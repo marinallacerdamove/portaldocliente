@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { getLanguageName } from 'dashboard/components/widgets/conversation/advancedFilterItems/languages';
 import ContactDetailsItem from './ContactDetailsItem.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
+import { ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS } from 'dashboard/constants/ticketDetailAttributes';
 
 const props = defineProps({
   conversationAttributes: {
@@ -91,6 +92,7 @@ const staticElements = computed(() =>
       attribute-class="conversation--attribute"
       attribute-from="conversation_panel"
       attribute-type="conversation_attribute"
+      :exclude-keys="ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS"
     >
       <template #staticItem="{ element }">
         <ContactDetailsItem

@@ -411,6 +411,7 @@
     "ASSIGNEE_LABEL": "Assigned Agent",
     "SELF_ASSIGN": "Assign to me",
     "TEAM_LABEL": "Assigned Team",
+    "SERVICO_LABEL": "Service",
     "SELECT": {
       "PLACEHOLDER": "None"
     },
@@ -419,6 +420,8 @@
       "CONVERSATION_ACTIONS": "Conversation Actions",
       "CONVERSATION_LABELS": "Conversation Labels",
       "CONVERSATION_INFO": "Conversation Information",
+      "TICKET_DETAILS": "Ticket Details",
+      "PORTAL_INFO": "Customer Portal Information",
       "CONTACT_NOTES": "Contact Notes",
       "CONTACT_ATTRIBUTES": "Contact Attributes",
       "PREVIOUS_CONVERSATION": "Previous Conversations",

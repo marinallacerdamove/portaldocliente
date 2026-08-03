@@ -66,6 +66,15 @@ export default {
     additionalAttributes() {
       return this.contact.additional_attributes || {};
     },
+    classificacaoCliente() {
+      return (this.contact.custom_attributes || {}).classificacao_cliente || '';
+    },
+    classificacaoTagHtml() {
+      if (!this.classificacaoCliente) return '';
+      const colors = { A: 'bg-emerald-500', B: 'bg-amber-500', C: 'bg-gray-400' };
+      const colorClass = colors[this.classificacaoCliente] || 'bg-gray-400';
+      return `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-white text-xs font-bold ${colorClass}">${this.classificacaoCliente}</span>`;
+    },
     location() {
       const {
         country = '',
@@ -288,6 +297,13 @@ export default {
             icon="map"
             emoji="🌍"
             :title="$t('CONTACT_PANEL.LOCATION')"
+          />
+          <ContactInfoRow
+            v-if="classificacaoCliente"
+            :value="classificacaoTagHtml"
+            icon="tag"
+            emoji="🏷️"
+            title="Classificação"
           />
           <SocialIcons :social-profiles="socialProfiles" />
         </div>

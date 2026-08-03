@@ -10,5 +10,6 @@ json.available_name resource.available_name
 json.custom_attributes resource.custom_attributes if resource.custom_attributes.present?
 json.name resource.name
 json.role resource.role
+json.team_ids resource.teams.where(account_id: Current.account&.id).pluck(:id)
 json.thumbnail resource.avatar_url
 json.custom_role_id resource.current_account_user&.custom_role_id if ChatwootApp.enterprise?

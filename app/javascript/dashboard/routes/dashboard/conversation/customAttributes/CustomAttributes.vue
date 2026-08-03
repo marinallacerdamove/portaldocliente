@@ -31,6 +31,16 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  // When set, only attributes whose key is in this list are shown
+  includeKeys: {
+    type: Array,
+    default: () => [],
+  },
+  // When set (and includeKeys is empty), attributes whose key is in this list are hidden
+  excludeKeys: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const store = useStore();
@@ -44,9 +54,26 @@ const dragging = ref(false);
 const [showAllAttributes, toggleShowAllAttributes] = useToggle(false);
 
 const currentChat = computed(() => getters.getSelectedChat.value);
-const attributes = computed(() =>
-  getters['attributes/getAttributesByModel'].value(props.attributeType)
-);
+const attributes = computed(() => {
+  const allAttributes = getters['attributes/getAttributesByModel'].value(
+    props.attributeType
+  );
+  if (props.includeKeys.length) {
+    return allAttributes
+      .filter(attribute => props.includeKeys.includes(attribute.attribute_key))
+      .sort(
+        (a, b) =>
+          props.includeKeys.indexOf(a.attribute_key) -
+          props.includeKeys.indexOf(b.attribute_key)
+      );
+  }
+  if (props.excludeKeys.length) {
+    return allAttributes.filter(
+      attribute => !props.excludeKeys.includes(attribute.attribute_key)
+    );
+  }
+  return allAttributes;
+});
 
 const contactIdentifier = computed(
   () =>
@@ -94,12 +121,19 @@ const orderKey = computed(
 );
 
 const combinedElements = computed(() => {
-  // Get saved order from UI settings
-  const savedOrder = uiSettings.value[orderKey.value] ?? [];
   const allElements = [
     ...props.staticElements,
     ...filteredCustomAttributes.value,
   ];
+
+  // When includeKeys is set, this is a curated section (e.g. Detalhes do
+  // Atendimento) whose order is fully controlled by that array — never let a
+  // per-agent saved drag-order (possibly persisted before a key was added or
+  // reordered) override it.
+  if (props.includeKeys.length) return allElements;
+
+  // Get saved order from UI settings
+  const savedOrder = uiSettings.value[orderKey.value] ?? [];
 
   // If no saved order exists, return in default order
   if (!savedOrder.length) return allElements;

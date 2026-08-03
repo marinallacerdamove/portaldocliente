@@ -22,6 +22,7 @@ import ChannelIcon from 'next/icon/ChannelIcon.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
 import Logo from 'next/icon/Logo.vue';
 import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
+import NewInternalTicket from 'dashboard/components-next/NewConversation/NewInternalTicket.vue';
 import {
   SIDEBAR_SORT_SECTIONS,
   getSidebarSortOptions,
@@ -1028,6 +1029,23 @@ const menuItems = computed(() => {
             />
           </template>
         </ComposeConversation>
+        <NewInternalTicket>
+          <template #trigger="{ open }">
+            <Button
+              icon="i-lucide-clipboard-plus"
+              color="slate"
+              size="sm"
+              title="Novo ticket interno"
+              class="dark:hover:!bg-n-slate-9/30"
+              :class="[
+                isEffectivelyCollapsed
+                  ? '!size-8 !outline-n-weak !text-n-slate-11'
+                  : '!h-7 !outline-n-weak !text-n-slate-11',
+              ]"
+              @click="open"
+            />
+          </template>
+        </NewInternalTicket>
       </div>
     </section>
     <nav

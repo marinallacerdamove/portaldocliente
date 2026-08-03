@@ -397,6 +397,7 @@
     "ASSIGNEE_LABEL": "Agente atribuído",
     "SELF_ASSIGN": "Atribuir a mim",
     "TEAM_LABEL": "Time atribuído",
+    "SERVICO_LABEL": "Serviço",
     "SELECT": {
       "PLACEHOLDER": "Nenhuma"
     },
@@ -405,6 +406,8 @@
       "CONVERSATION_ACTIONS": "Ações da conversa",
       "CONVERSATION_LABELS": "Etiquetas da conversa",
       "CONVERSATION_INFO": "Informação da conversa",
+      "TICKET_DETAILS": "Detalhes do Atendimento",
+      "PORTAL_INFO": "Informações do Portal do Cliente",
       "CONTACT_NOTES": "Notas do contato",
       "CONTACT_ATTRIBUTES": "Atributos do contato",
       "PREVIOUS_CONVERSATION": "Conversas anteriores",

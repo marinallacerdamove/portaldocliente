@@ -10,6 +10,7 @@ import { CONVERSATION_PRIORITY } from '../../../../shared/constants/messages';
 import { CONVERSATION_EVENTS } from '../../../helper/AnalyticsHelper/events';
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 
 export default {
   components: {
@@ -66,7 +67,22 @@ export default {
       currentChat: 'getSelectedChat',
       currentUser: 'getCurrentUser',
       teams: 'teams/getTeams',
+      getAttributesByModel: 'attributes/getAttributesByModel',
     }),
+    servicoDefinition() {
+      return this.getAttributesByModel('conversation_attribute').find(
+        attr => attr.attribute_key === 'servico'
+      );
+    },
+    servicoOptions() {
+      const values = this.servicoDefinition
+        ? this.servicoDefinition.attribute_values
+        : [];
+      return [
+        { id: '', name: this.$t('CONVERSATION.PRIORITY.OPTIONS.NONE') },
+        ...(values || []).map(value => ({ id: value, name: value })),
+      ];
+    },
     hasAnAssignedTeam() {
       return !!this.currentChat?.meta?.team;
     },
@@ -157,6 +173,42 @@ export default {
           });
       },
     },
+    assignedServico: {
+      get() {
+        const current =
+          (this.currentChat.custom_attributes || {}).servico || '';
+        return (
+          this.servicoOptions.find(opt => opt.id === current) ||
+          this.servicoOptions[0]
+        );
+      },
+      set(item) {
+        const conversationId = this.currentChat.id;
+        const updatedAttributes = {
+          ...(this.currentChat.custom_attributes || {}),
+        };
+        if (item && item.id) {
+          updatedAttributes.servico = item.id;
+        } else {
+          delete updatedAttributes.servico;
+        }
+        this.$store
+          .dispatch('updateCustomAttributes', {
+            conversationId,
+            customAttributes: updatedAttributes,
+          })
+          .then(() => {
+            useAlert(this.$t('CUSTOM_ATTRIBUTES.FORM.UPDATE.SUCCESS'));
+          });
+      },
+    },
+    ticketPaiId() {
+      return (this.currentChat.custom_attributes || {}).ticket_pai_id || null;
+    },
+    ticketFilhosIds() {
+      const raw = (this.currentChat.custom_attributes || {}).ticket_filhos_ids;
+      return raw ? raw.split(',').filter(Boolean) : [];
+    },
     showSelfAssign() {
       if (!this.assignedAgent) {
         return true;
@@ -223,12 +275,74 @@ export default {
         ? this.priorityOptions[0]
         : selectedPriorityItem;
     },
+
+    goToConversation(id) {
+      const accountId = this.$route.params.accountId;
+      this.$router.push({
+        path: frontendURL(conversationUrl({ accountId, id })),
+      });
+    },
+
+    onClickAssignServico(selectedItem) {
+      const isSame =
+        this.assignedServico && this.assignedServico.id === selectedItem.id;
+
+      this.assignedServico = isSame ? this.servicoOptions[0] : selectedItem;
+    },
+
   },
 };
 </script>
 
 <template>
   <div>
+    <div
+      v-if="ticketPaiId || ticketFilhosIds.length"
+      class="px-2 pt-2 pb-2 flex flex-col gap-1 text-sm"
+    >
+      <div v-if="ticketPaiId">
+        <span class="text-n-slate-11">Ticket Pai: </span>
+        <button
+          type="button"
+          class="text-n-brand underline"
+          @click="goToConversation(ticketPaiId)"
+        >
+          #{{ ticketPaiId }}
+        </button>
+      </div>
+      <div v-if="ticketFilhosIds.length">
+        <span class="text-n-slate-11">Tickets Filhos: </span>
+        <template v-for="(childId, index) in ticketFilhosIds" :key="childId">
+          <button
+            type="button"
+            class="text-n-brand underline"
+            @click="goToConversation(childId)"
+          >
+            #{{ childId }}
+          </button>
+          <span v-if="index < ticketFilhosIds.length - 1">, </span>
+        </template>
+      </div>
+    </div>
+    <div>
+      <ContactDetailsItem
+        compact
+        :title="$t('CONVERSATION_SIDEBAR.SERVICO_LABEL')"
+      />
+      <MultiselectDropdown
+        :options="servicoOptions"
+        :selected-item="assignedServico"
+        :multiselector-title="$t('CONVERSATION_SIDEBAR.SERVICO_LABEL')"
+        :multiselector-placeholder="$t('AGENT_MGMT.MULTI_SELECTOR.PLACEHOLDER')"
+        :no-search-result="
+          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.AGENT')
+        "
+        :input-placeholder="
+          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
+        "
+        @select="onClickAssignServico"
+      />
+    </div>
     <div>
       <ContactDetailsItem
         compact

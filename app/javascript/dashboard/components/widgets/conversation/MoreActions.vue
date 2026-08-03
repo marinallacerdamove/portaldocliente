@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onUnmounted } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import { useToggle } from '@vueuse/core';
 import { useStore } from 'vuex';
 import { useAlert } from 'dashboard/composables';
@@ -9,6 +9,7 @@ import EmailTranscriptModal from './EmailTranscriptModal.vue';
 import ResolveAction from '../../buttons/ResolveAction.vue';
 import ButtonV4 from 'dashboard/components-next/button/Button.vue';
 import DropdownMenu from 'dashboard/components-next/dropdown-menu/DropdownMenu.vue';
+import TicketLinkDialog from 'dashboard/routes/dashboard/conversation/TicketLinkDialog.vue';
 
 import {
   CMD_MUTE_CONVERSATION,
@@ -22,21 +23,22 @@ const { t } = useI18n();
 
 const [showEmailActionsModal, toggleEmailModal] = useToggle(false);
 const [showActionsDropdown, toggleDropdown] = useToggle(false);
+const ticketLinkDialogRef = ref(null);
 
 const currentChat = computed(() => store.getters.getSelectedChat);
 
-const actionMenuItems = computed(() => {
-  const items = [];
+const actionMenuSections = computed(() => {
+  const generalItems = [];
 
   if (!currentChat.value.muted) {
-    items.push({
+    generalItems.push({
       icon: 'i-lucide-volume-off',
       label: t('CONTACT_PANEL.MUTE_CONTACT'),
       action: 'mute',
       value: 'mute',
     });
   } else {
-    items.push({
+    generalItems.push({
       icon: 'i-lucide-volume-1',
       label: t('CONTACT_PANEL.UNMUTE_CONTACT'),
       action: 'unmute',
@@ -44,17 +46,53 @@ const actionMenuItems = computed(() => {
     });
   }
 
-  items.push({
+  generalItems.push({
     icon: 'i-lucide-share',
     label: t('CONTACT_PANEL.SEND_TRANSCRIPT'),
     action: 'send_transcript',
     value: 'send_transcript',
   });
 
-  return items;
+  return [
+    { title: '', items: generalItems },
+    {
+      title: 'Ticket pai',
+      items: [
+        {
+          icon: 'i-lucide-git-branch-plus',
+          label: 'Criar novo',
+          action: 'ticket_link',
+          value: 'newParent',
+        },
+        {
+          icon: 'i-lucide-link',
+          label: 'Relacionar a um já existente',
+          action: 'ticket_link',
+          value: 'existingParent',
+        },
+      ],
+    },
+    {
+      title: 'Ticket filho',
+      items: [
+        {
+          icon: 'i-lucide-git-branch-plus',
+          label: 'Criar novo',
+          action: 'ticket_link',
+          value: 'newChild',
+        },
+        {
+          icon: 'i-lucide-link',
+          label: 'Relacionar a um já existente',
+          action: 'ticket_link',
+          value: 'existingChild',
+        },
+      ],
+    },
+  ];
 });
 
-const handleActionClick = ({ action }) => {
+const handleActionClick = ({ action, value }) => {
   toggleDropdown(false);
 
   if (action === 'mute') {
@@ -65,6 +103,8 @@ const handleActionClick = ({ action }) => {
     useAlert(t('CONTACT_PANEL.UNMUTED_SUCCESS'));
   } else if (action === 'send_transcript') {
     toggleEmailModal();
+  } else if (action === 'ticket_link') {
+    ticketLinkDialogRef.value?.open(value);
   }
 };
 
@@ -111,7 +151,7 @@ onUnmounted(() => {
       />
       <DropdownMenu
         v-if="showActionsDropdown"
-        :menu-items="actionMenuItems"
+        :menu-sections="actionMenuSections"
         class="mt-1 ltr:right-0 rtl:left-0 top-full"
         @action="handleActionClick"
       />
@@ -122,5 +162,6 @@ onUnmounted(() => {
       :current-chat="currentChat"
       @cancel="toggleEmailModal"
     />
+    <TicketLinkDialog ref="ticketLinkDialogRef" />
   </div>
 </template>

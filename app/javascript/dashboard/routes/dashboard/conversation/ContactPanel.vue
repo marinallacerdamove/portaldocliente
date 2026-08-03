@@ -24,6 +24,11 @@ import ShopifyOrdersList from 'dashboard/components/widgets/conversation/Shopify
 import SidebarActionsHeader from 'dashboard/components-next/SidebarActionsHeader.vue';
 import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/IssuesList.vue';
 import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
+import {
+  TICKET_DETAIL_ATTRIBUTE_KEYS,
+  PORTAL_INFO_ATTRIBUTE_KEYS,
+  ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS,
+} from 'dashboard/constants/ticketDetailAttributes';
 
 const props = defineProps({
   conversationId: {
@@ -96,6 +101,27 @@ const contactAdditionalAttributes = computed(
   () => contact.value.additional_attributes || {}
 );
 
+const getAttributesByModel = useMapGetter('attributes/getAttributesByModel');
+const hasConversationInfoContent = computed(() => {
+  const attrs = conversationAdditionalAttributes.value || {};
+  const hasStaticInfo = !!(
+    attrs.initiated_at ||
+    attrs.browser_language ||
+    attrs.referer ||
+    attrs.browser ||
+    contactAdditionalAttributes.value.created_at_ip
+  );
+  const hasUncuratedAttribute = getAttributesByModel
+    .value('conversation_attribute')
+    .some(
+      attribute =>
+        !ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS.includes(
+          attribute.attribute_key
+        )
+    );
+  return hasStaticInfo || hasUncuratedAttribute;
+});
+
 const getContactDetails = () => {
   if (contactId.value) {
     store.dispatch('contacts/show', { id: contactId.value });
@@ -156,6 +182,7 @@ onMounted(() => {
           >
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_ACTIONS')"
+              icon="person-assign-outline"
               :is-open="isContactSidebarItemOpen('is_conv_actions_open')"
               @toggle="
                 value => toggleSidebarUIState('is_conv_actions_open', value)
@@ -185,7 +212,11 @@ onMounted(() => {
               />
             </AccordionItem>
           </div>
-          <div v-else-if="element.name === 'conversation_info'">
+          <div
+            v-else-if="
+              element.name === 'conversation_info' && hasConversationInfoContent
+            "
+          >
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_INFO')"
               :is-open="isContactSidebarItemOpen('is_conv_details_open')"
@@ -197,6 +228,40 @@ onMounted(() => {
               <ConversationInfo
                 :conversation-attributes="conversationAdditionalAttributes"
                 :contact-attributes="contactAdditionalAttributes"
+              />
+            </AccordionItem>
+          </div>
+          <div v-else-if="element.name === 'ticket_details'">
+            <AccordionItem
+              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.TICKET_DETAILS')"
+              icon="clipboard-outline"
+              :is-open="isContactSidebarItemOpen('is_ticket_details_open')"
+              compact
+              @toggle="
+                value => toggleSidebarUIState('is_ticket_details_open', value)
+              "
+            >
+              <CustomAttributes
+                attribute-type="conversation_attribute"
+                attribute-from="conversation_ticket_details_panel"
+                :include-keys="TICKET_DETAIL_ATTRIBUTE_KEYS"
+              />
+            </AccordionItem>
+          </div>
+          <div v-else-if="element.name === 'portal_info'">
+            <AccordionItem
+              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.PORTAL_INFO')"
+              icon="briefcase-outline"
+              :is-open="isContactSidebarItemOpen('is_portal_info_open')"
+              compact
+              @toggle="
+                value => toggleSidebarUIState('is_portal_info_open', value)
+              "
+            >
+              <CustomAttributes
+                attribute-type="conversation_attribute"
+                attribute-from="conversation_portal_info_panel"
+                :include-keys="PORTAL_INFO_ATTRIBUTE_KEYS"
               />
             </AccordionItem>
           </div>
@@ -214,6 +279,7 @@ onMounted(() => {
                 attribute-type="contact_attribute"
                 attribute-from="conversation_contact_panel"
                 :contact-id="contact.id"
+                :exclude-keys="['classificacao_cliente']"
                 :empty-state-message="
                   $t('CONVERSATION_CUSTOM_ATTRIBUTES.NO_RECORDS_FOUND')
                 "

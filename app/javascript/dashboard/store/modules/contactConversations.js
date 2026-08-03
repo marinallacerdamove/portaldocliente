@@ -24,11 +24,18 @@ export const createConversationPayload = ({ params, contactId, files }) => {
 
   payload.append('inbox_id', inboxId);
   payload.append('contact_id', contactId);
-  payload.append('source_id', sourceId);
+  // FormData.append coerces `undefined` to the literal string "undefined",
+  // which the backend would then treat as a real (colliding) value —
+  // only send these when the caller actually provided one.
+  if (sourceId) {
+    payload.append('source_id', sourceId);
+  }
   if (mailSubject) {
     payload.append('additional_attributes[mail_subject]', mailSubject);
   }
-  payload.append('assignee_id', assigneeId);
+  if (assigneeId) {
+    payload.append('assignee_id', assigneeId);
+  }
 
   return payload;
 };
