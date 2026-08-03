@@ -56,34 +56,34 @@ const actionMenuSections = computed(() => {
   return [
     { title: '', items: generalItems },
     {
-      title: 'Ticket pai',
+      title: t('TICKET_LINK_DIALOG.MENU.PARENT_SECTION'),
       items: [
         {
           icon: 'i-lucide-git-branch-plus',
-          label: 'Criar novo',
+          label: t('TICKET_LINK_DIALOG.MENU.CREATE_NEW'),
           action: 'ticket_link',
           value: 'newParent',
         },
         {
           icon: 'i-lucide-link',
-          label: 'Relacionar a um já existente',
+          label: t('TICKET_LINK_DIALOG.MENU.RELATE_EXISTING'),
           action: 'ticket_link',
           value: 'existingParent',
         },
       ],
     },
     {
-      title: 'Ticket filho',
+      title: t('TICKET_LINK_DIALOG.MENU.CHILD_SECTION'),
       items: [
         {
           icon: 'i-lucide-git-branch-plus',
-          label: 'Criar novo',
+          label: t('TICKET_LINK_DIALOG.MENU.CREATE_NEW'),
           action: 'ticket_link',
           value: 'newChild',
         },
         {
           icon: 'i-lucide-link',
-          label: 'Relacionar a um já existente',
+          label: t('TICKET_LINK_DIALOG.MENU.RELATE_EXISTING'),
           action: 'ticket_link',
           value: 'existingChild',
         },

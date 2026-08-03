@@ -448,6 +448,75 @@
       }
     }
   },
+  "TICKET_LINK_DIALOG": {
+    "TITLES": {
+      "NEW_CHILD": "Criar ticket filho",
+      "NEW_PARENT": "Criar ticket pai",
+      "EXISTING_CHILD": "Relacionar ticket filho existente",
+      "EXISTING_PARENT": "Relacionar ticket pai existente",
+      "DEFAULT": "Ticket interno"
+    },
+    "MENU": {
+      "PARENT_SECTION": "Ticket pai",
+      "CHILD_SECTION": "Ticket filho",
+      "CREATE_NEW": "Criar novo",
+      "RELATE_EXISTING": "Relacionar a um já existente"
+    },
+    "MESSAGE_PLACEHOLDER": "Descreva o ticket...",
+    "CREATE_BUTTON": "Criar ticket interno",
+    "SEARCH_PLACEHOLDER": "Buscar por protocolo, assunto, contato...",
+    "SEARCH_BUTTON": "Buscar",
+    "NO_RESULTS": "Nenhum resultado",
+    "CLOSE_BUTTON": "Fechar",
+    "LINK_SUCCESS": "Vínculo criado!",
+    "LINK_ERROR": "Erro ao vincular o ticket.",
+    "CREATE_SUCCESS": {
+      "PARENT": "Ticket pai criado!",
+      "CHILD": "Ticket filho criado!"
+    },
+    "CREATE_ERROR": "Erro ao criar o ticket interno.",
+    "VIEW_TICKET": "Ver ticket"
+  },
+  "NEW_INTERNAL_TICKET_DIALOG": {
+    "TITLE": "Novo ticket interno",
+    "REQUESTER_LABEL": "Solicitante",
+    "CONTACT_SEARCH_PLACEHOLDER": "Buscar contato...",
+    "SELECTED_LABEL": "Selecionado: {name}",
+    "SELECT_PLACEHOLDER": "Selecione",
+    "CATEGORIA_LABEL": "Categoria",
+    "URGENCIA_LABEL": "Urgência",
+    "PREVISAO_LABEL": "Previsão de solução",
+    "RESPONSIBLE_LABEL": "Responsável (Agente)",
+    "NO_AGENT_FOUND": "Nenhum agente encontrado",
+    "SEARCH_AGENT_PLACEHOLDER": "Buscar agente",
+    "TEAM_LABEL": "Time",
+    "NO_TEAM_FOUND": "Nenhum time encontrado",
+    "SEARCH_TEAM_PLACEHOLDER": "Buscar time",
+    "LIBERACOES_LABEL": "Liberações",
+    "ISSUE_JIRA_LABEL": "Issue Jira",
+    "DECISAO_PO_LABEL": "Decisão PO",
+    "STATUS_COBRANCA_LABEL": "Status da Cobrança",
+    "DATA_ENTREGA_LABEL": "Data Entrega",
+    "DATA_ATUALIZACAO_LABEL": "Data Atualização Sistema",
+    "CC_LABEL": "Cc (agentes adicionados como participantes)",
+    "SUBJECT_LABEL": "Assunto",
+    "MESSAGE_LABEL": "Mensagem",
+    "MESSAGE_PLACEHOLDER": "Digite algo...",
+    "SAVE_BUTTON": "Salvar",
+    "NONE_OPTION": "Nenhum",
+    "NO_OPTIONS_FOUND": "Nenhuma opção encontrada",
+    "SEARCH_INPUT_PLACEHOLDER": "Buscar",
+    "CREATE_SUCCESS": "Ticket interno criado!",
+    "CREATE_ERROR": "Erro ao criar o ticket interno.",
+    "VIEW_TICKET": "Ver ticket",
+    "URGENCIA_OPTIONS": {
+      "NONE": "Nenhuma",
+      "URGENT": "Urgente",
+      "HIGH": "Alta",
+      "MEDIUM": "Média",
+      "LOW": "Baixa"
+    }
+  },
   "CONVERSATION_CUSTOM_ATTRIBUTES": {
     "ADD_BUTTON_TEXT": "Criar atributo",
     "NO_RECORDS_FOUND": "Nenhum atributo encontrado",

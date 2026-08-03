@@ -462,6 +462,75 @@
       }
     }
   },
+  "TICKET_LINK_DIALOG": {
+    "TITLES": {
+      "NEW_CHILD": "Create child ticket",
+      "NEW_PARENT": "Create parent ticket",
+      "EXISTING_CHILD": "Relate an existing child ticket",
+      "EXISTING_PARENT": "Relate an existing parent ticket",
+      "DEFAULT": "Internal ticket"
+    },
+    "MENU": {
+      "PARENT_SECTION": "Parent ticket",
+      "CHILD_SECTION": "Child ticket",
+      "CREATE_NEW": "Create new",
+      "RELATE_EXISTING": "Relate to an existing one"
+    },
+    "MESSAGE_PLACEHOLDER": "Describe the ticket...",
+    "CREATE_BUTTON": "Create internal ticket",
+    "SEARCH_PLACEHOLDER": "Search by protocol, subject, contact...",
+    "SEARCH_BUTTON": "Search",
+    "NO_RESULTS": "No results",
+    "CLOSE_BUTTON": "Close",
+    "LINK_SUCCESS": "Link created!",
+    "LINK_ERROR": "Error linking the ticket.",
+    "CREATE_SUCCESS": {
+      "PARENT": "Parent ticket created!",
+      "CHILD": "Child ticket created!"
+    },
+    "CREATE_ERROR": "Error creating the internal ticket.",
+    "VIEW_TICKET": "View ticket"
+  },
+  "NEW_INTERNAL_TICKET_DIALOG": {
+    "TITLE": "New internal ticket",
+    "REQUESTER_LABEL": "Requester",
+    "CONTACT_SEARCH_PLACEHOLDER": "Search contact...",
+    "SELECTED_LABEL": "Selected: {name}",
+    "SELECT_PLACEHOLDER": "Select",
+    "CATEGORIA_LABEL": "Category",
+    "URGENCIA_LABEL": "Urgency",
+    "PREVISAO_LABEL": "Resolution forecast",
+    "RESPONSIBLE_LABEL": "Assignee (Agent)",
+    "NO_AGENT_FOUND": "No agent found",
+    "SEARCH_AGENT_PLACEHOLDER": "Search agent",
+    "TEAM_LABEL": "Team",
+    "NO_TEAM_FOUND": "No team found",
+    "SEARCH_TEAM_PLACEHOLDER": "Search team",
+    "LIBERACOES_LABEL": "Releases",
+    "ISSUE_JIRA_LABEL": "Jira Issue",
+    "DECISAO_PO_LABEL": "PO Decision",
+    "STATUS_COBRANCA_LABEL": "Billing Status",
+    "DATA_ENTREGA_LABEL": "Delivery Date",
+    "DATA_ATUALIZACAO_LABEL": "System Update Date",
+    "CC_LABEL": "Cc (agents added as participants)",
+    "SUBJECT_LABEL": "Subject",
+    "MESSAGE_LABEL": "Message",
+    "MESSAGE_PLACEHOLDER": "Type something...",
+    "SAVE_BUTTON": "Save",
+    "NONE_OPTION": "None",
+    "NO_OPTIONS_FOUND": "No options found",
+    "SEARCH_INPUT_PLACEHOLDER": "Search",
+    "CREATE_SUCCESS": "Internal ticket created!",
+    "CREATE_ERROR": "Error creating the internal ticket.",
+    "VIEW_TICKET": "View ticket",
+    "URGENCIA_OPTIONS": {
+      "NONE": "None",
+      "URGENT": "Urgent",
+      "HIGH": "High",
+      "MEDIUM": "Medium",
+      "LOW": "Low"
+    }
+  },
   "CONVERSATION_CUSTOM_ATTRIBUTES": {
     "ADD_BUTTON_TEXT": "Create attribute",
     "NO_RECORDS_FOUND": "No attributes found",

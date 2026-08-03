@@ -2,6 +2,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
+import { useI18n } from 'vue-i18n';
 import { debounce } from '@chatwoot/utils';
 import { createContactSearcher } from 'dashboard/components-next/NewConversation/helpers/composeConversationHelper';
 import { CONVERSATION_PRIORITY } from 'shared/constants/messages';
@@ -9,7 +10,11 @@ import { CONVERSATION_PRIORITY } from 'shared/constants/messages';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 
-const NONE_OPTION = { id: '', name: 'Nenhum' };
+const { t } = useI18n();
+const NONE_OPTION = computed(() => ({
+  id: '',
+  name: t('NEW_INTERNAL_TICKET_DIALOG.NONE_OPTION'),
+}));
 
 const dialogRef = ref(null);
 const store = useStore();
@@ -26,11 +31,14 @@ const targetInbox = computed(
 );
 
 const attrOptions = key => {
-  const def = getAttributesByModel.value('conversation_attribute').find(
-    attr => attr.attribute_key === key
-  );
+  const def = getAttributesByModel
+    .value('conversation_attribute')
+    .find(attr => attr.attribute_key === key);
   const values = def ? def.attribute_values : [];
-  return [NONE_OPTION, ...(values || []).map(value => ({ id: value, name: value }))];
+  return [
+    NONE_OPTION.value,
+    ...(values || []).map(value => ({ id: value, name: value })),
+  ];
 };
 
 const servicoOptions = computed(() => attrOptions('servico'));
@@ -38,13 +46,25 @@ const liberacoesOptions = computed(() => attrOptions('liberacoes'));
 const decisaoPoOptions = computed(() => attrOptions('decisao_po'));
 const statusCobrancaOptions = computed(() => attrOptions('status_cobranca'));
 
-const urgenciaOptions = [
-  { id: '', name: 'Nenhuma' },
-  { id: CONVERSATION_PRIORITY.URGENT, name: 'Urgente' },
-  { id: CONVERSATION_PRIORITY.HIGH, name: 'Alta' },
-  { id: CONVERSATION_PRIORITY.MEDIUM, name: 'Média' },
-  { id: CONVERSATION_PRIORITY.LOW, name: 'Baixa' },
-];
+const urgenciaOptions = computed(() => [
+  { id: '', name: t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_OPTIONS.NONE') },
+  {
+    id: CONVERSATION_PRIORITY.URGENT,
+    name: t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_OPTIONS.URGENT'),
+  },
+  {
+    id: CONVERSATION_PRIORITY.HIGH,
+    name: t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_OPTIONS.HIGH'),
+  },
+  {
+    id: CONVERSATION_PRIORITY.MEDIUM,
+    name: t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_OPTIONS.MEDIUM'),
+  },
+  {
+    id: CONVERSATION_PRIORITY.LOW,
+    name: t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_OPTIONS.LOW'),
+  },
+]);
 
 const query = ref('');
 const results = ref([]);
@@ -53,16 +73,16 @@ const isSubmitting = ref(false);
 
 const emptyForm = () => ({
   contact: null,
-  servico: NONE_OPTION,
+  servico: NONE_OPTION.value,
   categoria: '',
-  urgencia: urgenciaOptions[0],
+  urgencia: urgenciaOptions.value[0],
   prazoResolucao: '',
   agent: null,
   team: null,
-  liberacoes: NONE_OPTION,
+  liberacoes: NONE_OPTION.value,
   issueJira: '',
-  decisaoPo: NONE_OPTION,
-  statusCobranca: NONE_OPTION,
+  decisaoPo: NONE_OPTION.value,
+  statusCobranca: NONE_OPTION.value,
   dataEntrega: '',
   dataAtualizacaoSistema: '',
   ccAgentIds: [],
@@ -169,15 +189,23 @@ const onSubmit = async () => {
 
     const customAttributes = {};
     if (formState.servico?.id) customAttributes.servico = formState.servico.id;
-    if (formState.categoria.trim()) customAttributes.categoria = formState.categoria.trim();
-    if (formState.prazoResolucao) customAttributes.prazo_resolucao = formState.prazoResolucao;
-    if (formState.liberacoes?.id) customAttributes.liberacoes = formState.liberacoes.id;
-    if (formState.issueJira.trim()) customAttributes.issue_jira = formState.issueJira.trim();
-    if (formState.decisaoPo?.id) customAttributes.decisao_po = formState.decisaoPo.id;
-    if (formState.statusCobranca?.id) customAttributes.status_cobranca = formState.statusCobranca.id;
-    if (formState.dataEntrega) customAttributes.data_entrega = formState.dataEntrega;
+    if (formState.categoria.trim())
+      customAttributes.categoria = formState.categoria.trim();
+    if (formState.prazoResolucao)
+      customAttributes.prazo_resolucao = formState.prazoResolucao;
+    if (formState.liberacoes?.id)
+      customAttributes.liberacoes = formState.liberacoes.id;
+    if (formState.issueJira.trim())
+      customAttributes.issue_jira = formState.issueJira.trim();
+    if (formState.decisaoPo?.id)
+      customAttributes.decisao_po = formState.decisaoPo.id;
+    if (formState.statusCobranca?.id)
+      customAttributes.status_cobranca = formState.statusCobranca.id;
+    if (formState.dataEntrega)
+      customAttributes.data_entrega = formState.dataEntrega;
     if (formState.dataAtualizacaoSistema) {
-      customAttributes.data_atualizacao_sistema = formState.dataAtualizacaoSistema;
+      customAttributes.data_atualizacao_sistema =
+        formState.dataAtualizacaoSistema;
     }
     if (Object.keys(customAttributes).length) {
       await store.dispatch('updateCustomAttributes', {
@@ -193,14 +221,14 @@ const onSubmit = async () => {
       });
     }
 
-    useAlert('Ticket interno criado!', {
+    useAlert(t('NEW_INTERNAL_TICKET_DIALOG.CREATE_SUCCESS'), {
       type: 'link',
       to: `/app/accounts/${data.account_id}/conversations/${data.id}`,
-      message: 'Ver ticket',
+      message: t('NEW_INTERNAL_TICKET_DIALOG.VIEW_TICKET'),
     });
     close();
   } catch (error) {
-    useAlert('Erro ao criar o ticket interno.');
+    useAlert(t('NEW_INTERNAL_TICKET_DIALOG.CREATE_ERROR'));
   } finally {
     isSubmitting.value = false;
   }
@@ -213,22 +241,28 @@ defineExpose({ open });
   <slot name="trigger" :open="open" />
   <Dialog
     ref="dialogRef"
-    title="Novo ticket interno"
+    :title="t('NEW_INTERNAL_TICKET_DIALOG.TITLE')"
     width="3xl"
     overflow-y-auto
-    confirm-button-label="Salvar"
+    :confirm-button-label="t('NEW_INTERNAL_TICKET_DIALOG.SAVE_BUTTON')"
     :is-loading="isSubmitting"
     :disable-confirm-button="!canSubmit"
     @confirm="onSubmit"
   >
-    <div class="grid grid-cols-2 gap-6 w-full max-h-[70vh] overflow-y-auto pr-1">
+    <div
+      class="grid grid-cols-2 gap-6 w-full max-h-[70vh] overflow-y-auto pr-1"
+    >
       <div class="flex flex-col gap-3">
         <div class="relative">
-          <p class="text-xs text-n-slate-11 mb-1">Solicitante</p>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUESTER_LABEL') }}
+          </p>
           <input
             v-model="query"
             type="text"
-            placeholder="Buscar contato..."
+            :placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.CONTACT_SEARCH_PLACEHOLDER')
+            "
             class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
             @input="onSearch"
           />
@@ -247,26 +281,38 @@ defineExpose({ open });
             </li>
           </ul>
           <p v-if="formState.contact" class="text-xs text-n-teal-11 mt-1">
-            Selecionado: {{ formState.contact.name }}
+            {{
+              t('NEW_INTERNAL_TICKET_DIALOG.SELECTED_LABEL', {
+                name: formState.contact.name,
+              })
+            }}
           </p>
         </div>
 
         <div>
-          <p class="text-xs text-n-slate-11 mb-1">Serviço</p>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('CONVERSATION_SIDEBAR.SERVICO_LABEL') }}
+          </p>
           <MultiselectDropdown
             :options="servicoOptions"
             :selected-item="formState.servico"
-            multiselector-title="Serviço"
-            multiselector-placeholder="Selecione"
-            no-search-result="Nenhuma opção encontrada"
-            input-placeholder="Buscar"
+            :multiselector-title="t('CONVERSATION_SIDEBAR.SERVICO_LABEL')"
+            :multiselector-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+            "
+            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+            :input-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+            "
             @select="formState.servico = $event"
           />
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Categoria</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.CATEGORIA_LABEL') }}
+            </p>
             <input
               v-model="formState.categoria"
               type="text"
@@ -274,21 +320,33 @@ defineExpose({ open });
             />
           </div>
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Urgência</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL') }}
+            </p>
             <MultiselectDropdown
               :options="urgenciaOptions"
               :selected-item="formState.urgencia"
-              multiselector-title="Urgência"
-              multiselector-placeholder="Selecione"
-              no-search-result="Nenhuma opção encontrada"
-              input-placeholder="Buscar"
+              :multiselector-title="
+                t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL')
+              "
+              :multiselector-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+              "
+              :no-search-result="
+                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
+              "
+              :input-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
               @select="formState.urgencia = $event"
             />
           </div>
         </div>
 
         <div>
-          <p class="text-xs text-n-slate-11 mb-1">Previsão de solução</p>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.PREVISAO_LABEL') }}
+          </p>
           <input
             v-model="formState.prazoResolucao"
             type="date"
@@ -297,47 +355,73 @@ defineExpose({ open });
         </div>
 
         <div>
-          <p class="text-xs text-n-slate-11 mb-1">Responsável (Agente)</p>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.RESPONSIBLE_LABEL') }}
+          </p>
           <MultiselectDropdown
             :options="agentsList"
             :selected-item="formState.agent"
-            multiselector-title="Agente"
-            multiselector-placeholder="Selecione"
-            no-search-result="Nenhum agente encontrado"
-            input-placeholder="Buscar agente"
+            :multiselector-title="
+              t('NEW_INTERNAL_TICKET_DIALOG.RESPONSIBLE_LABEL')
+            "
+            :multiselector-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+            "
+            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_AGENT_FOUND')"
+            :input-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_AGENT_PLACEHOLDER')
+            "
             @select="onSelectAgent"
           />
         </div>
 
         <div>
-          <p class="text-xs text-n-slate-11 mb-1">Time</p>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL') }}
+          </p>
           <MultiselectDropdown
             :options="teams"
             :selected-item="formState.team"
             show-emoji-icon
-            multiselector-title="Time"
-            multiselector-placeholder="Selecione"
-            no-search-result="Nenhum time encontrado"
-            input-placeholder="Buscar time"
+            :multiselector-title="t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL')"
+            :multiselector-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+            "
+            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_TEAM_FOUND')"
+            :input-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_TEAM_PLACEHOLDER')
+            "
             @select="formState.team = $event"
           />
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Liberações</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.LIBERACOES_LABEL') }}
+            </p>
             <MultiselectDropdown
               :options="liberacoesOptions"
               :selected-item="formState.liberacoes"
-              multiselector-title="Liberações"
-              multiselector-placeholder="Selecione"
-              no-search-result="Nenhuma opção encontrada"
-              input-placeholder="Buscar"
+              :multiselector-title="
+                t('NEW_INTERNAL_TICKET_DIALOG.LIBERACOES_LABEL')
+              "
+              :multiselector-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+              "
+              :no-search-result="
+                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
+              "
+              :input-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
               @select="formState.liberacoes = $event"
             />
           </div>
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Issue Jira</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.ISSUE_JIRA_LABEL') }}
+            </p>
             <input
               v-model="formState.issueJira"
               type="text"
@@ -348,26 +432,46 @@ defineExpose({ open });
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Decisão PO</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.DECISAO_PO_LABEL') }}
+            </p>
             <MultiselectDropdown
               :options="decisaoPoOptions"
               :selected-item="formState.decisaoPo"
-              multiselector-title="Decisão PO"
-              multiselector-placeholder="Selecione"
-              no-search-result="Nenhuma opção encontrada"
-              input-placeholder="Buscar"
+              :multiselector-title="
+                t('NEW_INTERNAL_TICKET_DIALOG.DECISAO_PO_LABEL')
+              "
+              :multiselector-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+              "
+              :no-search-result="
+                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
+              "
+              :input-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
               @select="formState.decisaoPo = $event"
             />
           </div>
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Status da Cobrança</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.STATUS_COBRANCA_LABEL') }}
+            </p>
             <MultiselectDropdown
               :options="statusCobrancaOptions"
               :selected-item="formState.statusCobranca"
-              multiselector-title="Status da Cobrança"
-              multiselector-placeholder="Selecione"
-              no-search-result="Nenhuma opção encontrada"
-              input-placeholder="Buscar"
+              :multiselector-title="
+                t('NEW_INTERNAL_TICKET_DIALOG.STATUS_COBRANCA_LABEL')
+              "
+              :multiselector-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+              "
+              :no-search-result="
+                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
+              "
+              :input-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
               @select="formState.statusCobranca = $event"
             />
           </div>
@@ -375,7 +479,9 @@ defineExpose({ open });
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Data Entrega</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.DATA_ENTREGA_LABEL') }}
+            </p>
             <input
               v-model="formState.dataEntrega"
               type="date"
@@ -383,7 +489,9 @@ defineExpose({ open });
             />
           </div>
           <div>
-            <p class="text-xs text-n-slate-11 mb-1">Data Atualização Sistema</p>
+            <p class="text-xs text-n-slate-11 mb-1">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.DATA_ATUALIZACAO_LABEL') }}
+            </p>
             <input
               v-model="formState.dataAtualizacaoSistema"
               type="date"
@@ -394,7 +502,7 @@ defineExpose({ open });
 
         <div>
           <p class="text-xs text-n-slate-11 mb-1">
-            Cc (agentes adicionados como participantes)
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.CC_LABEL') }}
           </p>
           <div
             class="max-h-28 overflow-y-auto border border-n-weak rounded-md p-2 flex flex-col gap-1"
@@ -417,7 +525,9 @@ defineExpose({ open });
 
       <div class="flex flex-col gap-3">
         <div>
-          <p class="text-xs text-n-slate-11 mb-1">Assunto</p>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.SUBJECT_LABEL') }}
+          </p>
           <input
             v-model="formState.subject"
             type="text"
@@ -425,11 +535,13 @@ defineExpose({ open });
           />
         </div>
         <div class="flex-1 flex flex-col">
-          <p class="text-xs text-n-slate-11 mb-1">Mensagem</p>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_LABEL') }}
+          </p>
           <textarea
             v-model="formState.message"
             rows="18"
-            placeholder="Digite algo..."
+            :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER')"
             class="w-full flex-1 p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
           />
         </div>
