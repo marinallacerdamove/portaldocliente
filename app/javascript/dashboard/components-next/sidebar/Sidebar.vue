@@ -1029,22 +1029,19 @@ const menuItems = computed(() => {
             />
           </template>
         </ComposeConversation>
-      </div>
-      <div :class="isEffectivelyCollapsed ? 'flex justify-center' : 'px-2'">
         <NewInternalTicket>
           <template #trigger="{ open }">
             <Button
               icon="i-lucide-clipboard-plus"
-              variant="solid"
-              color="ruby"
-              :size="isEffectivelyCollapsed ? 'sm' : 'sm'"
-              :label="
-                isEffectivelyCollapsed
-                  ? ''
-                  : t('NEW_INTERNAL_TICKET_DIALOG.SAVE_BUTTON')
-              "
+              color="slate"
+              size="sm"
               :title="t('NEW_INTERNAL_TICKET_DIALOG.TITLE')"
-              :class="isEffectivelyCollapsed ? '!size-8' : '!h-8 !w-full'"
+              class="dark:hover:!bg-n-slate-9/30"
+              :class="[
+                isEffectivelyCollapsed
+                  ? '!size-8 !outline-n-weak !text-n-slate-11'
+                  : '!h-7 !outline-n-weak !text-n-slate-11',
+              ]"
               @click="open"
             />
           </template>
