@@ -131,11 +131,21 @@ defineExpose({ open, close });
       <OnClickOutside @trigger="handleClickOutside">
         <form
           ref="dialogContentRef"
-          class="flex flex-col w-full h-auto gap-6 p-6 overflow-visible text-start align-middle transition-all duration-300 ease-in-out transform bg-n-alpha-3 backdrop-blur-[100px] shadow-xl rounded-xl"
+          class="relative flex flex-col w-full h-auto gap-6 p-6 overflow-visible text-start align-middle transition-all duration-300 ease-in-out transform bg-n-alpha-3 backdrop-blur-[100px] shadow-xl rounded-xl"
           @submit.prevent="confirm"
           @click.stop
         >
-          <div v-if="title || description" class="flex flex-col gap-2">
+          <Button
+            icon="i-lucide-x"
+            variant="ghost"
+            color="slate"
+            size="xs"
+            type="button"
+            :title="t('DIALOG.BUTTONS.CANCEL')"
+            class="absolute top-3 ltr:right-3 rtl:left-3 !w-7 !h-7"
+            @click="close"
+          />
+          <div v-if="title || description" class="flex flex-col gap-2 pr-8">
             <h3 class="text-base font-medium leading-6 text-n-slate-12">
               {{ title }}
             </h3>

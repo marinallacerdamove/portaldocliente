@@ -101,6 +101,25 @@ const { onFileUpload } = useFileUpload({
   },
 });
 
+const pasteAttachmentId = ref(0);
+const onPasteMessage = e => {
+  const files = e.clipboardData?.files;
+  if (!files?.length) return;
+
+  Array.from(files)
+    .filter(file => file.size > 0)
+    .forEach(file => {
+      pasteAttachmentId.value += 1;
+      onFileUpload({
+        file,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        id: `paste-attachment-${pasteAttachmentId.value}`,
+      });
+    });
+};
+
 const emptyForm = () => ({
   contact: null,
   servico: NONE_OPTION.value,
@@ -574,6 +593,7 @@ defineExpose({ open });
             rows="14"
             :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER')"
             class="w-full min-h-[22rem] p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12 resize-y"
+            @paste="onPasteMessage"
           />
           <AttachmentPreviews
             v-if="attachedFiles.length"
