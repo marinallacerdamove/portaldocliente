@@ -282,7 +282,7 @@ defineExpose({ open });
     @confirm="onSubmit"
   >
     <div
-      class="grid grid-cols-2 gap-6 w-full max-h-[70vh] overflow-y-auto pr-1"
+      class="grid grid-cols-[26rem_1fr] items-start gap-6 w-full max-h-[80vh] overflow-y-auto pr-1"
     >
       <div class="flex flex-col gap-3">
         <div class="relative">
@@ -566,15 +566,15 @@ defineExpose({ open });
             class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
           />
         </div>
-        <div class="flex-1 flex flex-col">
+        <div class="flex flex-col">
           <p class="text-xs text-n-slate-11 mb-1">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_LABEL') }}
           </p>
           <textarea
             v-model="formState.message"
-            rows="18"
+            rows="14"
             :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER')"
-            class="w-full flex-1 p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+            class="w-full min-h-[22rem] p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12 resize-y"
           />
           <AttachmentPreviews
             v-if="attachedFiles.length"
