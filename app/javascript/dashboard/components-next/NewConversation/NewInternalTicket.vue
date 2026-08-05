@@ -101,25 +101,6 @@ const { onFileUpload } = useFileUpload({
   },
 });
 
-const pasteAttachmentId = ref(0);
-const onPasteMessage = e => {
-  const files = e.clipboardData?.files;
-  if (!files?.length) return;
-
-  Array.from(files)
-    .filter(file => file.size > 0)
-    .forEach(file => {
-      pasteAttachmentId.value += 1;
-      onFileUpload({
-        file,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        id: `paste-attachment-${pasteAttachmentId.value}`,
-      });
-    });
-};
-
 const emptyForm = () => ({
   contact: null,
   servico: NONE_OPTION.value,
@@ -140,6 +121,57 @@ const emptyForm = () => ({
 });
 
 const formState = reactive(emptyForm());
+
+const messageEditorRef = ref(null);
+const messageHasContent = computed(() => {
+  const html = formState.message || '';
+  return /<img/i.test(html) || html.replace(/<[^>]*>/g, '').trim().length > 0;
+});
+
+const onMessageInput = () => {
+  formState.message = messageEditorRef.value?.innerHTML || '';
+};
+
+const insertImageAtCursor = dataUrl => {
+  const editor = messageEditorRef.value;
+  if (!editor) return;
+  editor.focus();
+  const imgTag = `<img src="${dataUrl}" class="max-w-full max-h-72 rounded-md my-1" />`;
+  // execCommand is deprecated but remains the only broadly-supported way to
+  // insert HTML at the current cursor position inside a contenteditable.
+  document.execCommand('insertHTML', false, imgTag);
+};
+
+const pasteAttachmentId = ref(0);
+const onPasteMessage = e => {
+  const files = e.clipboardData?.files;
+  if (!files?.length) return;
+
+  const validFiles = Array.from(files).filter(file => file.size > 0);
+  if (!validFiles.length) return;
+
+  e.preventDefault();
+  validFiles.forEach(file => {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        insertImageAtCursor(reader.result);
+        onMessageInput();
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    pasteAttachmentId.value += 1;
+    onFileUpload({
+      file,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      id: `paste-attachment-${pasteAttachmentId.value}`,
+    });
+  });
+};
 
 onMounted(() => {
   store.dispatch('agents/get');
@@ -181,7 +213,7 @@ const canSubmit = computed(
   () =>
     !!formState.contact &&
     !!formState.team &&
-    !!formState.message.trim() &&
+    messageHasContent.value &&
     !!targetInbox.value
 );
 
@@ -588,13 +620,21 @@ defineExpose({ open });
           <p class="text-xs text-n-slate-11 mb-1">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_LABEL') }}
           </p>
-          <textarea
-            v-model="formState.message"
-            rows="14"
-            :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER')"
-            class="w-full min-h-[22rem] p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12 resize-y"
-            @paste="onPasteMessage"
-          />
+          <div class="relative">
+            <div
+              ref="messageEditorRef"
+              contenteditable="true"
+              class="w-full min-h-[22rem] max-h-[40rem] overflow-y-auto p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+              @input="onMessageInput"
+              @paste="onPasteMessage"
+            />
+            <span
+              v-if="!messageHasContent"
+              class="absolute top-2 left-2 text-sm text-n-slate-11 pointer-events-none"
+            >
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER') }}
+            </span>
+          </div>
           <AttachmentPreviews
             v-if="attachedFiles.length"
             class="!p-0 !max-h-none mt-2"
