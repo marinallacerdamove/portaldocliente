@@ -276,7 +276,6 @@ defineExpose({ open });
     :title="t('NEW_INTERNAL_TICKET_DIALOG.TITLE')"
     width="full"
     overflow-y-auto
-    :confirm-button-label="t('NEW_INTERNAL_TICKET_DIALOG.SAVE_BUTTON')"
     :is-loading="isSubmitting"
     :disable-confirm-button="!canSubmit"
     @confirm="onSubmit"
@@ -606,5 +605,26 @@ defineExpose({ open });
         </div>
       </div>
     </div>
+
+    <template #footer>
+      <div class="flex items-center justify-end w-full gap-2">
+        <Button
+          variant="faded"
+          color="slate"
+          size="sm"
+          type="button"
+          :label="t('DIALOG.BUTTONS.CANCEL')"
+          @click="close"
+        />
+        <Button
+          color="ruby"
+          size="sm"
+          type="submit"
+          :label="t('NEW_INTERNAL_TICKET_DIALOG.SAVE_BUTTON')"
+          :is-loading="isSubmitting"
+          :disabled="!canSubmit"
+        />
+      </div>
+    </template>
   </Dialog>
 </template>
