@@ -1033,15 +1033,16 @@ const menuItems = computed(() => {
           <template #trigger="{ open }">
             <Button
               icon="i-lucide-clipboard-plus"
-              color="slate"
-              size="sm"
-              title="Novo ticket interno"
-              class="dark:hover:!bg-n-slate-9/30"
-              :class="[
+              variant="solid"
+              color="ruby"
+              :size="isEffectivelyCollapsed ? 'sm' : 'md'"
+              :label="
                 isEffectivelyCollapsed
-                  ? '!size-8 !outline-n-weak !text-n-slate-11'
-                  : '!h-7 !outline-n-weak !text-n-slate-11',
-              ]"
+                  ? ''
+                  : t('NEW_INTERNAL_TICKET_DIALOG.SAVE_BUTTON')
+              "
+              :title="t('NEW_INTERNAL_TICKET_DIALOG.TITLE')"
+              :class="isEffectivelyCollapsed ? '!size-8' : '!h-9 w-full'"
               @click="open"
             />
           </template>

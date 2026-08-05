@@ -4,11 +4,21 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import { debounce } from '@chatwoot/utils';
-import { createContactSearcher } from 'dashboard/components-next/NewConversation/helpers/composeConversationHelper';
-import { CONVERSATION_PRIORITY } from 'shared/constants/messages';
+import FileUpload from 'vue-upload-component';
+import { useFileUpload } from 'dashboard/composables/useFileUpload';
+import {
+  createContactSearcher,
+  prepareAttachmentPayload,
+} from 'dashboard/components-next/NewConversation/helpers/composeConversationHelper';
+import {
+  CONVERSATION_PRIORITY,
+  ALLOWED_FILE_TYPES,
+} from 'shared/constants/messages';
 
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
+import AttachmentPreviews from 'dashboard/components-next/NewConversation/components/AttachmentPreviews.vue';
 
 const { t } = useI18n();
 const NONE_OPTION = computed(() => ({
@@ -70,6 +80,26 @@ const query = ref('');
 const results = ref([]);
 const isSearching = ref(false);
 const isSubmitting = ref(false);
+const attachedFiles = ref([]);
+
+const { onFileUpload } = useFileUpload({
+  attachFile: ({ blob, file }) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file.file);
+    reader.onloadend = () => {
+      attachedFiles.value = [
+        ...attachedFiles.value,
+        {
+          resource: blob || file,
+          isPrivate: false,
+          thumb: reader.result,
+          blobSignedId: blob?.signed_id,
+        },
+      ];
+    };
+  },
+});
 
 const emptyForm = () => ({
   contact: null,
@@ -140,6 +170,7 @@ const reset = () => {
   Object.assign(formState, emptyForm());
   query.value = '';
   results.value = [];
+  attachedFiles.value = [];
 };
 
 const open = () => {
@@ -165,6 +196,7 @@ const onSubmit = async () => {
         inboxId: targetInbox.value.id,
         contactId: formState.contact.id,
         message: { content: contentLines.join('\n\n') },
+        files: prepareAttachmentPayload(attachedFiles.value, false),
       },
     });
 
@@ -242,7 +274,7 @@ defineExpose({ open });
   <Dialog
     ref="dialogRef"
     :title="t('NEW_INTERNAL_TICKET_DIALOG.TITLE')"
-    width="3xl"
+    width="full"
     overflow-y-auto
     :confirm-button-label="t('NEW_INTERNAL_TICKET_DIALOG.SAVE_BUTTON')"
     :is-loading="isSubmitting"
@@ -544,6 +576,33 @@ defineExpose({ open });
             :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER')"
             class="w-full flex-1 p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
           />
+          <AttachmentPreviews
+            v-if="attachedFiles.length"
+            class="!p-0 !max-h-none mt-2"
+            :attachments="attachedFiles"
+            @update:attachments="attachedFiles = $event"
+          />
+          <FileUpload
+            input-id="newInternalTicketAttachment"
+            :size="4096 * 4096"
+            :accept="ALLOWED_FILE_TYPES"
+            multiple
+            :drop-directory="false"
+            :data="{
+              direct_upload_url: '/rails/active_storage/direct_uploads',
+              direct_upload: true,
+            }"
+            class="mt-2 self-start"
+            @input-file="onFileUpload"
+          >
+            <Button
+              icon="i-lucide-paperclip"
+              variant="outline"
+              color="slate"
+              size="sm"
+              :label="t('NEW_INTERNAL_TICKET_DIALOG.ATTACH_BUTTON')"
+            />
+          </FileUpload>
         </div>
       </div>
     </div>
