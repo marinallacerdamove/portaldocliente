@@ -1,0 +1,76 @@
+# Deploy real deste servidor. Substitui a rotina manual de "docker run" +
+# renomear container antigo a cada deploy. Ver PORTAL_FORK_README.md.
+#
+# Uso:
+#   docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate rails sidekiq
+#
+# Segredos reais ficam em .env.production (fora do git, ver .env.production.example).
+
+networks:
+  default:
+    name: chatwoot_default
+    external: true
+
+volumes:
+  chatwoot_storage_data:
+    external: true
+  backend_chatwoot_pgdata:
+    external: true
+  chatwoot_redis_persist_data:
+
+services:
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: backend-postgres-1
+    restart: always
+    environment:
+      POSTGRES_DB: chatwoot_production
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - backend_chatwoot_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    container_name: backend-redis-1
+    restart: always
+    volumes:
+      - chatwoot_redis_persist_data:/data
+    command: ["redis-server", "--save", "60", "1"]
+
+  rails:
+    image: chatwoot-custom:v4.16.2-ticketmodal7
+    container_name: chatwoot-rails-1
+    restart: always
+    env_file: .env.production
+    ports:
+      - "3001:3000"
+    volumes:
+      - chatwoot_storage_data:/app/storage
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    depends_on:
+      - postgres
+      - redis
+
+  sidekiq:
+    image: chatwoot-custom:v4.16.2-ticketmodal7
+    container_name: chatwoot-sidekiq-1
+    restart: always
+    env_file: .env.production
+    volumes:
+      - chatwoot_storage_data:/app/storage
+    command: ["bundle", "exec", "sidekiq"]
+    depends_on:
+      - postgres
+      - redis
+
+  glitchtip:
+    image: glitchtip/glitchtip:latest
+    container_name: glitchtip
+    restart: always
+    env_file: .env.glitchtip
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres
+      - redis

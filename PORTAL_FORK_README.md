@@ -31,8 +31,25 @@ git merge v4.17.0
 # 5. Rebuildar a imagem Docker
 docker build -f docker/Dockerfile -t chatwoot-custom:v4.17.0-ticketdetails .
 
-# 6. Trocar o container (ver docs/chatwoot_integration.md no chatwoot-portal pra o passo a passo
-#    completo de deploy — env vars, volume de storage, rename do container antigo como backup)
+# 6. Atualizar a tag da imagem em docker-compose.prod.yml (services.rails.image e
+#    services.sidekiq.image), depois trocar só esses dois containers:
+docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate rails sidekiq
+```
+
+## Deploy (docker-compose.prod.yml)
+
+Desde 2026-08-06 o stack inteiro (rails, sidekiq, postgres, redis, glitchtip) é gerenciado por
+`docker-compose.prod.yml` neste diretório — não existe mais renomeação manual de container a
+cada deploy. Segredos reais ficam em `.env.production` e `.env.glitchtip` (fora do git; use
+`.env.production.example`/`.env.glitchtip.example` como referência de quais chaves existem).
+
+```bash
+# Deploy normal (depois de rebuildar a imagem custom, passo 5 acima):
+docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate rails sidekiq
+
+# Subir o stack inteiro do zero (ex: depois de reboot do host, se os containers não
+# voltarem sozinhos por algum motivo — normalmente não é necessário, todos têm restart: always):
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 Se o merge vier limpo (sem conflito), é só rebuildar e trocar o container. Se der conflito,
