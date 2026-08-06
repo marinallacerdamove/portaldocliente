@@ -6,6 +6,12 @@
 #
 # Segredos reais ficam em .env.production (fora do git, ver .env.production.example).
 
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 networks:
   default:
     name: chatwoot_default
@@ -23,6 +29,7 @@ services:
     image: ankane/pgvector:latest
     container_name: backend-postgres-1
     restart: always
+    logging: *default-logging
     environment:
       POSTGRES_DB: chatwoot_production
       POSTGRES_USER: postgres
@@ -34,6 +41,7 @@ services:
     image: redis:alpine
     container_name: backend-redis-1
     restart: always
+    logging: *default-logging
     volumes:
       - chatwoot_redis_persist_data:/data
     command: ["redis-server", "--save", "60", "1"]
@@ -42,6 +50,7 @@ services:
     image: chatwoot-custom:v4.16.2-ticketmodal7
     container_name: chatwoot-rails-1
     restart: always
+    logging: *default-logging
     env_file: .env.production
     ports:
       - "3001:3000"
@@ -56,6 +65,7 @@ services:
     image: chatwoot-custom:v4.16.2-ticketmodal7
     container_name: chatwoot-sidekiq-1
     restart: always
+    logging: *default-logging
     env_file: .env.production
     volumes:
       - chatwoot_storage_data:/app/storage
@@ -68,6 +78,7 @@ services:
     image: glitchtip/glitchtip:latest
     container_name: glitchtip
     restart: always
+    logging: *default-logging
     env_file: .env.glitchtip
     ports:
       - "8001:8000"
