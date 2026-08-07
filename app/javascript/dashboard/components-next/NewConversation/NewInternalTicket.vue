@@ -132,16 +132,6 @@ const onMessageInput = () => {
   formState.message = messageEditorRef.value?.innerHTML || '';
 };
 
-const insertImageAtCursor = dataUrl => {
-  const editor = messageEditorRef.value;
-  if (!editor) return;
-  editor.focus();
-  const imgTag = `<img src="${dataUrl}" class="max-w-full max-h-72 rounded-md my-1" />`;
-  // execCommand is deprecated but remains the only broadly-supported way to
-  // insert HTML at the current cursor position inside a contenteditable.
-  document.execCommand('insertHTML', false, imgTag);
-};
-
 const pasteAttachmentId = ref(0);
 const onPasteMessage = e => {
   const files = e.clipboardData?.files;
@@ -151,17 +141,11 @@ const onPasteMessage = e => {
   if (!validFiles.length) return;
 
   e.preventDefault();
+  // Imagem colada vira anexo de verdade, igual qualquer outro arquivo colado —
+  // nunca <img src="data:..."> embutido no HTML da mensagem. O corpo da
+  // mensagem enviado ao backend não renderiza HTML arbitrário, então o base64
+  // apareceria como texto cru no ticket criado.
   validFiles.forEach(file => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        insertImageAtCursor(reader.result);
-        onMessageInput();
-      };
-      reader.readAsDataURL(file);
-      return;
-    }
-
     pasteAttachmentId.value += 1;
     onFileUpload({
       file,
@@ -213,7 +197,7 @@ const canSubmit = computed(
   () =>
     !!formState.contact &&
     !!formState.team &&
-    messageHasContent.value &&
+    (messageHasContent.value || attachedFiles.value.length > 0) &&
     !!targetInbox.value
 );
 
