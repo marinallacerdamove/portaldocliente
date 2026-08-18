@@ -7,7 +7,15 @@ class MessageContentPresenter < SimpleDelegator
     ).render
   end
 
+  # Canais de API (ex.: integrações externas como o Portal do Cliente) não
+  # têm um renderizador próprio de entrega (diferente de e-mail/WhatsApp/
+  # etc., que já têm um serviço de "send"), então o único lugar onde o
+  # conteúdo chega até eles é esse webhook genérico. Sem isso, imagem/negrito
+  # da assinatura do agente chegavam como markdown cru (`![arquivo.png](url)`,
+  # `**negrito**`) em vez de HTML de verdade.
   def webhook_content
+    return outgoing_content if conversation.inbox.channel_type == 'Channel::Api'
+
     Messages::WebhookContentNormalizer.normalize(content_with_survey_link)
   end
 
