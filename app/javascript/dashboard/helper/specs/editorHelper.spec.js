@@ -164,13 +164,24 @@ describe('stripUnsupportedMarkdown', () => {
     expect(result).toContain('[link](http://example.com)');
     expect(result).toContain('![](http://localhost:3000/image.png)');
   });
-  it('strips images but keeps bold/italic for Api channel', () => {
+  it('keeps images and bold/italic, but strips link syntax, for Api channel', () => {
     const result = stripUnsupportedMarkdown(richSignature, 'Channel::Api');
     expect(result).toContain('**Bold**');
     expect(result).toContain('_italic_');
     expect(result).toContain('link'); // link text kept
     expect(result).not.toContain('[link]('); // link syntax removed
-    expect(result).not.toContain('![]('); // image removed
+    expect(result).toContain('![](http://localhost:3000/image.png)'); // image kept
+  });
+  // Regression: the link-strip pattern used to match the `[]()` half of
+  // `![]()` too (no `!`-exclusion), so on a channel that keeps image but not
+  // link, an already-preserved image got mangled into "!: <url>" text.
+  it('does not mangle a preserved image into "!: url" when link is unsupported but image is', () => {
+    const result = stripUnsupportedMarkdown(
+      '![](http://localhost:3000/image.png)',
+      'Channel::Api'
+    );
+    expect(result).toBe('![](http://localhost:3000/image.png)');
+    expect(result).not.toContain('!:');
   });
   it('strips images but keeps bold/italic/link for Telegram channel', () => {
     const result = stripUnsupportedMarkdown(richSignature, 'Channel::Telegram');
@@ -259,9 +270,9 @@ describe('appendSignature with channelType', () => {
     );
     expect(result).toContain('![](http://localhost:3000/image.png');
   });
-  it('strips images but keeps text for Api channel', () => {
+  it('keeps images for Api channel', () => {
     const result = appendSignature('Hello', signatureWithImage, 'Channel::Api');
-    expect(result).not.toContain('![](');
+    expect(result).toContain('![](http://localhost:3000/image.png');
     expect(result).toContain('Thanks');
   });
   it('strips images but keeps text for WhatsApp channel', () => {

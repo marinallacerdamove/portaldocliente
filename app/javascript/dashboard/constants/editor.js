@@ -275,9 +275,14 @@ export const MARKDOWN_PATTERNS = [
     type: 'link', // PM: link
     patterns: [
       // Escape-aware label + URL captures so a \] or \) can't cut the match
-      // short and leave link markup that crashes the re-parse.
+      // short and leave link markup that crashes the re-parse. Excludes a
+      // leading `!` so this never touches `![alt](url)` image syntax — for
+      // a channel that supports image but not link (eg. Channel::Api),
+      // this pattern still runs (link isn't supported) and would otherwise
+      // mangle the `[alt](url)` half of an already-preserved image into
+      // "!: url" plain text.
       {
-        pattern: /\[((?:\\.|[^\]\\])*)\]\(((?:\\.|[^)\\])*)\)/g,
+        pattern: /(?<!!)\[((?:\\.|[^\]\\])*)\]\(((?:\\.|[^)\\])*)\)/g,
         replacement: flattenLink,
       },
       { pattern: /<([a-zA-Z][a-zA-Z0-9+.-]*:[^\s>]+)>/g, replacement: '$1' }, // <https://...>, <mailto:...>, <tel:...>, <ftp://...>, etc
