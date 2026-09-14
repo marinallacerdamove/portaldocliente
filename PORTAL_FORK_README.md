@@ -62,6 +62,7 @@ modificamos:
 - `app/javascript/dashboard/routes/dashboard/conversation/contact/ContactInfo.vue`
 - `app/javascript/dashboard/routes/dashboard/conversation/customAttributes/CustomAttributes.vue`
 - `app/javascript/dashboard/components/widgets/conversation/MoreActions.vue`
+- `app/javascript/dashboard/components/widgets/conversation/ConversationHeader.vue`
 - `app/javascript/dashboard/components-next/sidebar/Sidebar.vue`
 - `app/javascript/dashboard/composables/useUISettings.js`
 - `app/javascript/dashboard/store/modules/contactConversations.js`
@@ -95,6 +96,13 @@ Vários desses recursos dependem de `CustomAttributeDefinition`s que **não faze
 código-fonte** — foram criadas diretamente no banco via Rails console (servico, liberacoes,
 issue_jira, decisao_po, status_cobranca, data_entrega, data_atualizacao_sistema, categoria,
 ticket_pai_id, ticket_filhos_ids, classificacao_cliente, produto, sla_horas, prazo_resolucao,
-ticket_id_externo, tipo_de_solicitao, visivel_parceiro, motivo_encerramento). Uma atualização
-de versão do Chatwoot **não afeta esses dados** (ficam no Postgres, não no código), só o
-código-fonte deste fork é que precisa do merge acima.
+ticket_id_externo, tipo_de_solicitao, visivel_parceiro, motivo_encerramento, ticket_id, assunto).
+Uma atualização de versão do Chatwoot **não afeta esses dados** (ficam no Postgres, não no
+código), só o código-fonte deste fork é que precisa do merge acima.
+
+`ticket_id` e `assunto` (2026-09-14) existem só na conta 1 (Move Tecnologia) até esse commit —
+**foram replicadas manualmente nas contas 2 e 3 também** (Plus Consultoria, Exact Sistemas) na
+mesma sessão que criou o atributo, mas de forma geral: contas novas precisam ter esses
+`CustomAttributeDefinition`s recriados manualmente, não é automático. Ver
+`docs/chatwoot_integration.md` no Portal (`backend/../docs`) se existir um registro consolidado
+de quais atributos cada conta tem.

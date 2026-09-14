@@ -47,7 +47,7 @@ services:
     command: ["redis-server", "--save", "60", "1"]
 
   rails:
-    image: chatwoot-custom:v4.16.2-ticketmodal9
+    image: chatwoot-custom:v4.16.2-ticketmodal21
     container_name: chatwoot-rails-1
     restart: always
     logging: *default-logging
@@ -62,7 +62,7 @@ services:
       - redis
 
   sidekiq:
-    image: chatwoot-custom:v4.16.2-ticketmodal9
+    image: chatwoot-custom:v4.16.2-ticketmodal21
     container_name: chatwoot-sidekiq-1
     restart: always
     logging: *default-logging
