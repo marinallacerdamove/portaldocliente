@@ -9,14 +9,25 @@ import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import ContactDetailsItem from './ContactDetailsItem.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 
 const { t } = useI18n();
 const store = useStore();
 const route = useRoute();
+const { getPlainText } = useMessageFormatter();
 
 const currentChat = useMapGetter('getSelectedChat');
 const teams = useMapGetter('teams/getTeams');
 const agentsList = useMapGetter('agents/getAgents');
+const inboxes = useMapGetter('inboxes/getInboxes');
+
+// Sem fallback pra outra caixa de propósito: um ticket pai/filho novo tem
+// que ir sempre pra "Tickets Internos", nunca herdar a caixa da conversa
+// original (que normalmente é Portal do Cliente) - senão dispara automação
+// de cliente por engano, igual aconteceu antes dessa correção.
+const targetInbox = computed(() =>
+  inboxes.value.find(inbox => inbox.name === 'Tickets Internos')
+);
 
 const dialogRef = ref(null);
 const linkMode = ref(null);
@@ -30,7 +41,10 @@ const isLinkingExisting = ref(false);
 const isCreatingInternalTicket = ref(false);
 
 const canCreateInternalTicket = computed(
-  () => !!internalTicketTeam.value && !!internalTicketMessage.value.trim()
+  () =>
+    !!internalTicketTeam.value &&
+    !!internalTicketMessage.value.trim() &&
+    !!targetInbox.value
 );
 const showCreateForm = computed(
   () => linkMode.value === 'newChild' || linkMode.value === 'newParent'
@@ -75,6 +89,11 @@ const onSelectInternalTicketAgent = selectedAgent => {
   if (matchingTeam) {
     internalTicketTeam.value = matchingTeam;
   }
+};
+
+const messagePreview = result => {
+  const content = result.message && result.message.content;
+  return content ? getPlainText(content) : '';
 };
 
 const searchExistingTicket = async () => {
@@ -151,12 +170,14 @@ const linkExistingTicket = async pickedSummary => {
 
 const onCreateInternalTicket = async () => {
   const targetTeam = internalTicketTeam.value;
-  if (!targetTeam || !internalTicketMessage.value.trim()) return;
+  if (!targetTeam || !internalTicketMessage.value.trim() || !targetInbox.value)
+    return;
 
   const conv = currentChat.value;
   const accountId = route.params.accountId;
   const isParentMode = linkMode.value === 'newParent';
   const relationLabel = isParentMode ? 'pai' : 'filho';
+  const assunto = `Ticket ${relationLabel} · ${targetTeam.name}`;
   const protocolo = (conv.custom_attributes || {}).ticket_id_externo;
   const originalUrl = `${window.location.origin}/app/accounts/${accountId}/conversations/${conv.id}`;
   const content = [
@@ -172,9 +193,9 @@ const onCreateInternalTicket = async () => {
   try {
     const data = await store.dispatch('contactConversations/create', {
       params: {
-        inboxId: conv.inbox_id,
+        inboxId: targetInbox.value.id,
         contactId: conv.meta.sender.id,
-        message: { content },
+        message: { content, private: true },
       },
     });
 
@@ -203,6 +224,7 @@ const onCreateInternalTicket = async () => {
         customAttributes: {
           ...(data.custom_attributes || {}),
           ticket_filhos_ids: String(conv.id),
+          assunto,
         },
       });
     } else {
@@ -211,6 +233,7 @@ const onCreateInternalTicket = async () => {
         customAttributes: {
           ...(data.custom_attributes || {}),
           ticket_pai_id: String(conv.id),
+          assunto,
         },
       });
 
@@ -354,8 +377,8 @@ defineExpose({ open });
           @click="linkExistingTicket(result)"
         >
           <span class="text-n-brand">#{{ result.id }}</span>
-          {{ result.contact ? result.contact.name : '' }} —
-          {{ (result.message && result.message.content) || '' }}
+          {{ result.contact ? result.contact.name : '' }} ·
+          {{ messagePreview(result) }}
         </li>
       </ul>
       <p

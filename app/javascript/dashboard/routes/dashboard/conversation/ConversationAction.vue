@@ -6,17 +6,23 @@ import { useAgentsList } from 'dashboard/composables/useAgentsList';
 import ContactDetailsItem from './ContactDetailsItem.vue';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import ConversationLabels from './labels/LabelBox.vue';
+import CustomAttribute from 'dashboard/components/CustomAttribute.vue';
+import CustomAttributes from './customAttributes/CustomAttributes.vue';
+import LinkedTicketCard from './LinkedTicketCard.vue';
+import { PORTAL_INFO_ATTRIBUTE_KEYS } from 'dashboard/constants/ticketDetailAttributes';
 import { CONVERSATION_PRIORITY } from '../../../../shared/constants/messages';
 import { CONVERSATION_EVENTS } from '../../../helper/AnalyticsHelper/events';
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
-import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 
 export default {
   components: {
     ContactDetailsItem,
     MultiselectDropdown,
     ConversationLabels,
+    CustomAttribute,
+    CustomAttributes,
+    LinkedTicketCard,
     NextButton,
   },
   props: {
@@ -82,6 +88,14 @@ export default {
         { id: '', name: this.$t('CONVERSATION.PRIORITY.OPTIONS.NONE') },
         ...(values || []).map(value => ({ id: value, name: value })),
       ];
+    },
+    categoriaDefinition() {
+      return this.getAttributesByModel('conversation_attribute').find(
+        attr => attr.attribute_key === 'categoria'
+      );
+    },
+    categoriaValue() {
+      return (this.currentChat.custom_attributes || {}).categoria || '';
     },
     hasAnAssignedTeam() {
       return !!this.currentChat?.meta?.team;
@@ -209,6 +223,20 @@ export default {
       const raw = (this.currentChat.custom_attributes || {}).ticket_filhos_ids;
       return raw ? raw.split(',').filter(Boolean) : [];
     },
+    portalInfoAttributeKeys() {
+      return PORTAL_INFO_ATTRIBUTE_KEYS;
+    },
+    // Só mostra o bloco "Informações do Portal do Cliente" quando pelo menos
+    // um desses campos veio preenchido de verdade - ticket criado direto no
+    // Chatwoot (ticket interno) nunca tem nenhum, e mostrar tudo vazio só
+    // polui a tela.
+    hasPortalInfo() {
+      const attrs = this.currentChat.custom_attributes || {};
+      return PORTAL_INFO_ATTRIBUTE_KEYS.some(
+        key =>
+          attrs[key] !== undefined && attrs[key] !== null && attrs[key] !== ''
+      );
+    },
     showSelfAssign() {
       if (!this.assignedAgent) {
         return true;
@@ -276,13 +304,6 @@ export default {
         : selectedPriorityItem;
     },
 
-    goToConversation(id) {
-      const accountId = this.$route.params.accountId;
-      this.$router.push({
-        path: frontendURL(conversationUrl({ accountId, id })),
-      });
-    },
-
     onClickAssignServico(selectedItem) {
       const isSame =
         this.assignedServico && this.assignedServico.id === selectedItem.id;
@@ -290,38 +311,49 @@ export default {
       this.assignedServico = isSame ? this.servicoOptions[0] : selectedItem;
     },
 
+    async onUpdateCategoria(key, value) {
+      const conversationId = this.currentChat.id;
+      const updatedAttributes = {
+        ...(this.currentChat.custom_attributes || {}),
+        [key]: value,
+      };
+      try {
+        await this.$store.dispatch('updateCustomAttributes', {
+          conversationId,
+          customAttributes: updatedAttributes,
+        });
+        useAlert(this.$t('CUSTOM_ATTRIBUTES.FORM.UPDATE.SUCCESS'));
+      } catch (error) {
+        useAlert(this.$t('CUSTOM_ATTRIBUTES.FORM.UPDATE.ERROR'));
+      }
+    },
   },
 };
 </script>
 
 <template>
   <div>
-    <div
-      v-if="ticketPaiId || ticketFilhosIds.length"
-      class="px-2 pt-2 pb-2 flex flex-col gap-1 text-sm"
-    >
-      <div v-if="ticketPaiId">
-        <span class="text-n-slate-11">Ticket Pai: </span>
-        <button
-          type="button"
-          class="text-n-brand underline"
-          @click="goToConversation(ticketPaiId)"
-        >
-          #{{ ticketPaiId }}
-        </button>
-      </div>
-      <div v-if="ticketFilhosIds.length">
-        <span class="text-n-slate-11">Tickets Filhos: </span>
-        <template v-for="(childId, index) in ticketFilhosIds" :key="childId">
-          <button
-            type="button"
-            class="text-n-brand underline"
-            @click="goToConversation(childId)"
-          >
-            #{{ childId }}
-          </button>
-          <span v-if="index < ticketFilhosIds.length - 1">, </span>
-        </template>
+    <div v-if="ticketPaiId || ticketFilhosIds.length">
+      <ContactDetailsItem
+        compact
+        :title="$t('CONVERSATION_SIDEBAR.LINKED_TICKETS.SECTION_TITLE')"
+      />
+      <div class="flex flex-col gap-1.5 px-2 pb-2">
+        <LinkedTicketCard
+          v-if="ticketPaiId"
+          :conversation-id="ticketPaiId"
+          :relation-label="
+            $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.PARENT_LABEL')
+          "
+        />
+        <LinkedTicketCard
+          v-for="childId in ticketFilhosIds"
+          :key="childId"
+          :conversation-id="childId"
+          :relation-label="
+            $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.CHILD_LABEL')
+          "
+        />
       </div>
     </div>
     <div>
@@ -341,6 +373,18 @@ export default {
           $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
         "
         @select="onClickAssignServico"
+      />
+    </div>
+    <div v-if="categoriaDefinition">
+      <CustomAttribute
+        attribute-key="categoria"
+        :attribute-type="categoriaDefinition.attribute_display_type"
+        :label="categoriaDefinition.attribute_display_name"
+        :description="categoriaDefinition.attribute_description"
+        :attribute-regex="categoriaDefinition.regex_pattern"
+        :regex-cue="categoriaDefinition.regex_cue"
+        :value="categoriaValue"
+        @update="onUpdateCategoria"
       />
     </div>
     <div>
@@ -417,5 +461,21 @@ export default {
       :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_LABELS')"
     />
     <ConversationLabels :conversation-id="conversationId" />
+
+    <div
+      v-if="hasPortalInfo"
+      class="mt-1 border-t-2 border-n-blue-6 bg-n-blue-1 dark:bg-n-solid-2"
+    >
+      <p
+        class="px-2 pt-2 text-[11px] font-semibold uppercase tracking-wide text-n-blue-11"
+      >
+        {{ $t('CONVERSATION_SIDEBAR.ACCORDION.PORTAL_INFO') }}
+      </p>
+      <CustomAttributes
+        attribute-type="conversation_attribute"
+        attribute-from="conversation_portal_info_panel"
+        :include-keys="portalInfoAttributeKeys"
+      />
+    </div>
   </div>
 </template>

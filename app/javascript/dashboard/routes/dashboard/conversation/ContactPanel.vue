@@ -26,7 +26,6 @@ import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/I
 import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
 import {
   TICKET_DETAIL_ATTRIBUTE_KEYS,
-  PORTAL_INFO_ATTRIBUTE_KEYS,
   ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS,
 } from 'dashboard/constants/ticketDetailAttributes';
 
@@ -245,23 +244,6 @@ onMounted(() => {
                 attribute-type="conversation_attribute"
                 attribute-from="conversation_ticket_details_panel"
                 :include-keys="TICKET_DETAIL_ATTRIBUTE_KEYS"
-              />
-            </AccordionItem>
-          </div>
-          <div v-else-if="element.name === 'portal_info'">
-            <AccordionItem
-              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.PORTAL_INFO')"
-              icon="briefcase-outline"
-              :is-open="isContactSidebarItemOpen('is_portal_info_open')"
-              compact
-              @toggle="
-                value => toggleSidebarUIState('is_portal_info_open', value)
-              "
-            >
-              <CustomAttributes
-                attribute-type="conversation_attribute"
-                attribute-from="conversation_portal_info_panel"
-                :include-keys="PORTAL_INFO_ATTRIBUTE_KEYS"
               />
             </AccordionItem>
           </div>

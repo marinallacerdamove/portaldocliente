@@ -4,10 +4,13 @@ import ConversationApi from '../../api/conversations';
 import camelcaseKeys from 'camelcase-keys';
 
 export const createMessagePayload = (payload, message) => {
-  const { content, cc_emails, bcc_emails } = message;
+  const { content, cc_emails, bcc_emails, private: isPrivate } = message;
   payload.append('message[content]', content);
   if (cc_emails) payload.append('message[cc_emails]', cc_emails);
   if (bcc_emails) payload.append('message[bcc_emails]', bcc_emails);
+  // Nota privada: cria a conversa sem notificar/mostrar pro contato (ver
+  // Messages::MessageBuilder no backend, que já suporta esse parâmetro).
+  if (isPrivate) payload.append('message[private]', true);
 };
 
 export const createConversationPayload = ({ params, contactId, files }) => {
@@ -25,7 +28,7 @@ export const createConversationPayload = ({ params, contactId, files }) => {
   payload.append('inbox_id', inboxId);
   payload.append('contact_id', contactId);
   // FormData.append coerces `undefined` to the literal string "undefined",
-  // which the backend would then treat as a real (colliding) value —
+  // which the backend would then treat as a real (colliding) value -
   // only send these when the caller actually provided one.
   if (sourceId) {
     payload.append('source_id', sourceId);

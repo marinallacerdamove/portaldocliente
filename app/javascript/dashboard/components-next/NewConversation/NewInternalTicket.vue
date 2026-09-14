@@ -18,6 +18,7 @@ import {
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
 import AttachmentPreviews from 'dashboard/components-next/NewConversation/components/AttachmentPreviews.vue';
 
 const { t } = useI18n();
@@ -35,9 +36,12 @@ const teams = useMapGetter('teams/getTeams');
 const inboxes = useMapGetter('inboxes/getInboxes');
 const getAttributesByModel = useMapGetter('attributes/getAttributesByModel');
 
-const targetInbox = computed(
-  () =>
-    inboxes.value.find(inbox => inbox.name === 'Parceiros') || inboxes.value[0]
+// Sem fallback pra inboxes.value[0] de propósito: cair silenciosamente em
+// outra caixa (ex: Portal do Cliente) faria um ticket interno disparar
+// automações de cliente por engano. Se "Tickets Internos" não existir ou
+// ainda não tiver carregado, canSubmit trava o envio (ver abaixo).
+const targetInbox = computed(() =>
+  inboxes.value.find(inbox => inbox.name === 'Tickets Internos')
 );
 
 const attrOptions = key => {
@@ -118,6 +122,11 @@ const emptyForm = () => ({
   ccAgentIds: [],
   subject: '',
   message: '',
+  // Padrão desligado: por ser o fluxo de "ticket interno", a mensagem
+  // inicial nasce como nota privada (não notifica/não aparece pro
+  // cliente) - quem cria escolhe ligar se quiser que o cliente veja
+  // desta vez.
+  visibleToClient: false,
 });
 
 const formState = reactive(emptyForm());
@@ -141,7 +150,7 @@ const onPasteMessage = e => {
   if (!validFiles.length) return;
 
   e.preventDefault();
-  // Imagem colada vira anexo de verdade, igual qualquer outro arquivo colado —
+  // Imagem colada vira anexo de verdade, igual qualquer outro arquivo colado -
   // nunca <img src="data:..."> embutido no HTML da mensagem. O corpo da
   // mensagem enviado ao backend não renderiza HTML arbitrário, então o base64
   // apareceria como texto cru no ticket criado.
@@ -230,7 +239,10 @@ const onSubmit = async () => {
       params: {
         inboxId: targetInbox.value.id,
         contactId: formState.contact.id,
-        message: { content: contentLines.join('\n\n') },
+        message: {
+          content: contentLines.join('\n\n'),
+          private: !formState.visibleToClient,
+        },
         files: prepareAttachmentPayload(attachedFiles.value, false),
       },
     });
@@ -255,6 +267,8 @@ const onSubmit = async () => {
     }
 
     const customAttributes = {};
+    if (formState.subject.trim())
+      customAttributes.assunto = formState.subject.trim();
     if (formState.servico?.id) customAttributes.servico = formState.servico.id;
     if (formState.categoria.trim())
       customAttributes.categoria = formState.categoria.trim();
@@ -590,6 +604,19 @@ defineExpose({ open });
       </div>
 
       <div class="flex flex-col gap-3">
+        <div
+          class="flex items-start gap-2 p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2"
+        >
+          <Switch v-model="formState.visibleToClient" class="mt-0.5" />
+          <div>
+            <p class="text-sm text-n-slate-12">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_LABEL') }}
+            </p>
+            <p class="text-xs text-n-slate-11">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_HELP') }}
+            </p>
+          </div>
+        </div>
         <div>
           <p class="text-xs text-n-slate-11 mb-1">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SUBJECT_LABEL') }}

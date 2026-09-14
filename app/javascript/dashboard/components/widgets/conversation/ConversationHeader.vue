@@ -105,6 +105,17 @@ const copyConversationId = async () => {
     // error
   }
 };
+
+// Assunto e ID (sequencial, o mesmo "#74" que aparece na lista do Portal do
+// Cliente) só existem em conversas sincronizadas do Portal - ausentes em
+// outros canais (WhatsApp, Instagram etc.), por isso os dois ficam ocultos
+// quando não vierem.
+const ticketSubject = computed(
+  () => props.chat.custom_attributes?.assunto || ''
+);
+const ticketPortalId = computed(
+  () => props.chat.custom_attributes?.ticket_id || ''
+);
 </script>
 
 <template>
@@ -146,6 +157,20 @@ const copyConversationId = async () => {
         </div>
 
         <div
+          v-if="ticketSubject"
+          class="flex items-center gap-1 max-w-full overflow-hidden text-xs text-n-slate-11"
+        >
+          <span
+            v-if="ticketPortalId"
+            class="font-medium text-n-slate-12 shrink-0"
+            >{{ $t('CONVERSATION.HEADER.PORTAL_TICKET_ID_PREFIX') }} #{{
+              ticketPortalId
+            }}</span
+          >
+          <span class="truncate">{{ ticketSubject }}</span>
+        </div>
+
+        <div
           class="flex items-center gap-1 overflow-hidden text-xs conversation--header--actions text-n-slate-11 text-ellipsis whitespace-nowrap"
         >
           <button
@@ -153,7 +178,12 @@ const copyConversationId = async () => {
             class="truncate text-label-small text-n-slate-11 hover:text-n-slate-12 !p-0 cucursor-pointer"
             @click="copyConversationId"
           >
-            {{ `#${chat.id}` }}
+            <template v-if="ticketSubject"
+              >{{ $t('CONVERSATION.HEADER.CHATWOOT_ID_PREFIX') }} #{{
+                chat.id
+              }}</template
+            >
+            <template v-else>{{ `#${chat.id}` }}</template>
           </button>
           <span v-if="hasMultipleInboxes">•</span>
           <InboxName v-if="hasMultipleInboxes" :inbox="inbox" class="!mx-0" />
