@@ -1,18 +1,63 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseBubble from 'next/message/bubbles/Base.vue';
 import FormattedContent from './FormattedContent.vue';
 import AttachmentChips from 'next/message/chips/AttachmentChips.vue';
 import TranslationToggle from 'dashboard/components-next/message/TranslationToggle.vue';
+import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
+import NextButton from 'dashboard/components-next/button/Button.vue';
 import { MESSAGE_TYPES } from '../../constants';
 import { useMessageContext } from '../../provider.js';
 import { useTranslations } from 'dashboard/composables/useTranslations';
+import { useStore } from 'dashboard/composables/store';
+import { useAlert } from 'dashboard/composables';
 
-const { content, attachments, contentAttributes, messageType } =
-  useMessageContext();
+const {
+  content,
+  attachments,
+  contentAttributes,
+  messageType,
+  id,
+  conversationId,
+  isEditing,
+} = useMessageContext();
 
 const { hasTranslations, translationContent } =
   useTranslations(contentAttributes);
+
+const { t } = useI18n();
+const store = useStore();
+
+const editDraft = ref('');
+const savingEdit = ref(false);
+
+watch(isEditing, editing => {
+  if (editing) editDraft.value = content.value;
+});
+
+async function saveEdit() {
+  const trimmed = editDraft.value.trim();
+  if (!trimmed) return;
+
+  savingEdit.value = true;
+  try {
+    await store.dispatch('editMessage', {
+      conversationId: conversationId.value,
+      messageId: id.value,
+      content: trimmed,
+    });
+    isEditing.value = false;
+  } catch (error) {
+    useAlert(t('CONVERSATION.FAIL_EDIT_MESSAGE'));
+  } finally {
+    savingEdit.value = false;
+  }
+}
+
+function cancelEdit() {
+  isEditing.value = false;
+}
 
 const renderOriginal = ref(false);
 
@@ -43,11 +88,34 @@ const handleSeeOriginal = () => {
 
 <template>
   <BaseBubble class="px-4 py-3" data-bubble-name="text">
-    <div class="gap-3 flex flex-col">
+    <div v-if="isEditing" class="gap-2 flex flex-col min-w-64">
+      <TextArea v-model="editDraft" auto-height :disabled="savingEdit" />
+      <div class="flex items-center justify-end gap-2">
+        <NextButton
+          :label="$t('CONVERSATION.CONTEXT_MENU.EDIT_MESSAGE.CANCEL')"
+          ghost
+          slate
+          sm
+          :disabled="savingEdit"
+          @click="cancelEdit"
+        />
+        <NextButton
+          :label="$t('CONVERSATION.CONTEXT_MENU.EDIT_MESSAGE.SAVE')"
+          sm
+          :is-loading="savingEdit"
+          :disabled="!editDraft.trim() || savingEdit"
+          @click="saveEdit"
+        />
+      </div>
+    </div>
+    <div v-else class="gap-3 flex flex-col">
       <span v-if="isEmpty" class="text-n-slate-11">
         {{ $t('CONVERSATION.NO_CONTENT') }}
       </span>
       <FormattedContent v-if="renderContent" :content="renderContent" />
+      <span v-if="contentAttributes.editedAt" class="text-xs text-n-slate-11">
+        {{ $t('CONVERSATION.EDITED') }}
+      </span>
       <TranslationToggle
         v-if="hasTranslations"
         class="-mt-3"

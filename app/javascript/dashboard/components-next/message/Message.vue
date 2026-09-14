@@ -143,16 +143,29 @@ const emit = defineEmits(['retry']);
 const contextMenuPosition = ref({});
 const showBackgroundHighlight = ref(false);
 const showContextMenu = ref(false);
+const isEditing = ref(false);
 const { t } = useI18n();
 const route = useRoute();
 const inboxGetter = useMapGetter('inboxes/getInbox');
 const inbox = computed(() => inboxGetter.value(props.inboxId) || {});
 const isOnChatwootCloud = useMapGetter('globalConfig/isOnChatwootCloud');
 const { replaceInstallationName } = useBranding();
+const currentUserIdGetter = useMapGetter('getCurrentUserID');
+const currentRoleGetter = useMapGetter('getCurrentRole');
+const isAdmin = computed(() => currentRoleGetter.value === 'administrator');
 
 const isCaptainMessage = computed(() => {
   const senderType = props.sender?.type ?? props.senderType;
   return senderType === SENDER_TYPES.CAPTAIN_ASSISTANT;
+});
+
+const isOwnMessage = computed(() => {
+  const senderType = props.sender?.type ?? props.senderType;
+  const senderId = props.senderId ?? props.sender?.id;
+  return (
+    senderType?.toLowerCase() === SENDER_TYPES.USER.toLowerCase() &&
+    senderId === currentUserIdGetter.value
+  );
 });
 
 /**
@@ -396,6 +409,17 @@ const contextMenuEnabledOptions = computed(() => {
       !props.private &&
       props.inboxSupportsReplyTo.outgoing &&
       !isFailedOrProcessing,
+    // componentToRender === TextBubble garante que o balão que vai
+    // renderizar de verdade sabe entrar em modo de edição — em email/CSAT/
+    // formulário/ligação o texto exibido não é o conteúdo editável de
+    // verdade, então "Editar" não pode aparecer pra esses tipos.
+    edit:
+      isOutgoing &&
+      hasText &&
+      !isMessageDeleted.value &&
+      !isFailedOrProcessing &&
+      componentToRender.value === TextBubble &&
+      (isAdmin.value || isOwnMessage.value),
     report:
       isOnChatwootCloud.value &&
       isCaptainMessage.value &&
@@ -525,6 +549,7 @@ provideMessageContext({
   orientation,
   isBotOrAgentMessage,
   shouldGroupWithNext,
+  isEditing,
 });
 </script>
 
@@ -596,6 +621,7 @@ provideMessageContext({
         @open="openContextMenu"
         @close="closeContextMenu"
         @reply-to="handleReplyTo"
+        @edit="isEditing = true"
       />
     </div>
   </div>

@@ -1,5 +1,12 @@
 class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::Conversations::BaseController
-  before_action :ensure_api_inbox, only: :update
+  # Editar o conteúdo é uma ação separada de atualizar o status (essa sim
+  # restrita a inbox de API) — só cai no ensure_api_inbox quando o pedido é
+  # de status, senão editar mensagem de um inbox normal (email/whatsapp/
+  # widget) ficaria bloqueado à toa. Usa a MESMA condição (content_edit?)
+  # do branch em `update` — checar coisas diferentes aqui e lá permitia um
+  # pedido com `content` em branco escapar do ensure_api_inbox de um jeito
+  # e do authorize de outro.
+  before_action :ensure_api_inbox, only: :update, unless: :content_edit?
 
   def index
     @messages = message_finder.perform
@@ -14,7 +21,16 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def update
-    Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
+    if content_edit?
+      authorize message, :update?
+      content = permitted_params[:content].to_s.strip
+      return render json: { error: 'Content cannot be blank' }, status: :unprocessable_entity if content.blank?
+
+      updated = Messages::ContentUpdateService.new(message, content).perform
+      return render json: { error: 'This message cannot be edited' }, status: :unprocessable_entity unless updated
+    else
+      Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
+    end
     @message = message
   end
 
@@ -68,7 +84,15 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def permitted_params
-    params.permit(:id, :target_language, :status, :external_error)
+    params.permit(:id, :target_language, :status, :external_error, :content)
+  end
+
+  # Usa a presença da chave (não .present?) de propósito — um `content` em
+  # branco/só espaço ainda precisa passar pelo authorize e pela validação
+  # explícita em `update`, em vez de cair no branch de status (que aceitaria
+  # silenciosamente, sem checar permissão nenhuma).
+  def content_edit?
+    params.key?(:content)
   end
 
   def already_translated_content_available?

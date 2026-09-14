@@ -379,5 +379,89 @@ RSpec.describe 'Conversation Messages API', type: :request do
         end
       end
     end
+
+    context 'when editing message content' do
+      let(:inbox) { create(:inbox, account: account) }
+      let!(:conversation) { create(:conversation, inbox: inbox, account: account) }
+      let(:agent) { create(:user, account: account, role: :agent) }
+      let(:other_agent) { create(:user, account: account, role: :agent) }
+      let(:admin) { create(:user, account: account, role: :administrator) }
+      let!(:message) do
+        create(:message, conversation: conversation, account: account, message_type: :outgoing, sender: agent, content: 'Original')
+      end
+
+      before do
+        create(:inbox_member, inbox: inbox, user: agent)
+        create(:inbox_member, inbox: inbox, user: other_agent)
+      end
+
+      it 'lets the sender edit their own message, without requiring an API inbox' do
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: message.id
+        ), params: { content: 'Corrigido' }, headers: agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(message.reload.content).to eq('Corrigido')
+        expect(message.content_attributes['edited_at']).to be_present
+      end
+
+      it 'lets an administrator edit any message' do
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: message.id
+        ), params: { content: 'Corrigido pelo admin' }, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(message.reload.content).to eq('Corrigido pelo admin')
+      end
+
+      it "does not let another agent edit someone else's message" do
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: message.id
+        ), params: { content: 'Tentativa indevida' }, headers: other_agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(message.reload.content).to eq('Original')
+      end
+
+      it 'does not let editing an incoming (contact) message' do
+        contact_message = create(:message, conversation: conversation, account: account, message_type: :incoming, content: 'Do cliente')
+
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: contact_message.id
+        ), params: { content: 'Alterado' }, headers: admin.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(contact_message.reload.content).to eq('Do cliente')
+      end
+
+      it 'rejects blank/whitespace-only content without silently succeeding' do
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: message.id
+        ), params: { content: '   ' }, headers: agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(message.reload.content).to eq('Original')
+      end
+
+      it "still requires authorization for a blank content edit (does not fall through to the status branch)" do
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: message.id
+        ), params: { content: '' }, headers: other_agent.create_new_auth_token, as: :json
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
   end
 end
