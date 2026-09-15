@@ -19,6 +19,7 @@ import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
+import Label from 'dashboard/components-next/label/Label.vue';
 import AttachmentPreviews from 'dashboard/components-next/NewConversation/components/AttachmentPreviews.vue';
 
 const { t } = useI18n();
@@ -609,10 +610,16 @@ defineExpose({ open });
         >
           <Switch v-model="formState.visibleToClient" class="mt-0.5" />
           <div>
-            <p class="text-sm text-n-slate-12">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_LABEL') }}
-            </p>
-            <p class="text-xs text-n-slate-11">
+            <Label
+              :label="
+                formState.visibleToClient
+                  ? t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_BADGE')
+                  : t('NEW_INTERNAL_TICKET_DIALOG.INTERNAL_TICKET_BADGE')
+              "
+              :color="formState.visibleToClient ? 'teal' : 'amber'"
+              compact
+            />
+            <p class="text-xs text-n-slate-11 mt-1">
               {{ t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_HELP') }}
             </p>
           </div>
