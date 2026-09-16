@@ -557,7 +557,6 @@
     "SELECTED_LABEL_WITH_COMPANY": "Selected: {name} · {company}",
     "SELECT_PLACEHOLDER": "Select",
     "INBOX_LABEL": "Inbox",
-    "CATEGORIA_LABEL": "Category",
     "URGENCIA_LABEL": "Urgency",
     "PREVISAO_LABEL": "Resolution forecast",
     "RESPONSIBLE_LABEL": "Assignee (Agent)",

@@ -12,8 +12,10 @@ export const TICKET_DETAIL_ATTRIBUTE_KEYS = Object.freeze([
 
 // Conversation custom attribute keys that come from the Portal do Cliente
 // ticket sync, shown in their own "Informações do Portal do Cliente" section.
+// 'ticket_id' fica de fora de propósito - já aparece sozinho no cabeçalho da
+// conversa (ConversationHeader.vue) como "#74"; listar de novo aqui duplicava
+// o mesmo número na tela.
 export const PORTAL_INFO_ATTRIBUTE_KEYS = Object.freeze([
-  'ticket_id',
   'assunto',
   'produto',
   'sla_horas',
@@ -37,6 +39,11 @@ export const TICKET_LINK_ATTRIBUTE_KEYS = Object.freeze([
   'ticket_filhos_ids',
 ]);
 
+// Rendered no cabeçalho da conversa (ConversationHeader.vue), não na barra
+// lateral - ainda precisa ficar fora de "Informação da conversa"/"Informações
+// do Portal do Cliente" pra não duplicar o mesmo número na tela.
+export const HEADER_ATTRIBUTE_KEYS = Object.freeze(['ticket_id']);
+
 // Every conversation_attribute key that has a dedicated home elsewhere in the
 // sidebar - used to decide whether "Informação da conversa" has anything
 // left to show at all.
@@ -46,4 +53,5 @@ export const ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS = Object.freeze([
   SERVICO_ATTRIBUTE_KEY,
   CATEGORIA_ATTRIBUTE_KEY,
   ...TICKET_LINK_ATTRIBUTE_KEYS,
+  ...HEADER_ATTRIBUTE_KEYS,
 ]);

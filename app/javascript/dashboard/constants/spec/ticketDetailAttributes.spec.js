@@ -2,7 +2,9 @@ import {
   TICKET_DETAIL_ATTRIBUTE_KEYS,
   PORTAL_INFO_ATTRIBUTE_KEYS,
   SERVICO_ATTRIBUTE_KEY,
+  CATEGORIA_ATTRIBUTE_KEY,
   TICKET_LINK_ATTRIBUTE_KEYS,
+  HEADER_ATTRIBUTE_KEYS,
   ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS,
 } from 'dashboard/constants/ticketDetailAttributes';
 
@@ -21,12 +23,22 @@ describe('ticketDetailAttributes', () => {
     expect(TICKET_DETAIL_ATTRIBUTE_KEYS).not.toContain(SERVICO_ATTRIBUTE_KEY);
   });
 
+  it('does not list ticket_id under PORTAL_INFO_ATTRIBUTE_KEYS', () => {
+    // ticket_id already renders in ConversationHeader.vue ("#74") - listing
+    // it again in the "Informações do Portal do Cliente" panel duplicated
+    // the same number on screen.
+    expect(PORTAL_INFO_ATTRIBUTE_KEYS).not.toContain('ticket_id');
+    expect(HEADER_ATTRIBUTE_KEYS).toContain('ticket_id');
+  });
+
   it('combines every curated group into ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS with no duplicates', () => {
     const expected = [
       ...TICKET_DETAIL_ATTRIBUTE_KEYS,
       ...PORTAL_INFO_ATTRIBUTE_KEYS,
       SERVICO_ATTRIBUTE_KEY,
+      CATEGORIA_ATTRIBUTE_KEY,
       ...TICKET_LINK_ATTRIBUTE_KEYS,
+      ...HEADER_ATTRIBUTE_KEYS,
     ];
 
     expect(ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS).toEqual(expected);

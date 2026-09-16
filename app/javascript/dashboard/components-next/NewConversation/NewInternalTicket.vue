@@ -112,7 +112,6 @@ const emptyForm = () => ({
   contact: null,
   inbox: defaultInbox.value || null,
   servico: NONE_OPTION.value,
-  categoria: '',
   urgencia: urgenciaOptions.value[0],
   prazoResolucao: '',
   agent: null,
@@ -145,7 +144,45 @@ const onMessageInput = () => {
   formState.message = messageEditorRef.value?.innerHTML || '';
 };
 
+// Preview local (blob:) da imagem colada, inserido no ponto do cursor pra
+// dar a mesma sensação do editor do Portal - "a imagem fica no corpo da
+// mensagem" enquanto escreve. A URL blob: só existe nesta aba, então essa
+// tag <img> é removida do texto no onSubmit (stripPastePreviews); o arquivo
+// de verdade sempre viaja como anexo real (onFileUpload abaixo), que é quem
+// garante que a imagem apareça de fato pra quem for ver o ticket depois.
 const pasteAttachmentId = ref(0);
+const pastedImagePreviews = [];
+const PASTE_PREVIEW_ATTR = 'data-paste-preview-key';
+
+function insertImageAtCursor(url, key) {
+  const editor = messageEditorRef.value;
+  if (!editor) return;
+  editor.focus();
+
+  const img = document.createElement('img');
+  img.src = url;
+  img.setAttribute(PASTE_PREVIEW_ATTR, key);
+  img.className = 'max-w-full max-h-64 rounded-md my-1 align-middle';
+
+  const selection = window.getSelection();
+  const range =
+    selection?.rangeCount > 0 && editor.contains(selection.anchorNode)
+      ? selection.getRangeAt(0)
+      : (() => {
+          const r = document.createRange();
+          r.selectNodeContents(editor);
+          r.collapse(false);
+          return r;
+        })();
+
+  range.deleteContents();
+  range.insertNode(img);
+  range.setStartAfter(img);
+  range.setEndAfter(img);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
 const onPasteMessage = e => {
   const files = e.clipboardData?.files;
   if (!files?.length) return;
@@ -154,21 +191,33 @@ const onPasteMessage = e => {
   if (!validFiles.length) return;
 
   e.preventDefault();
-  // Imagem colada vira anexo de verdade, igual qualquer outro arquivo colado -
-  // nunca <img src="data:..."> embutido no HTML da mensagem. O corpo da
-  // mensagem enviado ao backend não renderiza HTML arbitrário, então o base64
-  // apareceria como texto cru no ticket criado.
+
   validFiles.forEach(file => {
     pasteAttachmentId.value += 1;
+    const id = `paste-attachment-${pasteAttachmentId.value}`;
+
+    if (file.type.startsWith('image/')) {
+      const previewUrl = URL.createObjectURL(file);
+      pastedImagePreviews.push({ key: id, url: previewUrl });
+      insertImageAtCursor(previewUrl, id);
+      onMessageInput();
+    }
+
     onFileUpload({
       file,
       name: file.name,
       type: file.type,
       size: file.size,
-      id: `paste-attachment-${pasteAttachmentId.value}`,
+      id,
     });
   });
 };
+
+const stripPastePreviews = html =>
+  html.replace(
+    new RegExp(`<img[^>]*${PASTE_PREVIEW_ATTR}="[^"]*"[^>]*>`, 'g'),
+    ''
+  );
 
 onMounted(() => {
   store.dispatch('agents/get');
@@ -224,6 +273,8 @@ const canSubmit = computed(
 );
 
 const reset = () => {
+  pastedImagePreviews.forEach(preview => URL.revokeObjectURL(preview.url));
+  pastedImagePreviews.length = 0;
   Object.assign(formState, emptyForm());
   query.value = '';
   results.value = [];
@@ -245,7 +296,10 @@ const onSubmit = async () => {
 
   const contentLines = [];
   if (formState.subject.trim()) contentLines.push(formState.subject.trim());
-  contentLines.push(formState.message.trim());
+  // O preview <img src="blob:..."> só existe nesta aba - a imagem de verdade
+  // já viaja como anexo (attachedFiles), então o texto enviado não deve
+  // carregar essa referência local sem sentido pra quem for ler o ticket.
+  contentLines.push(stripPastePreviews(formState.message).trim());
 
   try {
     const data = await store.dispatch('contactConversations/create', {
@@ -283,8 +337,6 @@ const onSubmit = async () => {
     if (formState.subject.trim())
       customAttributes.assunto = formState.subject.trim();
     if (formState.servico?.id) customAttributes.servico = formState.servico.id;
-    if (formState.categoria.trim())
-      customAttributes.categoria = formState.categoria.trim();
     if (formState.prazoResolucao)
       customAttributes.prazo_resolucao = formState.prazoResolucao;
     if (formState.liberacoes?.id)
@@ -343,7 +395,7 @@ defineExpose({ open });
     @confirm="onSubmit"
   >
     <div
-      class="grid grid-cols-[26rem_1fr] items-start gap-6 w-full max-h-[80vh] overflow-y-auto pr-1"
+      class="grid grid-cols-1 lg:grid-cols-[26rem_1fr] items-start gap-6 w-full max-h-[80vh] overflow-y-auto pr-1"
     >
       <div class="flex flex-col gap-3">
         <div class="relative">
@@ -424,39 +476,25 @@ defineExpose({ open });
           />
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.CATEGORIA_LABEL') }}
-            </p>
-            <input
-              v-model="formState.categoria"
-              type="text"
-              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
-            />
-          </div>
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL') }}
-            </p>
-            <MultiselectDropdown
-              :options="urgenciaOptions"
-              :selected-item="formState.urgencia"
-              :multiselector-title="
-                t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL')
-              "
-              :multiselector-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-              "
-              :no-search-result="
-                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
-              "
-              :input-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-              "
-              @select="formState.urgencia = $event"
-            />
-          </div>
+        <div>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL') }}
+          </p>
+          <MultiselectDropdown
+            :options="urgenciaOptions"
+            :selected-item="formState.urgencia"
+            :multiselector-title="
+              t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL')
+            "
+            :multiselector-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+            "
+            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+            :input-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+            "
+            @select="formState.urgencia = $event"
+          />
         </div>
 
         <div>
