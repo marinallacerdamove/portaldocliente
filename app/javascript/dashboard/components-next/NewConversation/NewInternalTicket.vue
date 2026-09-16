@@ -184,6 +184,15 @@ const onSearch = debounce(async () => {
   }
 }, 400);
 
+const selectedContactLabel = computed(() => {
+  if (!formState.contact) return '';
+  const company = formState.contact.additionalAttributes?.companyName;
+  const key = company
+    ? 'NEW_INTERNAL_TICKET_DIALOG.SELECTED_LABEL_WITH_COMPANY'
+    : 'NEW_INTERNAL_TICKET_DIALOG.SELECTED_LABEL';
+  return t(key, { name: formState.contact.name, company });
+});
+
 const selectContact = contact => {
   formState.contact = contact;
   results.value = [];
@@ -360,16 +369,20 @@ defineExpose({ open });
               class="px-2 py-1 text-sm cursor-pointer hover:bg-n-alpha-2"
               @click="selectContact(contact)"
             >
-              {{ contact.name }}
-              <span class="text-n-slate-10">{{ contact.email }}</span>
+              <div class="flex items-center justify-between gap-2">
+                <span>{{ contact.name }}</span>
+                <span class="text-n-slate-10">{{ contact.email }}</span>
+              </div>
+              <div
+                v-if="contact.additionalAttributes?.companyName"
+                class="text-xs text-n-slate-10"
+              >
+                {{ contact.additionalAttributes.companyName }}
+              </div>
             </li>
           </ul>
           <p v-if="formState.contact" class="text-xs text-n-teal-11 mt-1">
-            {{
-              t('NEW_INTERNAL_TICKET_DIALOG.SELECTED_LABEL', {
-                name: formState.contact.name,
-              })
-            }}
+            {{ selectedContactLabel }}
           </p>
         </div>
 

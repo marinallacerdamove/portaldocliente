@@ -554,6 +554,7 @@
     "REQUESTER_LABEL": "Requester",
     "CONTACT_SEARCH_PLACEHOLDER": "Search contact...",
     "SELECTED_LABEL": "Selected: {name}",
+    "SELECTED_LABEL_WITH_COMPANY": "Selected: {name} · {company}",
     "SELECT_PLACEHOLDER": "Select",
     "INBOX_LABEL": "Inbox",
     "CATEGORIA_LABEL": "Category",

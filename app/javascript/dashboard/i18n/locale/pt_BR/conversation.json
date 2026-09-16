@@ -508,6 +508,7 @@
     "REQUESTER_LABEL": "Solicitante",
     "CONTACT_SEARCH_PLACEHOLDER": "Buscar contato...",
     "SELECTED_LABEL": "Selecionado: {name}",
+    "SELECTED_LABEL_WITH_COMPANY": "Selecionado: {name} · {company}",
     "SELECT_PLACEHOLDER": "Selecione",
     "INBOX_LABEL": "Caixa",
     "CATEGORIA_LABEL": "Categoria",

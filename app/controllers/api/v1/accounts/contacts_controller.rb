@@ -24,8 +24,12 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
   def search
     render json: { error: 'Specify search string with parameter q' }, status: :unprocessable_entity if params[:q].blank? && return
 
+    # Busca também por empresa (additional_attributes.company_name) - chamados
+    # geralmente são abertos por empresa, então digitar o nome dela aqui já
+    # traz todos os contatos vinculados a ela, não só quem bate por nome/e-mail.
     contacts = Current.account.contacts.where(
-      'name ILIKE :search OR email ILIKE :search OR phone_number ILIKE :search OR contacts.identifier LIKE :search',
+      "name ILIKE :search OR email ILIKE :search OR phone_number ILIKE :search OR contacts.identifier LIKE :search " \
+      "OR contacts.additional_attributes ->> 'company_name' ILIKE :search",
       search: "%#{params[:q].strip}%"
     )
     @contacts = fetch_contacts_with_has_more(contacts)
