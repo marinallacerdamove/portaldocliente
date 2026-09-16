@@ -550,11 +550,12 @@
     "VIEW_TICKET": "View ticket"
   },
   "NEW_INTERNAL_TICKET_DIALOG": {
-    "TITLE": "New internal ticket",
+    "TITLE": "New ticket",
     "REQUESTER_LABEL": "Requester",
     "CONTACT_SEARCH_PLACEHOLDER": "Search contact...",
     "SELECTED_LABEL": "Selected: {name}",
     "SELECT_PLACEHOLDER": "Select",
+    "INBOX_LABEL": "Inbox",
     "CATEGORIA_LABEL": "Category",
     "URGENCIA_LABEL": "Urgency",
     "PREVISAO_LABEL": "Resolution forecast",
@@ -582,8 +583,8 @@
     "NONE_OPTION": "None",
     "NO_OPTIONS_FOUND": "No options found",
     "SEARCH_INPUT_PLACEHOLDER": "Search",
-    "CREATE_SUCCESS": "Internal ticket created!",
-    "CREATE_ERROR": "Error creating the internal ticket.",
+    "CREATE_SUCCESS": "Ticket created!",
+    "CREATE_ERROR": "Error creating the ticket.",
     "VIEW_TICKET": "View ticket",
     "URGENCIA_OPTIONS": {
       "NONE": "None",

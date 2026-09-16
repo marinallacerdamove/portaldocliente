@@ -37,11 +37,13 @@ const teams = useMapGetter('teams/getTeams');
 const inboxes = useMapGetter('inboxes/getInboxes');
 const getAttributesByModel = useMapGetter('attributes/getAttributesByModel');
 
-// Sem fallback pra inboxes.value[0] de propósito: cair silenciosamente em
-// outra caixa (ex: Portal do Cliente) faria um ticket interno disparar
-// automações de cliente por engano. Se "Tickets Internos" não existir ou
-// ainda não tiver carregado, canSubmit trava o envio (ver abaixo).
-const targetInbox = computed(() =>
+// Caixa é escolhida explicitamente no formulário agora (formState.inbox) -
+// quem cria vê e decide pra onde o ticket vai (Tickets Internos, Portal do
+// Cliente, um canal de WhatsApp etc.), em vez de só existir a opção
+// "sempre Tickets Internos" de antes. "Tickets Internos" continua sendo o
+// valor padrão ao abrir o formulário (ver emptyForm), preservando o
+// comportamento de sempre pra quem não mexer nesse campo.
+const defaultInbox = computed(() =>
   inboxes.value.find(inbox => inbox.name === 'Tickets Internos')
 );
 
@@ -108,6 +110,7 @@ const { onFileUpload } = useFileUpload({
 
 const emptyForm = () => ({
   contact: null,
+  inbox: defaultInbox.value || null,
   servico: NONE_OPTION.value,
   categoria: '',
   urgencia: urgenciaOptions.value[0],
@@ -206,9 +209,9 @@ const toggleCcAgent = agentId => {
 const canSubmit = computed(
   () =>
     !!formState.contact &&
+    !!formState.inbox &&
     !!formState.team &&
-    (messageHasContent.value || attachedFiles.value.length > 0) &&
-    !!targetInbox.value
+    (messageHasContent.value || attachedFiles.value.length > 0)
 );
 
 const reset = () => {
@@ -238,7 +241,7 @@ const onSubmit = async () => {
   try {
     const data = await store.dispatch('contactConversations/create', {
       params: {
-        inboxId: targetInbox.value.id,
+        inboxId: formState.inbox.id,
         contactId: formState.contact.id,
         message: {
           content: contentLines.join('\n\n'),
@@ -368,6 +371,25 @@ defineExpose({ open });
               })
             }}
           </p>
+        </div>
+
+        <div>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL') }}
+          </p>
+          <MultiselectDropdown
+            :options="inboxes"
+            :selected-item="formState.inbox"
+            :multiselector-title="t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL')"
+            :multiselector-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+            "
+            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+            :input-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+            "
+            @select="formState.inbox = $event"
+          />
         </div>
 
         <div>

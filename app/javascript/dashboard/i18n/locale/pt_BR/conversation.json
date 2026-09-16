@@ -504,11 +504,12 @@
     "VIEW_TICKET": "Ver ticket"
   },
   "NEW_INTERNAL_TICKET_DIALOG": {
-    "TITLE": "Novo ticket interno",
+    "TITLE": "Novo ticket",
     "REQUESTER_LABEL": "Solicitante",
     "CONTACT_SEARCH_PLACEHOLDER": "Buscar contato...",
     "SELECTED_LABEL": "Selecionado: {name}",
     "SELECT_PLACEHOLDER": "Selecione",
+    "INBOX_LABEL": "Caixa",
     "CATEGORIA_LABEL": "Categoria",
     "URGENCIA_LABEL": "Urgência",
     "PREVISAO_LABEL": "Previsão de solução",
@@ -536,8 +537,8 @@
     "NONE_OPTION": "Nenhum",
     "NO_OPTIONS_FOUND": "Nenhuma opção encontrada",
     "SEARCH_INPUT_PLACEHOLDER": "Buscar",
-    "CREATE_SUCCESS": "Ticket interno criado!",
-    "CREATE_ERROR": "Erro ao criar o ticket interno.",
+    "CREATE_SUCCESS": "Ticket criado!",
+    "CREATE_ERROR": "Erro ao criar o ticket.",
     "VIEW_TICKET": "Ver ticket",
     "URGENCIA_OPTIONS": {
       "NONE": "Nenhuma",
