@@ -695,6 +695,7 @@ defineExpose({ open });
             @input-file="onFileUpload"
           >
             <Button
+              type="button"
               icon="i-lucide-paperclip"
               variant="outline"
               color="slate"

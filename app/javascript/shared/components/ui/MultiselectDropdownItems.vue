@@ -97,6 +97,7 @@ export default {
         class="search-input"
         autofocus="true"
         :placeholder="inputPlaceholder"
+        @keydown.enter.prevent
       />
     </div>
     <div class="flex items-start justify-start flex-auto overflow-auto mt-2">
@@ -107,6 +108,7 @@ export default {
             :key="`${option.assignee_type || 'User'}-${option.id}`"
           >
             <NextButton
+              type="button"
               slate
               :variant="isActive(option) ? 'faded' : 'ghost'"
               trailing-icon
