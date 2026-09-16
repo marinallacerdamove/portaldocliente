@@ -48,6 +48,10 @@ const voiceCallData = computed(() => {
 
 const unreadCount = computed(() => props.chat.unread_count);
 
+const contactCompany = computed(
+  () => props.currentContact?.additional_attributes?.company_name
+);
+
 const slaCardLabel = useTemplateRef('slaCardLabel');
 
 const hasSlaPolicyId = computed(
@@ -152,11 +156,19 @@ const selectedModel = computed({
         :hide-thumbnail="false"
       />
 
-      <h4
-        class="text-heading-3 my-0 capitalize truncate text-n-slate-12 font-medium w-32 flex-shrink-0"
-      >
-        {{ currentContact.name }}
-      </h4>
+      <div class="flex flex-col justify-center min-w-0 w-32 flex-shrink-0">
+        <h4
+          class="text-heading-3 my-0 capitalize truncate text-n-slate-12 font-medium leading-tight"
+        >
+          {{ currentContact.name }}
+        </h4>
+        <span
+          v-if="contactCompany"
+          class="text-xs leading-tight truncate text-n-slate-10"
+        >
+          {{ contactCompany }}
+        </span>
+      </div>
 
       <CardContent
         :last-message="lastMessageInChat"

@@ -38,6 +38,9 @@ const cardMessagePreviewWithMetaRef = ref(null);
 const currentContact = computed(() => props.contact);
 
 const currentContactName = computed(() => currentContact.value?.name);
+const currentContactCompany = computed(
+  () => currentContact.value?.additional_attributes?.company_name
+);
 const currentContactThumbnail = computed(() => currentContact.value?.thumbnail);
 const currentContactStatus = computed(
   () => currentContact.value?.availabilityStatus
@@ -123,6 +126,12 @@ const onCardClick = e => {
           </span>
         </div>
       </div>
+      <p
+        v-if="currentContactCompany"
+        class="text-sm truncate text-n-slate-10 -mt-1"
+      >
+        {{ currentContactCompany }}
+      </p>
       <CardMessagePreview
         v-show="showMessagePreviewWithoutMeta"
         :conversation="conversation"
