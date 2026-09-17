@@ -408,7 +408,7 @@ defineExpose({ open });
             :placeholder="
               t('NEW_INTERNAL_TICKET_DIALOG.CONTACT_SEARCH_PLACEHOLDER')
             "
-            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
             @input="onSearch"
           />
           <ul
@@ -504,7 +504,7 @@ defineExpose({ open });
           <input
             v-model="formState.prazoResolucao"
             type="date"
-            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
           />
         </div>
 
@@ -579,7 +579,7 @@ defineExpose({ open });
             <input
               v-model="formState.issueJira"
               type="text"
-              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
             />
           </div>
         </div>
@@ -639,7 +639,7 @@ defineExpose({ open });
             <input
               v-model="formState.dataEntrega"
               type="date"
-              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
             />
           </div>
           <div>
@@ -649,7 +649,7 @@ defineExpose({ open });
             <input
               v-model="formState.dataAtualizacaoSistema"
               type="date"
-              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
             />
           </div>
         </div>
@@ -679,7 +679,7 @@ defineExpose({ open });
 
       <div class="flex flex-col gap-3">
         <div
-          class="flex items-start gap-2 p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2"
+          class="flex items-start gap-2 p-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2"
         >
           <Switch v-model="formState.visibleToClient" class="mt-0.5" />
           <div>
@@ -704,7 +704,7 @@ defineExpose({ open });
           <input
             v-model="formState.subject"
             type="text"
-            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
           />
         </div>
         <div class="flex flex-col">
@@ -715,7 +715,7 @@ defineExpose({ open });
             <div
               ref="messageEditorRef"
               contenteditable="true"
-              class="w-full min-h-[22rem] max-h-[40rem] overflow-y-auto p-2 rounded-md outline outline-1 outline-n-weak bg-n-solid-2 text-sm text-n-slate-12"
+              class="w-full min-h-[22rem] max-h-[40rem] overflow-y-auto p-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
               @input="onMessageInput"
               @paste="onPasteMessage"
             />
