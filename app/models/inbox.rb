@@ -56,7 +56,6 @@ class Inbox < ApplicationRecord
   validates :out_of_office_message, length: { maximum: Limits::OUT_OF_OFFICE_MESSAGE_MAX_LENGTH }
   validates :greeting_message, length: { maximum: Limits::GREETING_MESSAGE_MAX_LENGTH }
   validate :ensure_valid_max_assignment_limit
-  validate :json_bot_flow_steps_format
 
   belongs_to :account
   belongs_to :portal, optional: true
@@ -257,36 +256,6 @@ class Inbox < ApplicationRecord
 
   def ensure_valid_max_assignment_limit
     # overridden in enterprise/app/models/enterprise/inbox.rb
-  end
-
-  # bot_flow_steps é um array heterogêneo (cada tipo de passo tem campos
-  # diferentes) - mesmo espírito de AutomationRule#actions/#conditions,
-  # validado aqui em vez de via strong params (ver InboxesController#update).
-  BOT_FLOW_STEP_TYPES = %w[menu ask_and_extract message].freeze
-  BOT_FLOW_STEP_REQUIRED_FIELDS = {
-    'menu' => %w[attribute_key prompt_canned_response],
-    'ask_and_extract' => %w[prompt_canned_response],
-    'message' => %w[canned_response]
-  }.freeze
-
-  def json_bot_flow_steps_format
-    return if bot_flow_steps.blank?
-
-    unless bot_flow_steps.is_a?(Array)
-      errors.add(:bot_flow_steps, 'must be an array')
-      return
-    end
-
-    bot_flow_steps.each_with_index do |step, index|
-      type = step.is_a?(Hash) ? step['type'] : nil
-      unless BOT_FLOW_STEP_TYPES.include?(type)
-        errors.add(:bot_flow_steps, "step #{index}: type '#{type}' not supported")
-        next
-      end
-
-      missing = BOT_FLOW_STEP_REQUIRED_FIELDS[type] - step.keys
-      errors.add(:bot_flow_steps, "step #{index}: missing #{missing.join(', ')}") if missing.any?
-    end
   end
 
   def delete_round_robin_agents

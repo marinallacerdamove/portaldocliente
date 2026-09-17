@@ -143,9 +143,10 @@ namespace :move do
       acc = inbox.account
       inbox.update_column(:csat_survey_enabled, true)
 
-      # As opções aqui embaixo são só o valor inicial - depois disso, é a
-      # lista de valores desse atributo em Configurações > Atributos
-      # personalizados que manda, não este seed (ver WhatsappBotFlowListener).
+      # As opções aqui embaixo são só o valor inicial, usado pela task
+      # move:migrate_whatsapp_bot_flow pra montar as opções do nó de Menu do
+      # BotFlow migrado - depois da migração, o Construtor de Bot (Configurações)
+      # é quem manda, não mais este atributo.
       unless acc.custom_attribute_definitions.exists?(attribute_key: "setor", attribute_model: "conversation_attribute")
         acc.custom_attribute_definitions.create!(
           attribute_display_name: "Setor",
@@ -157,10 +158,11 @@ namespace :move do
         puts "#{acc.name}: atributo 'Setor' criado"
       end
 
-      # Textos do bot como Respostas Prontas (Configurações > Respostas
-      # Prontas) - editáveis sem deploy, ver WhatsappBotFlowListener#canned_text.
-      # %<contact_name>s e %<empresa_nome>s são placeholders de verdade
-      # (não trocar o nome, só o texto ao redor).
+      # Textos do bot usados como insumo pela task move:migrate_whatsapp_bot_flow
+      # pra preencher o texto inicial dos nós do BotFlow migrado - depois da
+      # migração, o texto passa a ser editado direto no nó, não mais aqui.
+      # {{contact.name}} e {{empresa_nome}} viram placeholders de verdade
+      # dentro do BotFlow (não trocar o nome, só o texto ao redor).
       canned_responses = {
         "bot_menu_setor" => "Olá! Selecione o setor desejado para o seu atendimento:",
         "bot_menu_setor_retry" => "Não entendi sua escolha. Por favor, selecione uma das opções abaixo:",
@@ -173,17 +175,6 @@ namespace :move do
 
         acc.canned_responses.create!(short_code: short_code, content: content)
         puts "#{acc.name}: resposta pronta '#{short_code}' criada"
-      end
-
-      # Sequência de passos do bot (Configurações > Caixas de Entrada > [essa
-      # caixa] > aba "Fluxo de Boas-vindas") - só grava se a caixa ainda não
-      # tiver nada configurado, pra não sobrescrever edição feita pela tela.
-      if inbox.bot_flow_steps.blank?
-        inbox.update!(bot_flow_steps: [
-          { "type" => "menu", "attribute_key" => "setor", "prompt_canned_response" => "bot_menu_setor", "retry_canned_response" => "bot_menu_setor_retry" },
-          { "type" => "ask_and_extract", "prompt_canned_response" => "bot_pedido_detalhes", "extract" => "cnpj", "found_canned_response" => "bot_empresa_conhecida", "not_found_canned_response" => "bot_empresa_desconhecida" }
-        ])
-        puts "#{acc.name}: fluxo de boas-vindas do bot criado pra #{inbox.name}"
       end
 
       rule_name = "WhatsApp - Encerramento (#{inbox.name})"
@@ -202,6 +193,83 @@ namespace :move do
         active: true
       )
       puts "#{acc.name}: regra de encerramento criada pra #{inbox.name}"
+    end
+  end
+
+  desc "Migra o fluxo de Setor + CNPJ (antes fixo em código) pro BotFlow novo (Configurações > Construtor de Bot), reaproveitando o atributo 'Setor' e as Respostas Prontas já existentes como insumo - roda uma vez só, é seguro rodar de novo (não duplica)"
+  task migrate_whatsapp_bot_flow: :environment do
+    Inbox.where(channel_type: "Channel::Whatsapp").find_each do |inbox|
+      acc = inbox.account
+      flow_name = "Setor + CNPJ (migrado)"
+      if acc.bot_flows.exists?(name: flow_name, inbox_ids: [inbox.id])
+        puts "#{acc.name} / #{inbox.name}: '#{flow_name}' já existe, pulando"
+        next
+      end
+
+      setor_attribute = acc.custom_attribute_definitions.find_by(attribute_key: "setor", attribute_model: "conversation_attribute")
+      setores = setor_attribute&.attribute_values || []
+      if setores.blank?
+        puts "#{acc.name} / #{inbox.name}: atributo 'Setor' sem valores, pulando"
+        next
+      end
+
+      canned = acc.canned_responses.where(short_code: %w[bot_menu_setor bot_menu_setor_retry bot_pedido_detalhes bot_empresa_conhecida bot_empresa_desconhecida])
+                  .index_by(&:short_code)
+      text_for = ->(code, default) { (canned[code]&.content.presence || default).gsub("%<contact_name>s", "{{contact.name}}").gsub("%<empresa_nome>s", "{{empresa_nome}}") }
+
+      nodes = [{ "id" => "start", "type" => "start" }]
+      edges = [{ "source" => "start", "sourceHandle" => "default", "target" => "menu_setor" }]
+
+      nodes << {
+        "id" => "menu_setor", "type" => "menu",
+        "prompt" => text_for.call("bot_menu_setor", "Selecione o setor desejado para o seu atendimento:"),
+        "retry_prompt" => text_for.call("bot_menu_setor_retry", "Não entendi sua escolha. Por favor, selecione uma das opções abaixo:"),
+        "options" => setores.each_with_index.map { |setor, i| { "id" => "setor-#{i}", "label" => setor } }
+      }
+
+      setores.each_with_index do |setor, i|
+        team = acc.teams.detect { |t| t.name.downcase == setor.downcase }
+        target = "ask_detalhes"
+
+        if team
+          action_id = "assign_team_#{i}"
+          nodes << { "id" => action_id, "type" => "chatwoot_action", "action_name" => "assign_team", "action_params" => [team.id] }
+          edges << { "source" => action_id, "sourceHandle" => "default", "target" => target }
+          target = action_id
+        end
+
+        edges << { "source" => "menu_setor", "sourceHandle" => "option-setor-#{i}", "target" => target }
+      end
+
+      nodes << { "id" => "ask_detalhes", "type" => "ask_and_extract",
+                 "prompt" => text_for.call("bot_pedido_detalhes", "Por favor, descreva a situação, o nome da empresa e o CNPJ para prosseguirmos com o atendimento."),
+                 "variable_name" => "detalhes" }
+      edges << { "source" => "ask_detalhes", "sourceHandle" => "default", "target" => "extract_cnpj" }
+
+      nodes << { "id" => "extract_cnpj", "type" => "extract_pattern", "source_variable" => "detalhes", "pattern" => "cnpj", "target_variable" => "cnpj" }
+      edges << { "source" => "extract_cnpj", "sourceHandle" => "found", "target" => "webhook_empresa" }
+      edges << { "source" => "extract_cnpj", "sourceHandle" => "not_found", "target" => "msg_desconhecida" }
+
+      nodes << {
+        "id" => "webhook_empresa", "type" => "webhook", "method" => "get",
+        "url" => "#{ENV.fetch('PORTAL_INTERNAL_API_URL', '')}/api/internal/empresa_by_cnpj?cnpj={{cnpj}}",
+        "headers" => { "X-Internal-Token" => ENV.fetch("PORTAL_INTERNAL_API_TOKEN", "") },
+        "success_check" => { "field" => "found", "equals" => true },
+        "response_mappings" => [{ "json_path" => "nome", "variable_name" => "empresa_nome" }]
+      }
+      edges << { "source" => "webhook_empresa", "sourceHandle" => "success", "target" => "msg_conhecida" }
+      edges << { "source" => "webhook_empresa", "sourceHandle" => "error", "target" => "msg_desconhecida" }
+
+      nodes << { "id" => "msg_conhecida", "type" => "send_message",
+                 "text" => text_for.call("bot_empresa_conhecida", "Olá, {{contact.name}}! Vi que sua empresa é a {{empresa_nome}}. Como podemos te ajudar?") }
+      nodes << { "id" => "msg_desconhecida", "type" => "send_message",
+                 "text" => text_for.call("bot_empresa_desconhecida", "Olá, {{contact.name}}! Recebemos sua solicitação, em breve um atendente vai te responder.") }
+
+      flow = acc.bot_flows.create!(
+        name: flow_name, active: true, trigger_type: "conversation_created",
+        inbox_ids: [inbox.id], nodes: nodes, edges: edges
+      )
+      puts "#{acc.name} / #{inbox.name}: BotFlow ##{flow.id} '#{flow_name}' criado"
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_17_180000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_18_000001) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -315,6 +315,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_17_180000) do
     t.boolean "active", default: true, null: false
     t.integer "execution_delay"
     t.index ["account_id"], name: "index_automation_rules_on_account_id"
+  end
+
+  create_table "bot_flows", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.boolean "active", default: true, null: false
+    t.integer "trigger_type", default: 0, null: false
+    t.jsonb "trigger_config", default: {}, null: false
+    t.bigint "inbox_ids", default: [], null: false, array: true
+    t.integer "priority", default: 0, null: false
+    t.jsonb "nodes", default: [], null: false
+    t.jsonb "edges", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_bot_flows_on_account_id"
+    t.index ["inbox_ids"], name: "index_bot_flows_on_inbox_ids", using: :gin
   end
 
   create_table "calls", force: :cascade do |t|

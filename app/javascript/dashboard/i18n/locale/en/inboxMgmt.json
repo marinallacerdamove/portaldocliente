@@ -662,7 +662,6 @@
       "BOT_CONFIGURATION": "Bot Configuration",
       "ACCOUNT_HEALTH": "Account Health",
       "CSAT": "CSAT",
-      "BOT_FLOW": "Welcome Flow",
       "VOICE": "Voice",
       "CALLS": "Calls"
     },
@@ -1202,33 +1201,6 @@
       "API": {
         "SUCCESS_MESSAGE": "CSAT settings updated successfully",
         "ERROR_MESSAGE": "We couldn't update CSAT settings. Please try again later."
-      }
-    },
-    "BOT_FLOW": {
-      "TITLE": "Welcome flow",
-      "SUBTITLE": "Set up the sequence of automatic steps sent when a new WhatsApp conversation starts. Editable here, no code changes needed.",
-      "EMPTY_STATE": "No steps configured yet. Add a step to get started.",
-      "ADD_STEP": "Add step",
-      "SAVE": "Save flow",
-      "SUCCESS_MESSAGE": "Welcome flow updated successfully",
-      "ERROR_MESSAGE": "We couldn't update the welcome flow. Please try again later.",
-      "VALIDATION_ERROR": "Fill in all required fields on every step before saving.",
-      "STEP_TYPES": {
-        "SELECT_PLACEHOLDER": "Select a step type",
-        "MENU": "Menu",
-        "ASK_AND_EXTRACT": "Ask for information",
-        "MESSAGE": "Message"
-      },
-      "FIELDS": {
-        "ATTRIBUTE": "Custom attribute (menu options)",
-        "ATTRIBUTE_PLACEHOLDER": "Select a custom attribute",
-        "PROMPT_CANNED_RESPONSE": "Message sent",
-        "RETRY_CANNED_RESPONSE": "Message sent on invalid reply",
-        "CANNED_RESPONSE": "Message sent",
-        "CANNED_RESPONSE_PLACEHOLDER": "Select a canned response",
-        "EXTRACT_CNPJ": "Extract CNPJ and look up company",
-        "FOUND_CANNED_RESPONSE": "Message sent when company is found",
-        "NOT_FOUND_CANNED_RESPONSE": "Message sent when company is not found"
       }
     },
     "BUSINESS_HOURS": {

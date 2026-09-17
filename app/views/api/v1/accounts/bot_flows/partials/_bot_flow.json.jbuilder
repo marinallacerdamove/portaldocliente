@@ -1,0 +1,13 @@
+json.id bot_flow.id
+json.account_id bot_flow.account_id
+json.name bot_flow.name
+json.description bot_flow.description
+json.active bot_flow.active?
+json.trigger_type bot_flow.trigger_type
+json.trigger_config bot_flow.trigger_config
+json.inbox_ids bot_flow.inbox_ids
+json.priority bot_flow.priority
+json.nodes bot_flow.nodes
+json.edges bot_flow.edges
+json.created_at bot_flow.created_at.to_i
+json.updated_at bot_flow.updated_at.to_i
