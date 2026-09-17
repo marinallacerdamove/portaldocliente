@@ -54,6 +54,11 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
       inbox_params = permitted_params.except(:channel, :csat_config)
       inbox_params[:csat_config] = format_csat_config(permitted_params[:csat_config]) if permitted_params[:csat_config].present?
       @inbox.update!(inbox_params)
+      # bot_flow_steps é um array heterogêneo (campos variam por tipo de
+      # passo) - não dá pra descrever isso num permit() fixo, mesmo caso já
+      # resolvido em AutomationRulesController#update pra actions/conditions.
+      # A validação de formato fica no model (Inbox#json_bot_flow_steps_format).
+      @inbox.update!(bot_flow_steps: params[:bot_flow_steps]) if params[:bot_flow_steps]
       update_inbox_working_hours
       update_channel if channel_update_required?
     end

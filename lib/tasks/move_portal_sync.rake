@@ -145,7 +145,7 @@ namespace :move do
 
       # As opções aqui embaixo são só o valor inicial - depois disso, é a
       # lista de valores desse atributo em Configurações > Atributos
-      # personalizados que manda, não este seed (ver WhatsappSetorMenuListener).
+      # personalizados que manda, não este seed (ver WhatsappBotFlowListener).
       unless acc.custom_attribute_definitions.exists?(attribute_key: "setor", attribute_model: "conversation_attribute")
         acc.custom_attribute_definitions.create!(
           attribute_display_name: "Setor",
@@ -158,7 +158,7 @@ namespace :move do
       end
 
       # Textos do bot como Respostas Prontas (Configurações > Respostas
-      # Prontas) - editáveis sem deploy, ver WhatsappSetorMenuListener#canned_text.
+      # Prontas) - editáveis sem deploy, ver WhatsappBotFlowListener#canned_text.
       # %<contact_name>s e %<empresa_nome>s são placeholders de verdade
       # (não trocar o nome, só o texto ao redor).
       canned_responses = {
@@ -173,6 +173,17 @@ namespace :move do
 
         acc.canned_responses.create!(short_code: short_code, content: content)
         puts "#{acc.name}: resposta pronta '#{short_code}' criada"
+      end
+
+      # Sequência de passos do bot (Configurações > Caixas de Entrada > [essa
+      # caixa] > aba "Fluxo de Boas-vindas") - só grava se a caixa ainda não
+      # tiver nada configurado, pra não sobrescrever edição feita pela tela.
+      if inbox.bot_flow_steps.blank?
+        inbox.update!(bot_flow_steps: [
+          { "type" => "menu", "attribute_key" => "setor", "prompt_canned_response" => "bot_menu_setor", "retry_canned_response" => "bot_menu_setor_retry" },
+          { "type" => "ask_and_extract", "prompt_canned_response" => "bot_pedido_detalhes", "extract" => "cnpj", "found_canned_response" => "bot_empresa_conhecida", "not_found_canned_response" => "bot_empresa_desconhecida" }
+        ])
+        puts "#{acc.name}: fluxo de boas-vindas do bot criado pra #{inbox.name}"
       end
 
       rule_name = "WhatsApp - Encerramento (#{inbox.name})"

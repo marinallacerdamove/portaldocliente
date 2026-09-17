@@ -20,7 +20,7 @@ class AsyncDispatcher < BaseDispatcher
       Conversations::UnreadCounts::Listener.instance,
       ReportingEventListener.instance,
       WebhookListener.instance,
-      WhatsappSetorMenuListener.instance
+      WhatsappBotFlowListener.instance
     ]
   end
 end

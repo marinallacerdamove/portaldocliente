@@ -661,6 +661,7 @@
       "BOT_CONFIGURATION": "Configuração do Bot",
       "ACCOUNT_HEALTH": "Saúde da conta",
       "CSAT": "CSAT",
+      "BOT_FLOW": "Fluxo de Boas-vindas",
       "VOICE": "Voz",
       "CALLS": "Chamadas"
     },
@@ -1170,6 +1171,33 @@
       "API": {
         "SUCCESS_MESSAGE": "Configurações de CSAT atualizadas com sucesso",
         "ERROR_MESSAGE": "Não foi possível atualizar as configurações do CSAT. Por favor, tente novamente mais tarde."
+      }
+    },
+    "BOT_FLOW": {
+      "TITLE": "Fluxo de boas-vindas",
+      "SUBTITLE": "Configure a sequência de passos automáticos enviados quando uma nova conversa do WhatsApp começa. Editável por aqui, sem precisar de alteração de código.",
+      "EMPTY_STATE": "Nenhum passo configurado ainda. Adicione um passo para começar.",
+      "ADD_STEP": "Adicionar passo",
+      "SAVE": "Salvar fluxo",
+      "SUCCESS_MESSAGE": "Fluxo de boas-vindas atualizado com sucesso",
+      "ERROR_MESSAGE": "Não foi possível atualizar o fluxo de boas-vindas. Por favor, tente novamente mais tarde.",
+      "VALIDATION_ERROR": "Preencha todos os campos obrigatórios de cada passo antes de salvar.",
+      "STEP_TYPES": {
+        "SELECT_PLACEHOLDER": "Selecione o tipo do passo",
+        "MENU": "Menu",
+        "ASK_AND_EXTRACT": "Pedir informação",
+        "MESSAGE": "Mensagem"
+      },
+      "FIELDS": {
+        "ATTRIBUTE": "Atributo personalizado (opções do menu)",
+        "ATTRIBUTE_PLACEHOLDER": "Selecione um atributo personalizado",
+        "PROMPT_CANNED_RESPONSE": "Mensagem enviada",
+        "RETRY_CANNED_RESPONSE": "Mensagem enviada em caso de resposta inválida",
+        "CANNED_RESPONSE": "Mensagem enviada",
+        "CANNED_RESPONSE_PLACEHOLDER": "Selecione uma resposta pronta",
+        "EXTRACT_CNPJ": "Extrair CNPJ e buscar empresa",
+        "FOUND_CANNED_RESPONSE": "Mensagem enviada quando a empresa é encontrada",
+        "NOT_FOUND_CANNED_RESPONSE": "Mensagem enviada quando a empresa não é encontrada"
       }
     },
     "BUSINESS_HOURS": {
