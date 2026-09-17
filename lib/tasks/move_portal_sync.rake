@@ -157,6 +157,24 @@ namespace :move do
         puts "#{acc.name}: atributo 'Setor' criado"
       end
 
+      # Textos do bot como Respostas Prontas (Configurações > Respostas
+      # Prontas) - editáveis sem deploy, ver WhatsappSetorMenuListener#canned_text.
+      # %<contact_name>s e %<empresa_nome>s são placeholders de verdade
+      # (não trocar o nome, só o texto ao redor).
+      canned_responses = {
+        "bot_menu_setor" => "Olá! Selecione o setor desejado para o seu atendimento:",
+        "bot_menu_setor_retry" => "Não entendi sua escolha. Por favor, selecione uma das opções abaixo:",
+        "bot_pedido_detalhes" => "Por favor, descreva a situação, o nome da empresa e o CNPJ para prosseguirmos com o atendimento.",
+        "bot_empresa_conhecida" => "Olá, %<contact_name>s! Vi que sua empresa é a %<empresa_nome>s. Como podemos te ajudar?",
+        "bot_empresa_desconhecida" => "Olá, %<contact_name>s! Recebemos sua solicitação, em breve um atendente vai te responder."
+      }
+      canned_responses.each do |short_code, content|
+        next if acc.canned_responses.exists?(short_code: short_code)
+
+        acc.canned_responses.create!(short_code: short_code, content: content)
+        puts "#{acc.name}: resposta pronta '#{short_code}' criada"
+      end
+
       rule_name = "WhatsApp - Encerramento (#{inbox.name})"
       next if acc.automation_rules.exists?(name: rule_name)
 

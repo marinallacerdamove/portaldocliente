@@ -10,16 +10,27 @@
 # que bater com o texto escolhido - de propósito, pra dar pra ajustar setor
 # e equipe de destino direto pela tela do Chatwoot, sem precisar mexer
 # nesse código pra cada mudança.
+#
+# Os textos das mensagens do bot vêm das Respostas Prontas (Configurações >
+# Respostas Prontas), pelo código curto de cada uma (ver *_SHORT_CODE
+# abaixo) - editar o texto lá não precisa de deploy. Se a resposta pronta
+# não existir ainda, usa o texto padrão (DEFAULT_*) como caiu-e-levantou.
 class WhatsappSetorMenuListener < BaseListener
   SETOR_ATTRIBUTE_KEY = 'setor'.freeze
-
-  MENU_PROMPT = 'Olá! Selecione o setor desejado para o seu atendimento:'.freeze
-  RETRY_PROMPT = 'Não entendi sua escolha. Por favor, selecione uma das opções abaixo:'.freeze
-  DETAILS_PROMPT = 'Por favor, descreva a situação, o nome da empresa e o CNPJ para prosseguirmos com o atendimento.'.freeze
-  KNOWN_COMPANY_REPLY = 'Olá, %<contact_name>s! Vi que sua empresa é a %<empresa_nome>s. Como podemos te ajudar?'.freeze
-  UNKNOWN_COMPANY_REPLY = 'Olá, %<contact_name>s! Recebemos sua solicitação, em breve um atendente vai te responder.'.freeze
   STEP_KEY = 'setor_flow_step'.freeze
   CNPJ_REGEX = /\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/.freeze
+
+  MENU_SHORT_CODE = 'bot_menu_setor'.freeze
+  RETRY_SHORT_CODE = 'bot_menu_setor_retry'.freeze
+  DETAILS_SHORT_CODE = 'bot_pedido_detalhes'.freeze
+  KNOWN_COMPANY_SHORT_CODE = 'bot_empresa_conhecida'.freeze
+  UNKNOWN_COMPANY_SHORT_CODE = 'bot_empresa_desconhecida'.freeze
+
+  DEFAULT_MENU_PROMPT = 'Olá! Selecione o setor desejado para o seu atendimento:'.freeze
+  DEFAULT_RETRY_PROMPT = 'Não entendi sua escolha. Por favor, selecione uma das opções abaixo:'.freeze
+  DEFAULT_DETAILS_PROMPT = 'Por favor, descreva a situação, o nome da empresa e o CNPJ para prosseguirmos com o atendimento.'.freeze
+  DEFAULT_KNOWN_COMPANY_REPLY = 'Olá, %<contact_name>s! Vi que sua empresa é a %<empresa_nome>s. Como podemos te ajudar?'.freeze
+  DEFAULT_UNKNOWN_COMPANY_REPLY = 'Olá, %<contact_name>s! Recebemos sua solicitação, em breve um atendente vai te responder.'.freeze
 
   def conversation_created(event)
     conversation, = extract_conversation_and_account(event)
@@ -29,7 +40,8 @@ class WhatsappSetorMenuListener < BaseListener
     setores = setores_for(conversation.account)
     return if setores.empty?
 
-    send_setor_menu(conversation, MENU_PROMPT, setores)
+    prompt = canned_text(conversation.account, MENU_SHORT_CODE, DEFAULT_MENU_PROMPT)
+    send_setor_menu(conversation, prompt, setores)
     set_step(conversation, 'awaiting_setor')
   end
 
@@ -63,6 +75,15 @@ class WhatsappSetorMenuListener < BaseListener
     account.teams.detect { |team| team.name.downcase == title.downcase }
   end
 
+  def canned_text(account, short_code, default_template, vars = {})
+    canned = account.canned_responses.find_by(short_code: short_code)
+    template = canned&.content.presence || default_template
+    vars.present? ? format(template, vars) : template
+  rescue KeyError, ArgumentError => e
+    Rails.logger.error("[WhatsappSetorMenuListener] resposta pronta '#{short_code}' com placeholder inválido (#{e.message}), usando texto padrão")
+    vars.present? ? format(default_template, vars) : default_template
+  end
+
   def set_step(conversation, step)
     conversation.update!(additional_attributes: conversation.additional_attributes.merge(STEP_KEY => step))
   end
@@ -81,34 +102,37 @@ class WhatsappSetorMenuListener < BaseListener
   end
 
   def handle_setor_reply(conversation, message)
-    setores = setores_for(conversation.account)
+    account = conversation.account
+    setores = setores_for(account)
     chosen = setores.detect { |title| title.downcase == message.content.to_s.strip.downcase }
     unless chosen
-      send_setor_menu(conversation, RETRY_PROMPT, setores)
+      retry_prompt = canned_text(account, RETRY_SHORT_CODE, DEFAULT_RETRY_PROMPT)
+      send_setor_menu(conversation, retry_prompt, setores)
       return
     end
 
-    team = team_for_setor(conversation.account, chosen)
+    team = team_for_setor(account, chosen)
     conversation.update!(team: team) if team
 
     conversation.messages.create!(
       account_id: conversation.account_id,
       inbox_id: conversation.inbox_id,
       message_type: :outgoing,
-      content: DETAILS_PROMPT
+      content: canned_text(account, DETAILS_SHORT_CODE, DEFAULT_DETAILS_PROMPT)
     )
     set_step(conversation, 'awaiting_details')
   end
 
   def handle_details_reply(conversation, message)
+    account = conversation.account
     cnpj = message.content.to_s[CNPJ_REGEX]
     empresa = cnpj.present? ? lookup_empresa_by_cnpj(cnpj) : nil
     contact_name = conversation.contact.name.presence || 'tudo bem'
 
     content = if empresa
-      format(KNOWN_COMPANY_REPLY, contact_name: contact_name, empresa_nome: empresa['nome'])
+      canned_text(account, KNOWN_COMPANY_SHORT_CODE, DEFAULT_KNOWN_COMPANY_REPLY, contact_name: contact_name, empresa_nome: empresa['nome'])
     else
-      format(UNKNOWN_COMPANY_REPLY, contact_name: contact_name)
+      canned_text(account, UNKNOWN_COMPANY_SHORT_CODE, DEFAULT_UNKNOWN_COMPANY_REPLY, contact_name: contact_name)
     end
 
     conversation.messages.create!(
