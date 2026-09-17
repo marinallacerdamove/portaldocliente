@@ -1,0 +1,161 @@
+{
+  "BOT_FLOW": {
+    "HEADER": "Construtor de Bot",
+    "DESCRIPTION": "Monte fluxos de conversa reais para o WhatsApp, com ramificação: se o cliente responder isso, acontece aquilo. Sem depender de código.",
+    "LIST": {
+      "SEARCH_PLACEHOLDER": "Buscar fluxo",
+      "COUNT": "{n} fluxo(s)",
+      "NEW_FLOW": "Novo fluxo",
+      "LOADING": "Carregando fluxos...",
+      "404": "Nenhum fluxo criado ainda.",
+      "NO_RESULTS": "Nenhum fluxo encontrado para essa busca.",
+      "TOGGLE_ACTIVE": "Ativar/desativar fluxo",
+      "EDIT": "Editar fluxo",
+      "TRIGGER_KEYWORD": "Dispara por palavra-chave: {keywords}",
+      "TRIGGER_CONVERSATION_CREATED": "Dispara no início da conversa",
+      "API": {
+        "ERROR_MESSAGE": "Não foi possível atualizar o fluxo. Tente novamente mais tarde."
+      },
+      "DELETE": {
+        "BUTTON_TEXT": "Excluir fluxo",
+        "SUCCESS_MESSAGE": "Fluxo excluído com sucesso",
+        "ERROR_MESSAGE": "Não foi possível excluir o fluxo. Tente novamente mais tarde.",
+        "CONFIRM": {
+          "TITLE": "Excluir fluxo {flowName}?",
+          "MESSAGE": "Essa ação não pode ser desfeita. O fluxo deixará de rodar imediatamente.",
+          "YES": "Sim, excluir",
+          "NO": "Cancelar",
+          "PLACE_HOLDER": "Digite \"{flowName}\" para confirmar"
+        }
+      }
+    },
+    "EDITOR": {
+      "HEADER": "Editor de fluxo",
+      "NAME_LABEL": "Nome do fluxo",
+      "NAME_PLACEHOLDER": "Ex.: Atendimento inicial WhatsApp",
+      "DESCRIPTION_LABEL": "Descrição (opcional)",
+      "TRIGGER_LABEL": "Quando este fluxo começa",
+      "TRIGGER_TYPES": {
+        "CONVERSATION_CREATED": "No início de uma nova conversa",
+        "KEYWORD": "Quando a mensagem contém uma palavra-chave"
+      },
+      "KEYWORDS_LABEL": "Palavras-chave (uma por linha ou separadas por vírgula)",
+      "KEYWORDS_PLACEHOLDER": "Ex.: cancelar, suporte, ajuda",
+      "INBOXES_LABEL": "Caixas de WhatsApp onde este fluxo roda",
+      "INBOXES_PLACEHOLDER": "Selecione uma ou mais caixas",
+      "ACTIVE_LABEL": "Fluxo ativo",
+      "SAVE": "Salvar fluxo",
+      "SUCCESS_MESSAGE": "Fluxo salvo com sucesso",
+      "ERROR_MESSAGE": "Não foi possível salvar o fluxo. Confira se todos os passos estão preenchidos corretamente.",
+      "VALIDATION": {
+        "NAME_REQUIRED": "Dê um nome ao fluxo antes de salvar.",
+        "SINGLE_START": "O fluxo precisa ter exatamente um bloco de Início.",
+        "MISSING_FIELDS": "Preencha os campos obrigatórios de todos os blocos antes de salvar."
+      },
+      "ADD_NODE": "Adicionar bloco",
+      "DELETE_NODE": "Excluir bloco",
+      "NODE_TYPES": {
+        "START": "Início",
+        "SEND_MESSAGE": "Enviar mensagem",
+        "MENU": "Menu",
+        "ASK_AND_EXTRACT": "Pedir informação",
+        "CONDITION": "Condição",
+        "EXTRACT_PATTERN": "Extrair padrão",
+        "WEBHOOK": "Chamar webhook",
+        "CHATWOOT_ACTION": "Ação do Chatwoot"
+      },
+      "HANDLES": {
+        "DEFAULT": "Continua",
+        "FOUND": "Encontrado",
+        "NOT_FOUND": "Não encontrado",
+        "SUCCESS": "Sucesso",
+        "ERROR": "Erro",
+        "ELSE": "Senão"
+      },
+      "PANEL": {
+        "SEND_MESSAGE": {
+          "TEXT_LABEL": "Mensagem",
+          "TEXT_PLACEHOLDER": "Digite o texto que será enviado ao cliente"
+        },
+        "MENU": {
+          "PROMPT_LABEL": "Mensagem do menu",
+          "PROMPT_PLACEHOLDER": "Ex.: Selecione uma opção:",
+          "RETRY_PROMPT_LABEL": "Mensagem se a resposta não for reconhecida",
+          "OPTIONS_LABEL": "Opções do menu",
+          "OPTION_PLACEHOLDER": "Texto da opção",
+          "ADD_OPTION": "Adicionar opção"
+        },
+        "ASK_AND_EXTRACT": {
+          "PROMPT_LABEL": "Pergunta enviada ao cliente",
+          "PROMPT_PLACEHOLDER": "Ex.: Descreva sua situação",
+          "VARIABLE_NAME_LABEL": "Guardar resposta na variável",
+          "VARIABLE_NAME_PLACEHOLDER": "Ex.: situacao"
+        },
+        "CONDITION": {
+          "VARIABLE_LABEL": "Variável a comparar",
+          "RULES_LABEL": "Regras",
+          "ADD_RULE": "Adicionar regra",
+          "OPERATOR_LABEL": "Condição",
+          "OPERATORS": {
+            "EQUALS": "é igual a",
+            "CONTAINS": "contém",
+            "IS_PRESENT": "foi preenchida",
+            "REGEX": "combina com o padrão (avançado)"
+          },
+          "VALUE_LABEL": "Valor",
+          "VALUE_PLACEHOLDER": "Valor de comparação"
+        },
+        "EXTRACT_PATTERN": {
+          "SOURCE_VARIABLE_LABEL": "Variável de origem",
+          "PATTERN_LABEL": "O que extrair",
+          "PATTERNS": {
+            "CNPJ": "CNPJ",
+            "CPF": "CPF",
+            "EMAIL": "E-mail",
+            "TELEFONE": "Telefone",
+            "PERSONALIZADO": "Personalizado (avançado)"
+          },
+          "CUSTOM_PATTERN_LABEL": "Padrão (regex)",
+          "CUSTOM_PATTERN_PLACEHOLDER": "Padrão de busca avançado",
+          "TARGET_VARIABLE_LABEL": "Guardar resultado na variável",
+          "TARGET_VARIABLE_PLACEHOLDER": "Ex.: cnpj"
+        },
+        "WEBHOOK": {
+          "METHOD_LABEL": "Método",
+          "URL_LABEL": "Endereço (URL)",
+          "URL_PLACEHOLDER": "https://exemplo.com/api?campo={{variavel}}",
+          "HEADERS_LABEL": "Cabeçalhos (autenticação, etc.)",
+          "ADD_HEADER": "Adicionar cabeçalho",
+          "HEADER_KEY_PLACEHOLDER": "Nome",
+          "HEADER_VALUE_PLACEHOLDER": "Valor",
+          "BODY_LABEL": "Corpo da requisição (para POST)",
+          "BODY_PLACEHOLDER": "{\"campo\": \"{{variavel}}\"}",
+          "SUCCESS_CHECK_LABEL": "Considerar sucesso quando a resposta trouxer (opcional)",
+          "SUCCESS_CHECK_FIELD_PLACEHOLDER": "campo (ex.: found)",
+          "SUCCESS_CHECK_VALUE_PLACEHOLDER": "igual a (ex.: true)",
+          "RESPONSE_MAPPINGS_LABEL": "Guardar dados da resposta em variáveis",
+          "ADD_MAPPING": "Adicionar variável",
+          "JSON_PATH_PLACEHOLDER": "campo da resposta (ex.: nome)",
+          "VARIABLE_NAME_PLACEHOLDER": "nome da variável"
+        },
+        "CHATWOOT_ACTION": {
+          "ACTION_LABEL": "O que fazer",
+          "ACTIONS": {
+            "ASSIGN_TEAM": "Atribuir a um time",
+            "ADD_LABEL": "Adicionar etiqueta",
+            "SET_CUSTOM_ATTRIBUTE": "Definir atributo personalizado",
+            "RESOLVE_CONVERSATION": "Encerrar a conversa"
+          },
+          "TEAM_LABEL": "Time",
+          "LABEL_LABEL": "Etiqueta",
+          "ATTRIBUTE_KEY_LABEL": "Atributo",
+          "ATTRIBUTE_VALUE_LABEL": "Valor"
+        }
+      },
+      "VARIABLE_PICKER": {
+        "LABEL": "Variáveis disponíveis até aqui",
+        "EMPTY": "Nenhuma variável capturada antes deste bloco ainda"
+      }
+    }
+  }
+}

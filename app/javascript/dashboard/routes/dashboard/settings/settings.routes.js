@@ -10,6 +10,7 @@ import assignmentPolicy from './assignmentPolicy/assignmentPolicy.routes';
 import agentBot from './agentBots/agentBot.routes';
 import attributes from './attributes/attributes.routes';
 import automation from './automation/automation.routes';
+import botFlow from './botFlow/botFlow.routes';
 import auditlogs from './auditlogs/audit.routes';
 import billing from './billing/billing.routes';
 import canned from './canned/canned.routes';
@@ -54,6 +55,7 @@ export default {
     ...agentBot.routes,
     ...attributes.routes,
     ...automation.routes,
+    ...botFlow.routes,
     ...auditlogs.routes,
     ...billing.routes,
     ...canned.routes,

@@ -1,0 +1,161 @@
+{
+  "BOT_FLOW": {
+    "HEADER": "Bot Builder",
+    "DESCRIPTION": "Build real conversation flows for WhatsApp, with branching: if the customer replies this, do that. No code required.",
+    "LIST": {
+      "SEARCH_PLACEHOLDER": "Search flow",
+      "COUNT": "{n} flow(s)",
+      "NEW_FLOW": "New flow",
+      "LOADING": "Loading flows...",
+      "404": "No flows created yet.",
+      "NO_RESULTS": "No flows found for this search.",
+      "TOGGLE_ACTIVE": "Enable/disable flow",
+      "EDIT": "Edit flow",
+      "TRIGGER_KEYWORD": "Triggers on keyword: {keywords}",
+      "TRIGGER_CONVERSATION_CREATED": "Triggers when a conversation starts",
+      "API": {
+        "ERROR_MESSAGE": "Could not update the flow. Please try again later."
+      },
+      "DELETE": {
+        "BUTTON_TEXT": "Delete flow",
+        "SUCCESS_MESSAGE": "Flow deleted successfully",
+        "ERROR_MESSAGE": "Could not delete the flow. Please try again later.",
+        "CONFIRM": {
+          "TITLE": "Delete flow {flowName}?",
+          "MESSAGE": "This action cannot be undone. The flow will stop running immediately.",
+          "YES": "Yes, delete",
+          "NO": "Cancel",
+          "PLACE_HOLDER": "Type \"{flowName}\" to confirm"
+        }
+      }
+    },
+    "EDITOR": {
+      "HEADER": "Flow editor",
+      "NAME_LABEL": "Flow name",
+      "NAME_PLACEHOLDER": "E.g.: WhatsApp initial support",
+      "DESCRIPTION_LABEL": "Description (optional)",
+      "TRIGGER_LABEL": "When this flow starts",
+      "TRIGGER_TYPES": {
+        "CONVERSATION_CREATED": "When a new conversation starts",
+        "KEYWORD": "When the message contains a keyword"
+      },
+      "KEYWORDS_LABEL": "Keywords (one per line or comma-separated)",
+      "KEYWORDS_PLACEHOLDER": "E.g.: cancel, support, help",
+      "INBOXES_LABEL": "WhatsApp inboxes this flow runs on",
+      "INBOXES_PLACEHOLDER": "Select one or more inboxes",
+      "ACTIVE_LABEL": "Flow active",
+      "SAVE": "Save flow",
+      "SUCCESS_MESSAGE": "Flow saved successfully",
+      "ERROR_MESSAGE": "Could not save the flow. Check that every block is filled in correctly.",
+      "VALIDATION": {
+        "NAME_REQUIRED": "Give the flow a name before saving.",
+        "SINGLE_START": "The flow must have exactly one Start block.",
+        "MISSING_FIELDS": "Fill in the required fields on every block before saving."
+      },
+      "ADD_NODE": "Add block",
+      "DELETE_NODE": "Delete block",
+      "NODE_TYPES": {
+        "START": "Start",
+        "SEND_MESSAGE": "Send message",
+        "MENU": "Menu",
+        "ASK_AND_EXTRACT": "Ask for information",
+        "CONDITION": "Condition",
+        "EXTRACT_PATTERN": "Extract pattern",
+        "WEBHOOK": "Call webhook",
+        "CHATWOOT_ACTION": "Chatwoot action"
+      },
+      "HANDLES": {
+        "DEFAULT": "Continue",
+        "FOUND": "Found",
+        "NOT_FOUND": "Not found",
+        "SUCCESS": "Success",
+        "ERROR": "Error",
+        "ELSE": "Else"
+      },
+      "PANEL": {
+        "SEND_MESSAGE": {
+          "TEXT_LABEL": "Message",
+          "TEXT_PLACEHOLDER": "Type the text that will be sent to the customer"
+        },
+        "MENU": {
+          "PROMPT_LABEL": "Menu message",
+          "PROMPT_PLACEHOLDER": "E.g.: Select an option:",
+          "RETRY_PROMPT_LABEL": "Message when the reply isn't recognized",
+          "OPTIONS_LABEL": "Menu options",
+          "OPTION_PLACEHOLDER": "Option text",
+          "ADD_OPTION": "Add option"
+        },
+        "ASK_AND_EXTRACT": {
+          "PROMPT_LABEL": "Question sent to the customer",
+          "PROMPT_PLACEHOLDER": "E.g.: Describe your situation",
+          "VARIABLE_NAME_LABEL": "Save reply into variable",
+          "VARIABLE_NAME_PLACEHOLDER": "E.g.: situation"
+        },
+        "CONDITION": {
+          "VARIABLE_LABEL": "Variable to compare",
+          "RULES_LABEL": "Rules",
+          "ADD_RULE": "Add rule",
+          "OPERATOR_LABEL": "Condition",
+          "OPERATORS": {
+            "EQUALS": "equals",
+            "CONTAINS": "contains",
+            "IS_PRESENT": "was filled in",
+            "REGEX": "matches pattern (advanced)"
+          },
+          "VALUE_LABEL": "Value",
+          "VALUE_PLACEHOLDER": "Comparison value"
+        },
+        "EXTRACT_PATTERN": {
+          "SOURCE_VARIABLE_LABEL": "Source variable",
+          "PATTERN_LABEL": "What to extract",
+          "PATTERNS": {
+            "CNPJ": "CNPJ",
+            "CPF": "CPF",
+            "EMAIL": "Email",
+            "TELEFONE": "Phone",
+            "PERSONALIZADO": "Custom (advanced)"
+          },
+          "CUSTOM_PATTERN_LABEL": "Pattern (regex)",
+          "CUSTOM_PATTERN_PLACEHOLDER": "Advanced search pattern",
+          "TARGET_VARIABLE_LABEL": "Save result into variable",
+          "TARGET_VARIABLE_PLACEHOLDER": "E.g.: cnpj"
+        },
+        "WEBHOOK": {
+          "METHOD_LABEL": "Method",
+          "URL_LABEL": "URL",
+          "URL_PLACEHOLDER": "https://example.com/api?field={{variable}}",
+          "HEADERS_LABEL": "Headers (authentication, etc.)",
+          "ADD_HEADER": "Add header",
+          "HEADER_KEY_PLACEHOLDER": "Name",
+          "HEADER_VALUE_PLACEHOLDER": "Value",
+          "BODY_LABEL": "Request body (for POST)",
+          "BODY_PLACEHOLDER": "{\"field\": \"{{variable}}\"}",
+          "SUCCESS_CHECK_LABEL": "Consider success when the response has (optional)",
+          "SUCCESS_CHECK_FIELD_PLACEHOLDER": "field (e.g.: found)",
+          "SUCCESS_CHECK_VALUE_PLACEHOLDER": "equal to (e.g.: true)",
+          "RESPONSE_MAPPINGS_LABEL": "Save response data into variables",
+          "ADD_MAPPING": "Add variable",
+          "JSON_PATH_PLACEHOLDER": "response field (e.g.: name)",
+          "VARIABLE_NAME_PLACEHOLDER": "variable name"
+        },
+        "CHATWOOT_ACTION": {
+          "ACTION_LABEL": "What to do",
+          "ACTIONS": {
+            "ASSIGN_TEAM": "Assign to a team",
+            "ADD_LABEL": "Add label",
+            "SET_CUSTOM_ATTRIBUTE": "Set custom attribute",
+            "RESOLVE_CONVERSATION": "Resolve the conversation"
+          },
+          "TEAM_LABEL": "Team",
+          "LABEL_LABEL": "Label",
+          "ATTRIBUTE_KEY_LABEL": "Attribute",
+          "ATTRIBUTE_VALUE_LABEL": "Value"
+        }
+      },
+      "VARIABLE_PICKER": {
+        "LABEL": "Variables available up to here",
+        "EMPTY": "No variables captured before this block yet"
+      }
+    }
+  }
+}
