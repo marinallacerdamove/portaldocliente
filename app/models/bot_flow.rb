@@ -26,7 +26,7 @@ class BotFlow < ApplicationRecord
 
   enum trigger_type: { conversation_created: 0, keyword: 1 }
 
-  NODE_TYPES = %w[start send_message menu ask_and_extract condition extract_pattern webhook chatwoot_action].freeze
+  NODE_TYPES = %w[start send_message menu ask_and_extract condition extract_pattern webhook chatwoot_action cnpj_lookup].freeze
   NODE_REQUIRED_FIELDS = {
     'start' => [],
     'send_message' => ['text'],
@@ -35,7 +35,8 @@ class BotFlow < ApplicationRecord
     'condition' => ['branches'],
     'extract_pattern' => %w[source_variable pattern target_variable],
     'webhook' => %w[url method],
-    'chatwoot_action' => ['action_name']
+    'chatwoot_action' => ['action_name'],
+    'cnpj_lookup' => ['source_variable']
   }.freeze
 
   validates :name, presence: true

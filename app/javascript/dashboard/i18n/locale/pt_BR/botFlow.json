@@ -66,7 +66,8 @@
         "CONDITION": "Condição",
         "EXTRACT_PATTERN": "Extrair padrão",
         "WEBHOOK": "Buscar informação em outro sistema",
-        "CHATWOOT_ACTION": "Ação do Chatwoot"
+        "CHATWOOT_ACTION": "Ação do Chatwoot",
+        "CNPJ_LOOKUP": "Consultar CNPJ no Portal"
       },
       "HANDLES": {
         "DEFAULT": "Continua",
@@ -169,6 +170,11 @@
           "ATTRIBUTE_KEY_LABEL": "Nome da informação",
           "ATTRIBUTE_VALUE_LABEL": "Valor",
           "ATTRIBUTE_HELP": "Fica salvo na conversa, só pra uso interno da equipe"
+        },
+        "CNPJ_LOOKUP": {
+          "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e verifica se essa empresa já está cadastrada no Portal. Se encontrar, o nome da empresa fica disponível como {{empresa_nome}} pra usar na próxima mensagem.",
+          "SOURCE_VARIABLE_LABEL": "Onde procurar o CNPJ",
+          "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo"
         }
       },
       "VARIABLE_PICKER": {

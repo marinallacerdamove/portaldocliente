@@ -7,6 +7,7 @@ export const BOT_FLOW_NODE_TYPES = {
   EXTRACT_PATTERN: 'extract_pattern',
   WEBHOOK: 'webhook',
   CHATWOOT_ACTION: 'chatwoot_action',
+  CNPJ_LOOKUP: 'cnpj_lookup',
 };
 
 export const BOT_FLOW_ADDABLE_NODE_TYPES = [
@@ -14,6 +15,7 @@ export const BOT_FLOW_ADDABLE_NODE_TYPES = [
   BOT_FLOW_NODE_TYPES.MENU,
   BOT_FLOW_NODE_TYPES.ASK_AND_EXTRACT,
   BOT_FLOW_NODE_TYPES.CONDITION,
+  BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP,
   BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN,
   BOT_FLOW_NODE_TYPES.WEBHOOK,
   BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION,
@@ -53,6 +55,8 @@ export const getDefaultNodeData = type => {
       };
     case BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION:
       return { action_name: 'assign_team', action_params: [] };
+    case BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP:
+      return { source_variable: '' };
     default:
       return {};
   }
@@ -84,6 +88,7 @@ export const staticHandlesFor = type => {
     case BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION:
       return ['default'];
     case BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN:
+    case BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP:
       return ['found', 'not_found'];
     case BOT_FLOW_NODE_TYPES.WEBHOOK:
       return ['success', 'error'];
@@ -123,6 +128,7 @@ const REQUIRED_FIELDS_BY_TYPE = {
   ],
   [BOT_FLOW_NODE_TYPES.WEBHOOK]: ['url', 'method'],
   [BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION]: ['action_name'],
+  [BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP]: ['source_variable'],
 };
 
 const isBranchValid = branch =>

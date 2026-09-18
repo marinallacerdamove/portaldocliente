@@ -77,6 +77,9 @@ class BotFlows::Engine
       when 'webhook'
         handle, vars = BotFlows::WebhookCaller.new(node, vars, @conversation).call
         node_id = next_node_id(flow, node['id'], handle)
+      when 'cnpj_lookup'
+        handle, vars = BotFlows::CnpjLookup.new(node, vars, @conversation).call
+        node_id = next_node_id(flow, node['id'], handle)
       when 'chatwoot_action'
         run_chatwoot_action(node)
         node_id = next_node_id(flow, node['id'], 'default')

@@ -244,21 +244,14 @@ namespace :move do
       nodes << { "id" => "ask_detalhes", "type" => "ask_and_extract",
                  "prompt" => text_for.call("bot_pedido_detalhes", "Por favor, descreva a situação, o nome da empresa e o CNPJ para prosseguirmos com o atendimento."),
                  "variable_name" => "detalhes" }
-      edges << { "source" => "ask_detalhes", "sourceHandle" => "default", "target" => "extract_cnpj" }
+      edges << { "source" => "ask_detalhes", "sourceHandle" => "default", "target" => "cnpj_lookup" }
 
-      nodes << { "id" => "extract_cnpj", "type" => "extract_pattern", "source_variable" => "detalhes", "pattern" => "cnpj", "target_variable" => "cnpj" }
-      edges << { "source" => "extract_cnpj", "sourceHandle" => "found", "target" => "webhook_empresa" }
-      edges << { "source" => "extract_cnpj", "sourceHandle" => "not_found", "target" => "msg_desconhecida" }
-
-      nodes << {
-        "id" => "webhook_empresa", "type" => "webhook", "method" => "get",
-        "url" => "#{ENV.fetch('PORTAL_INTERNAL_API_URL', '')}/api/internal/empresa_by_cnpj?cnpj={{cnpj}}",
-        "headers" => { "X-Internal-Token" => ENV.fetch("PORTAL_INTERNAL_API_TOKEN", "") },
-        "success_check" => { "field" => "found", "equals" => true },
-        "response_mappings" => [{ "json_path" => "nome", "variable_name" => "empresa_nome" }]
-      }
-      edges << { "source" => "webhook_empresa", "sourceHandle" => "success", "target" => "msg_conhecida" }
-      edges << { "source" => "webhook_empresa", "sourceHandle" => "error", "target" => "msg_desconhecida" }
+      # Bloco pronto (sem campo técnico) - acha o CNPJ dentro de "detalhes" e
+      # consulta o Portal; endereço/token/formato da resposta ficam fixos em
+      # BotFlows::CnpjLookup, não precisam ser configurados aqui.
+      nodes << { "id" => "cnpj_lookup", "type" => "cnpj_lookup", "source_variable" => "detalhes" }
+      edges << { "source" => "cnpj_lookup", "sourceHandle" => "found", "target" => "msg_conhecida" }
+      edges << { "source" => "cnpj_lookup", "sourceHandle" => "not_found", "target" => "msg_desconhecida" }
 
       nodes << { "id" => "msg_conhecida", "type" => "send_message",
                  "text" => text_for.call("bot_empresa_conhecida", "Olá, {{contact.name}}! Vi que sua empresa é a {{empresa_nome}}. Como podemos te ajudar?") }

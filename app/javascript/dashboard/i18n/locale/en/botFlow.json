@@ -66,7 +66,8 @@
         "CONDITION": "Condition",
         "EXTRACT_PATTERN": "Extract pattern",
         "WEBHOOK": "Look up information in another system",
-        "CHATWOOT_ACTION": "Chatwoot action"
+        "CHATWOOT_ACTION": "Chatwoot action",
+        "CNPJ_LOOKUP": "Look up CNPJ in the Portal"
       },
       "HANDLES": {
         "DEFAULT": "Continue",
@@ -169,6 +170,11 @@
           "ATTRIBUTE_KEY_LABEL": "Information name",
           "ATTRIBUTE_VALUE_LABEL": "Value",
           "ATTRIBUTE_HELP": "Saved on the conversation, for internal team use only"
+        },
+        "CNPJ_LOOKUP": {
+          "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and checks if that company is already registered in the Portal. When found, the company name becomes available as {{empresa_nome}} to use in the next message.",
+          "SOURCE_VARIABLE_LABEL": "Where to look for the CNPJ",
+          "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow"
         }
       },
       "VARIABLE_PICKER": {

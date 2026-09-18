@@ -26,6 +26,7 @@ const ICONS = {
   [BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN]: 'i-lucide-regex',
   [BOT_FLOW_NODE_TYPES.WEBHOOK]: 'i-lucide-globe',
   [BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION]: 'i-lucide-zap',
+  [BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP]: 'i-lucide-building-2',
 };
 
 const icon = computed(() => ICONS[props.type] || 'i-lucide-box');
@@ -59,6 +60,10 @@ const summary = computed(() => {
         ? t(
             `BOT_FLOW.EDITOR.PANEL.CHATWOOT_ACTION.ACTIONS.${data.action_name.toUpperCase()}`
           )
+        : '';
+    case BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP:
+      return data.source_variable
+        ? `{{${data.source_variable}}} → {{empresa_nome}}`
         : '';
     default:
       return '';

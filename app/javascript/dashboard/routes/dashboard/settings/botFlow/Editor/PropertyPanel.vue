@@ -11,6 +11,7 @@ import ConditionPanel from './panels/ConditionPanel.vue';
 import ExtractPatternPanel from './panels/ExtractPatternPanel.vue';
 import WebhookPanel from './panels/WebhookPanel.vue';
 import ChatwootActionPanel from './panels/ChatwootActionPanel.vue';
+import CnpjLookupPanel from './panels/CnpjLookupPanel.vue';
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -30,6 +31,7 @@ const PANELS = {
   [BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN]: ExtractPatternPanel,
   [BOT_FLOW_NODE_TYPES.WEBHOOK]: WebhookPanel,
   [BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION]: ChatwootActionPanel,
+  [BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP]: CnpjLookupPanel,
 };
 
 const panelComponent = computed(() => PANELS[props.node.type]);
@@ -49,6 +51,7 @@ const { variableOptions, insertableVariableOptions } = useBotFlowVariables(
 const CAPTURED_ONLY_TYPES = [
   BOT_FLOW_NODE_TYPES.CONDITION,
   BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN,
+  BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP,
 ];
 const panelVariableOptions = computed(() =>
   CAPTURED_ONLY_TYPES.includes(props.node.type)
