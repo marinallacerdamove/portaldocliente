@@ -142,13 +142,13 @@
           "INTRO_HELP": "Esse bloco vai buscar uma informação em outro sistema/site fora do WhatsApp - por exemplo, verificar se o CNPJ do cliente já está cadastrado no Portal. Preencher isso é mais técnico (parecido com preencher um formulário de programador): se você não souber o que colocar aqui, peça ajuda de quem já configurou um bloco desses antes, ou de um desenvolvedor.",
           "METHOD_LABEL": "Método",
           "URL_LABEL": "Endereço (URL)",
-          "URL_PLACEHOLDER": "https://exemplo.com/api?campo={{variavel}}",
+          "URL_PLACEHOLDER": "https://exemplo.com/api?campo={'{'}{'{'}variavel{'}'}{'}'}",
           "HEADERS_LABEL": "Chaves de acesso (se precisar)",
           "ADD_HEADER": "Adicionar chave",
           "HEADER_KEY_PLACEHOLDER": "Nome",
           "HEADER_VALUE_PLACEHOLDER": "Valor",
           "BODY_LABEL": "Dados enviados (método Enviar)",
-          "BODY_PLACEHOLDER": "{\"campo\": \"{{variavel}}\"}",
+          "BODY_PLACEHOLDER": "{'{'}\"campo\": \"{'{'}{'{'}variavel{'}'}{'}'}\"{'}'}",
           "SUCCESS_CHECK_LABEL": "Considerar sucesso quando a resposta trouxer (opcional)",
           "SUCCESS_CHECK_FIELD_PLACEHOLDER": "campo (ex.: found)",
           "SUCCESS_CHECK_VALUE_PLACEHOLDER": "igual a (ex.: true)",
@@ -172,7 +172,7 @@
           "ATTRIBUTE_HELP": "Fica salvo na conversa, só pra uso interno da equipe"
         },
         "CNPJ_LOOKUP": {
-          "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e verifica se essa empresa já está cadastrada no Portal. Se encontrar, o nome da empresa fica disponível como {{empresa_nome}} pra usar na próxima mensagem.",
+          "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e verifica se essa empresa já está cadastrada no Portal. Se encontrar, o nome da empresa fica disponível como {'{'}{'{'}empresa_nome{'}'}{'}'} pra usar na próxima mensagem.",
           "SOURCE_VARIABLE_LABEL": "Onde procurar o CNPJ",
           "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo"
         }

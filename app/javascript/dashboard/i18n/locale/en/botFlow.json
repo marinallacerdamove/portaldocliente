@@ -142,13 +142,13 @@
           "INTRO_HELP": "This block looks up information in another system/site outside of WhatsApp - for example, checking if the customer's CNPJ is already registered in the Portal. Filling this in is more technical (similar to filling out a developer's form): if you're not sure what to put here, ask whoever has set up a block like this before, or a developer.",
           "METHOD_LABEL": "Method",
           "URL_LABEL": "URL",
-          "URL_PLACEHOLDER": "https://example.com/api?field={{variable}}",
+          "URL_PLACEHOLDER": "https://example.com/api?field={'{'}{'{'}variable{'}'}{'}'}",
           "HEADERS_LABEL": "Access keys (if needed)",
           "ADD_HEADER": "Add key",
           "HEADER_KEY_PLACEHOLDER": "Name",
           "HEADER_VALUE_PLACEHOLDER": "Value",
           "BODY_LABEL": "Data sent (Send method)",
-          "BODY_PLACEHOLDER": "{\"field\": \"{{variable}}\"}",
+          "BODY_PLACEHOLDER": "{'{'}\"field\": \"{'{'}{'{'}variable{'}'}{'}'}\"{'}'}",
           "SUCCESS_CHECK_LABEL": "Consider success when the response has (optional)",
           "SUCCESS_CHECK_FIELD_PLACEHOLDER": "field (e.g.: found)",
           "SUCCESS_CHECK_VALUE_PLACEHOLDER": "equal to (e.g.: true)",
@@ -172,7 +172,7 @@
           "ATTRIBUTE_HELP": "Saved on the conversation, for internal team use only"
         },
         "CNPJ_LOOKUP": {
-          "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and checks if that company is already registered in the Portal. When found, the company name becomes available as {{empresa_nome}} to use in the next message.",
+          "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and checks if that company is already registered in the Portal. When found, the company name becomes available as {'{'}{'{'}empresa_nome{'}'}{'}'} to use in the next message.",
           "SOURCE_VARIABLE_LABEL": "Where to look for the CNPJ",
           "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow"
         }
