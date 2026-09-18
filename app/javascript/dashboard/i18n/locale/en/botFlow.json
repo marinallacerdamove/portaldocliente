@@ -67,7 +67,8 @@
         "EXTRACT_PATTERN": "Extract pattern",
         "WEBHOOK": "Look up information in another system",
         "CHATWOOT_ACTION": "Chatwoot action",
-        "CNPJ_LOOKUP": "Look up CNPJ in the Portal"
+        "CNPJ_LOOKUP": "Look up CNPJ in the Portal",
+        "RECEITA_CNPJ_LOOKUP": "Look up CNPJ with the tax authority"
       },
       "HANDLES": {
         "DEFAULT": "Continue",
@@ -78,12 +79,15 @@
         "ELSE": "Else"
       },
       "NODE_SUMMARY": {
-        "CONDITION_PATHS": "{n} path(s)"
+        "CONDITION_PATHS": "{n} path(s)",
+        "PRIVATE_PREFIX": "[Internal]"
       },
       "PANEL": {
         "SEND_MESSAGE": {
           "TEXT_LABEL": "Message",
-          "TEXT_PLACEHOLDER": "Type the text that will be sent to the customer"
+          "TEXT_PLACEHOLDER": "Type the text that will be sent to the customer",
+          "PRIVATE_LABEL": "Internal message",
+          "PRIVATE_HELP": "Only the team sees this message on the conversation - the customer gets nothing."
         },
         "MENU": {
           "PROMPT_LABEL": "Menu message",
@@ -175,6 +179,12 @@
           "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and checks if that company is already registered in the Portal. When found, the company name becomes available as {'{'}{'{'}empresa_nome{'}'}{'}'} to use in the next message.",
           "SOURCE_VARIABLE_LABEL": "Where to look for the CNPJ",
           "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow"
+        },
+        "RECEITA_CNPJ_LOOKUP": {
+          "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and looks up that company's official data straight from the tax authority (a free public source). Good for recognizing a new customer before even replying.",
+          "SOURCE_VARIABLE_LABEL": "Where to look for the CNPJ",
+          "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow",
+          "VARIABLES_HELP": "After this block you'll have: legal name, trade name, business activity, registration status, company size, phone, start date, and address (full and by part)."
         }
       },
       "VARIABLE_PICKER": {

@@ -27,6 +27,7 @@ const ICONS = {
   [BOT_FLOW_NODE_TYPES.WEBHOOK]: 'i-lucide-globe',
   [BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION]: 'i-lucide-zap',
   [BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP]: 'i-lucide-building-2',
+  [BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP]: 'i-lucide-landmark',
 };
 
 const icon = computed(() => ICONS[props.type] || 'i-lucide-box');
@@ -38,7 +39,9 @@ const summary = computed(() => {
   const data = props.data || {};
   switch (props.type) {
     case BOT_FLOW_NODE_TYPES.SEND_MESSAGE:
-      return data.text;
+      return data.private
+        ? `${t('BOT_FLOW.EDITOR.NODE_SUMMARY.PRIVATE_PREFIX')} ${data.text || ''}`
+        : data.text;
     case BOT_FLOW_NODE_TYPES.MENU:
       return data.prompt;
     case BOT_FLOW_NODE_TYPES.ASK_AND_EXTRACT:
@@ -64,6 +67,10 @@ const summary = computed(() => {
     case BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP:
       return data.source_variable
         ? `{{${data.source_variable}}} → {{empresa_nome}}`
+        : '';
+    case BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP:
+      return data.source_variable
+        ? `{{${data.source_variable}}} → {{empresa_razao_social}}...`
         : '';
     default:
       return '';

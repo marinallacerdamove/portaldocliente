@@ -8,6 +8,7 @@ export const BOT_FLOW_NODE_TYPES = {
   WEBHOOK: 'webhook',
   CHATWOOT_ACTION: 'chatwoot_action',
   CNPJ_LOOKUP: 'cnpj_lookup',
+  RECEITA_CNPJ_LOOKUP: 'receita_cnpj_lookup',
 };
 
 export const BOT_FLOW_ADDABLE_NODE_TYPES = [
@@ -16,6 +17,7 @@ export const BOT_FLOW_ADDABLE_NODE_TYPES = [
   BOT_FLOW_NODE_TYPES.ASK_AND_EXTRACT,
   BOT_FLOW_NODE_TYPES.CONDITION,
   BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP,
+  BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP,
   BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN,
   BOT_FLOW_NODE_TYPES.WEBHOOK,
   BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION,
@@ -30,7 +32,7 @@ export const generateNodeId = type => {
 export const getDefaultNodeData = type => {
   switch (type) {
     case BOT_FLOW_NODE_TYPES.SEND_MESSAGE:
-      return { text: '' };
+      return { text: '', private: false };
     case BOT_FLOW_NODE_TYPES.MENU:
       return { prompt: '', retry_prompt: '', options: [] };
     case BOT_FLOW_NODE_TYPES.ASK_AND_EXTRACT:
@@ -56,6 +58,7 @@ export const getDefaultNodeData = type => {
     case BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION:
       return { action_name: 'assign_team', action_params: [] };
     case BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP:
+    case BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP:
       return { source_variable: '' };
     default:
       return {};
@@ -89,6 +92,7 @@ export const staticHandlesFor = type => {
       return ['default'];
     case BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN:
     case BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP:
+    case BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP:
       return ['found', 'not_found'];
     case BOT_FLOW_NODE_TYPES.WEBHOOK:
       return ['success', 'error'];
@@ -129,6 +133,7 @@ const REQUIRED_FIELDS_BY_TYPE = {
   [BOT_FLOW_NODE_TYPES.WEBHOOK]: ['url', 'method'],
   [BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION]: ['action_name'],
   [BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP]: ['source_variable'],
+  [BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP]: ['source_variable'],
 };
 
 const isBranchValid = branch =>

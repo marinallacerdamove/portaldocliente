@@ -12,6 +12,30 @@ const SYSTEM_VARIABLES = [
 
 const formatOption = (id, label) => ({ id, name: `${label} - {{${id}}}` });
 
+// Esses dois tipos de bloco não deixam quem monta o fluxo escolher o nome
+// da variável (o nome já vem fixo, pra ficar sem código) - por isso as
+// variáveis que eles criam entram aqui direto, em vez de vir de
+// data.variable_name/data.target_variable como nos outros tipos.
+const FIXED_OUTPUT_VARIABLES = {
+  [BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP]: ['empresa_nome'],
+  [BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP]: [
+    'empresa_razao_social',
+    'empresa_nome_fantasia',
+    'empresa_cnae',
+    'empresa_situacao',
+    'empresa_porte',
+    'empresa_telefone',
+    'empresa_data_abertura',
+    'empresa_endereco',
+    'empresa_logradouro',
+    'empresa_numero',
+    'empresa_bairro',
+    'empresa_municipio',
+    'empresa_uf',
+    'empresa_cep',
+  ],
+};
+
 // Lista as variáveis já capturadas antes de um nó (varre as arestas de trás
 // pra frente) - usado pra oferecer um dropdown de variável em vez de pedir
 // pra digitar o nome de cor, e reduzir erro de digitação/nome inventado.
@@ -51,6 +75,9 @@ export function useBotFlowVariables(nodes, edges, currentNodeId) {
               ) {
                 names.add(sourceNode.data.target_variable);
               }
+              (FIXED_OUTPUT_VARIABLES[sourceNode.type] || []).forEach(name =>
+                names.add(name)
+              );
             }
             queue.push(edge.source);
           });

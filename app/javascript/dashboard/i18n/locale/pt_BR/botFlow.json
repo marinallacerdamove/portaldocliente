@@ -67,7 +67,8 @@
         "EXTRACT_PATTERN": "Extrair padrão",
         "WEBHOOK": "Buscar informação em outro sistema",
         "CHATWOOT_ACTION": "Ação do Chatwoot",
-        "CNPJ_LOOKUP": "Consultar CNPJ no Portal"
+        "CNPJ_LOOKUP": "Consultar CNPJ no Portal",
+        "RECEITA_CNPJ_LOOKUP": "Consultar CNPJ na Receita Federal"
       },
       "HANDLES": {
         "DEFAULT": "Continua",
@@ -78,12 +79,15 @@
         "ELSE": "Senão"
       },
       "NODE_SUMMARY": {
-        "CONDITION_PATHS": "{n} caminho(s)"
+        "CONDITION_PATHS": "{n} caminho(s)",
+        "PRIVATE_PREFIX": "[Interno]"
       },
       "PANEL": {
         "SEND_MESSAGE": {
           "TEXT_LABEL": "Mensagem",
-          "TEXT_PLACEHOLDER": "Digite o texto que será enviado ao cliente"
+          "TEXT_PLACEHOLDER": "Digite o texto que será enviado ao cliente",
+          "PRIVATE_LABEL": "Mensagem interna",
+          "PRIVATE_HELP": "Só a equipe vê essa mensagem na conversa - o cliente não recebe nada."
         },
         "MENU": {
           "PROMPT_LABEL": "Mensagem do menu",
@@ -175,6 +179,12 @@
           "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e verifica se essa empresa já está cadastrada no Portal. Se encontrar, o nome da empresa fica disponível como {'{'}{'{'}empresa_nome{'}'}{'}'} pra usar na próxima mensagem.",
           "SOURCE_VARIABLE_LABEL": "Onde procurar o CNPJ",
           "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo"
+        },
+        "RECEITA_CNPJ_LOOKUP": {
+          "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e busca os dados oficiais dessa empresa direto na Receita Federal (fonte pública, gratuita). Bom pra reconhecer um cliente novo antes mesmo de responder.",
+          "SOURCE_VARIABLE_LABEL": "Onde procurar o CNPJ",
+          "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo",
+          "VARIABLES_HELP": "Depois desse bloco ficam disponíveis: razão social, nome fantasia, atividade (CNAE), situação cadastral, porte, telefone, data de abertura e endereço (completo e por partes)."
         }
       },
       "VARIABLE_PICKER": {

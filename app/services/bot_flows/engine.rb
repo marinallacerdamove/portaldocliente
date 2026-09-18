@@ -61,7 +61,7 @@ class BotFlows::Engine
 
       case node['type']
       when 'send_message'
-        send_text(interpolate(node['text'], vars))
+        send_text(interpolate(node['text'], vars), private: node['private'].present?)
         node_id = next_node_id(flow, node['id'], 'default')
       when 'menu'
         send_menu(node, vars)
@@ -79,6 +79,9 @@ class BotFlows::Engine
         node_id = next_node_id(flow, node['id'], handle)
       when 'cnpj_lookup'
         handle, vars = BotFlows::CnpjLookup.new(node, vars, @conversation).call
+        node_id = next_node_id(flow, node['id'], handle)
+      when 'receita_cnpj_lookup'
+        handle, vars = BotFlows::ReceitaCnpjLookup.new(node, vars, @conversation).call
         node_id = next_node_id(flow, node['id'], handle)
       when 'chatwoot_action'
         run_chatwoot_action(node)
@@ -163,12 +166,12 @@ class BotFlows::Engine
     BotFlows::Interpolation.render(template, variables: vars, contact: @conversation.contact)
   end
 
-  def send_text(content)
+  def send_text(content, private: false)
     return if content.blank?
 
     @conversation.messages.create!(
       account_id: @conversation.account_id, inbox_id: @conversation.inbox_id,
-      message_type: :outgoing, content: content
+      message_type: :outgoing, content: content, private: private
     )
   end
 
