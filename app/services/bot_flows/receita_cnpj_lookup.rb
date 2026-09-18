@@ -29,12 +29,26 @@ class BotFlows::ReceitaCnpjLookup
     @conversation = conversation
   end
 
+  # Uma tentativa só - uma API pública e gratuita como essa tem instabilidade
+  # e limite de uso reais (confirmado na prática), então uma falha passageira
+  # não pode virar "CNPJ não encontrado" pro time comercial sem nem tentar
+  # de novo.
+  MAX_ATTEMPTS = 2
+  RETRY_DELAY_SECONDS = 1.5
+
   def call
     digits = @vars[@node['source_variable']].to_s[CNPJ_REGEX].to_s.gsub(/\D/, '')
     return ['not_found', @vars] if digits.blank?
 
     webhook_node = { 'url' => "#{BASE_URL}/#{digits}", 'method' => 'get', 'response_mappings' => RESPONSE_MAPPINGS }
-    handle, vars = BotFlows::WebhookCaller.new(webhook_node, @vars, @conversation).call
+
+    handle = vars = nil
+    MAX_ATTEMPTS.times do |attempt|
+      handle, vars = BotFlows::WebhookCaller.new(webhook_node, @vars, @conversation).call
+      break if handle == 'success'
+
+      sleep(RETRY_DELAY_SECONDS) if attempt < MAX_ATTEMPTS - 1
+    end
     return ['not_found', vars] unless handle == 'success'
 
     ['found', vars.merge('empresa_endereco' => format_address(vars))]
