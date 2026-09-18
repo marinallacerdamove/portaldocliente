@@ -3,14 +3,12 @@ import { markRaw, watch } from 'vue';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
-import { MiniMap } from '@vue-flow/minimap';
 import BotFlowNode from './nodes/BotFlowNode.vue';
 import { BOT_FLOW_NODE_TYPES } from 'dashboard/helper/botFlowHelper';
 
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/controls/dist/style.css';
-import '@vue-flow/minimap/dist/style.css';
 
 const props = defineProps({
   selectedNodeId: { type: String, default: null },
@@ -66,6 +64,5 @@ watch(
   >
     <Background :gap="16" />
     <Controls />
-    <MiniMap />
   </VueFlow>
 </template>

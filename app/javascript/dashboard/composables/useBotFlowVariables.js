@@ -10,7 +10,7 @@ const SYSTEM_VARIABLES = [
   { id: 'contact.phone_number', label: 'Telefone do cliente' },
 ];
 
-const formatOption = (id, label) => ({ id, name: `${label} — {{${id}}}` });
+const formatOption = (id, label) => ({ id, name: `${label} - {{${id}}}` });
 
 // Lista as variáveis já capturadas antes de um nó (varre as arestas de trás
 // pra frente) - usado pra oferecer um dropdown de variável em vez de pedir

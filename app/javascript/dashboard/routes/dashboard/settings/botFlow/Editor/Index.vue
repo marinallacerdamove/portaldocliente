@@ -57,7 +57,15 @@ const selectedNode = computed(
 const undoStack = ref([]);
 const redoStack = ref([]);
 const snapshot = () =>
-  structuredClone({ nodes: nodes.value, edges: edges.value });
+  structuredClone({
+    nodes: nodes.value.map(flowNodeToBackend),
+    edges: edges.value.map(flowEdgeToBackend),
+  });
+const restore = state => {
+  nodes.value = state.nodes.map(backendNodeToFlow);
+  edges.value = state.edges.map(backendEdgeToFlow);
+  selectedNodeId.value = null;
+};
 const pushHistory = () => {
   undoStack.value.push(snapshot());
   redoStack.value = [];
@@ -65,18 +73,12 @@ const pushHistory = () => {
 const undo = () => {
   if (!undoStack.value.length) return;
   redoStack.value.push(snapshot());
-  const previous = undoStack.value.pop();
-  nodes.value = previous.nodes;
-  edges.value = previous.edges;
-  selectedNodeId.value = null;
+  restore(undoStack.value.pop());
 };
 const redo = () => {
   if (!redoStack.value.length) return;
   undoStack.value.push(snapshot());
-  const next = redoStack.value.pop();
-  nodes.value = next.nodes;
-  edges.value = next.edges;
-  selectedNodeId.value = null;
+  restore(redoStack.value.pop());
 };
 
 const triggerTypeOptions = computed(() => [
