@@ -56,11 +56,18 @@ const selectedNode = computed(
 // edição de texto dentro do painel não entra aqui de propósito.
 const undoStack = ref([]);
 const redoStack = ref([]);
+// JSON.parse/stringify em vez de structuredClone de propósito: os nós do
+// vue-flow guardam campos internos (posição, dimensões etc.) que não são
+// literais simples e o structuredClone rejeita - JSON round-trip é
+// exatamente o formato que já mandamos pro backend em saveFlow, então
+// serializa igual, sem exigir que tudo seja "clonável" no sentido estrito.
 const snapshot = () =>
-  structuredClone({
-    nodes: nodes.value.map(flowNodeToBackend),
-    edges: edges.value.map(flowEdgeToBackend),
-  });
+  JSON.parse(
+    JSON.stringify({
+      nodes: nodes.value.map(flowNodeToBackend),
+      edges: edges.value.map(flowEdgeToBackend),
+    })
+  );
 const restore = state => {
   nodes.value = state.nodes.map(backendNodeToFlow);
   edges.value = state.edges.map(backendEdgeToFlow);
@@ -119,7 +126,7 @@ const backendEdgeToFlow = (edge, index) => ({
 const flowNodeToBackend = node => ({
   id: node.id,
   type: node.type,
-  position: node.position,
+  position: { x: node.position.x, y: node.position.y },
   ...node.data,
 });
 const flowEdgeToBackend = edge => ({
@@ -214,7 +221,7 @@ const duplicateSelectedNode = () => {
     id: generateNodeId(original.type),
     type: original.type,
     position: { x: original.position.x + 40, y: original.position.y + 40 },
-    data: structuredClone(original.data),
+    data: JSON.parse(JSON.stringify(original.data)),
   };
   nodes.value = [...nodes.value, clone];
   selectedNodeId.value = clone.id;
