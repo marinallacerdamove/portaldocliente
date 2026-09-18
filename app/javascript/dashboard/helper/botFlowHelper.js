@@ -129,3 +129,60 @@ export const isNodeValid = node => {
     return !!value;
   });
 };
+
+const LAYOUT_COLUMN_WIDTH = 280;
+const LAYOUT_ROW_HEIGHT = 160;
+const LAYOUT_OFFSET = 80;
+
+// Reorganiza o canvas em colunas (uma por "distância" a partir do Início),
+// seguindo as arestas - resolve o caso comum de nós empilhados/desorganizados
+// sem precisar arrastar um por um.
+export const autoLayoutPositions = (nodes, edges) => {
+  const adjacency = new Map();
+  edges.forEach(edge => {
+    if (!adjacency.has(edge.source)) adjacency.set(edge.source, []);
+    adjacency.get(edge.source).push(edge.target);
+  });
+
+  const startNode = nodes.find(node => node.type === BOT_FLOW_NODE_TYPES.START);
+  const layerById = new Map();
+  if (startNode) {
+    layerById.set(startNode.id, 0);
+    const queue = [startNode.id];
+    while (queue.length) {
+      const id = queue.shift();
+      (adjacency.get(id) || []).forEach(targetId => {
+        const candidateLayer = layerById.get(id) + 1;
+        if (
+          !layerById.has(targetId) ||
+          candidateLayer > layerById.get(targetId)
+        ) {
+          layerById.set(targetId, candidateLayer);
+          queue.push(targetId);
+        }
+      });
+    }
+  }
+  nodes.forEach(node => {
+    if (!layerById.has(node.id)) layerById.set(node.id, 0);
+  });
+
+  const nodesByLayer = new Map();
+  nodes.forEach(node => {
+    const layer = layerById.get(node.id);
+    if (!nodesByLayer.has(layer)) nodesByLayer.set(layer, []);
+    nodesByLayer.get(layer).push(node.id);
+  });
+
+  return nodes.map(node => {
+    const layer = layerById.get(node.id);
+    const rowIndex = nodesByLayer.get(layer).indexOf(node.id);
+    return {
+      ...node,
+      position: {
+        x: LAYOUT_OFFSET + layer * LAYOUT_COLUMN_WIDTH,
+        y: LAYOUT_OFFSET + rowIndex * LAYOUT_ROW_HEIGHT,
+      },
+    };
+  });
+};

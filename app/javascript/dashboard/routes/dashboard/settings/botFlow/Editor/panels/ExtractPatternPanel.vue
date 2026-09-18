@@ -45,6 +45,9 @@ const patternModel = computed({
   <div class="flex flex-col gap-4">
     <WithLabel
       :label="t('BOT_FLOW.EDITOR.PANEL.EXTRACT_PATTERN.SOURCE_VARIABLE_LABEL')"
+      :help-message="
+        t('BOT_FLOW.EDITOR.PANEL.EXTRACT_PATTERN.SOURCE_VARIABLE_HELP')
+      "
       name="source_variable"
     >
       <SingleSelect v-model="sourceVariableModel" :options="variableOptions" />
@@ -64,6 +67,9 @@ const patternModel = computed({
     <WithLabel
       v-if="modelValue.pattern === 'personalizado'"
       :label="t('BOT_FLOW.EDITOR.PANEL.EXTRACT_PATTERN.CUSTOM_PATTERN_LABEL')"
+      :help-message="
+        t('BOT_FLOW.EDITOR.PANEL.EXTRACT_PATTERN.CUSTOM_PATTERN_HELP')
+      "
       name="custom_pattern"
     >
       <NextInput
@@ -76,6 +82,9 @@ const patternModel = computed({
 
     <WithLabel
       :label="t('BOT_FLOW.EDITOR.PANEL.EXTRACT_PATTERN.TARGET_VARIABLE_LABEL')"
+      :help-message="
+        t('BOT_FLOW.EDITOR.PANEL.EXTRACT_PATTERN.TARGET_VARIABLE_HELP')
+      "
       name="target_variable"
     >
       <NextInput

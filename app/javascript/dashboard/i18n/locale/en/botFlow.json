@@ -53,6 +53,7 @@
         "MISSING_FIELDS": "Fill in the required fields on every block before saving."
       },
       "ADD_NODE": "Add block",
+      "ORGANIZE_LAYOUT": "Auto-organize",
       "DELETE_NODE": "Delete block",
       "NODE_TYPES": {
         "START": "Start",
@@ -88,73 +89,81 @@
         "ASK_AND_EXTRACT": {
           "PROMPT_LABEL": "Question sent to the customer",
           "PROMPT_PLACEHOLDER": "E.g.: Describe your situation",
-          "VARIABLE_NAME_LABEL": "Save reply into variable",
-          "VARIABLE_NAME_PLACEHOLDER": "E.g.: situation"
+          "VARIABLE_NAME_LABEL": "Give this reply a name",
+          "VARIABLE_NAME_PLACEHOLDER": "E.g.: customer_name",
+          "VARIABLE_NAME_HELP": "You'll be able to use this reply later, in other blocks"
         },
         "CONDITION": {
-          "VARIABLE_LABEL": "Variable to compare",
-          "RULES_LABEL": "Rules",
-          "ADD_RULE": "Add rule",
+          "VARIABLE_LABEL": "What to compare",
+          "VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow",
+          "RULES_LABEL": "If the reply is like this, go here",
+          "RULES_HELP": "Each rule below is a different path the conversation can take",
+          "ADD_RULE": "Add path",
           "OPERATOR_LABEL": "Condition",
           "OPERATORS": {
             "EQUALS": "equals",
             "CONTAINS": "contains",
             "IS_PRESENT": "was filled in",
-            "REGEX": "matches pattern (advanced)"
+            "REGEX": "matches a special pattern (advanced)"
           },
           "VALUE_LABEL": "Value",
           "VALUE_PLACEHOLDER": "Comparison value"
         },
         "EXTRACT_PATTERN": {
-          "SOURCE_VARIABLE_LABEL": "Source variable",
-          "PATTERN_LABEL": "What to extract",
+          "SOURCE_VARIABLE_LABEL": "Where to get the information from",
+          "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow",
+          "PATTERN_LABEL": "What to find in that reply",
           "PATTERNS": {
             "CNPJ": "CNPJ",
             "CPF": "CPF",
             "EMAIL": "Email",
             "TELEFONE": "Phone",
-            "PERSONALIZADO": "Custom (advanced)"
+            "PERSONALIZADO": "Other (advanced)"
           },
-          "CUSTOM_PATTERN_LABEL": "Pattern (regex)",
+          "CUSTOM_PATTERN_LABEL": "Search pattern (advanced)",
           "CUSTOM_PATTERN_PLACEHOLDER": "Advanced search pattern",
-          "TARGET_VARIABLE_LABEL": "Save result into variable",
-          "TARGET_VARIABLE_PLACEHOLDER": "E.g.: cnpj"
+          "CUSTOM_PATTERN_HELP": "Only fill this in if you know what a regular expression is",
+          "TARGET_VARIABLE_LABEL": "Name to save the result as",
+          "TARGET_VARIABLE_PLACEHOLDER": "E.g.: cnpj",
+          "TARGET_VARIABLE_HELP": "You'll be able to use this later, in other blocks"
         },
         "WEBHOOK": {
+          "INTRO_HELP": "This looks up information in another system (e.g. checking if a CNPJ exists in your records). It's a more technical setting - if you don't use this day-to-day, ask whoever configured it for help.",
           "METHOD_LABEL": "Method",
           "URL_LABEL": "URL",
           "URL_PLACEHOLDER": "https://example.com/api?field={{variable}}",
-          "HEADERS_LABEL": "Headers (authentication, etc.)",
-          "ADD_HEADER": "Add header",
+          "HEADERS_LABEL": "Access keys (if needed)",
+          "ADD_HEADER": "Add key",
           "HEADER_KEY_PLACEHOLDER": "Name",
           "HEADER_VALUE_PLACEHOLDER": "Value",
-          "BODY_LABEL": "Request body (for POST)",
+          "BODY_LABEL": "Data sent (Send method)",
           "BODY_PLACEHOLDER": "{\"field\": \"{{variable}}\"}",
           "SUCCESS_CHECK_LABEL": "Consider success when the response has (optional)",
           "SUCCESS_CHECK_FIELD_PLACEHOLDER": "field (e.g.: found)",
           "SUCCESS_CHECK_VALUE_PLACEHOLDER": "equal to (e.g.: true)",
-          "RESPONSE_MAPPINGS_LABEL": "Save response data into variables",
-          "ADD_MAPPING": "Add variable",
+          "RESPONSE_MAPPINGS_LABEL": "Save data from the response",
+          "ADD_MAPPING": "Add information",
           "JSON_PATH_PLACEHOLDER": "response field (e.g.: name)",
-          "VARIABLE_NAME_PLACEHOLDER": "variable name"
+          "VARIABLE_NAME_PLACEHOLDER": "name to save as"
         },
         "CHATWOOT_ACTION": {
           "ACTION_LABEL": "What to do",
           "ACTIONS": {
             "ASSIGN_TEAM": "Assign to a team",
             "ADD_LABEL": "Add label",
-            "SET_CUSTOM_ATTRIBUTE": "Set custom attribute",
+            "SET_CUSTOM_ATTRIBUTE": "Save extra information on the conversation",
             "RESOLVE_CONVERSATION": "Resolve the conversation"
           },
           "TEAM_LABEL": "Team",
           "LABEL_LABEL": "Label",
-          "ATTRIBUTE_KEY_LABEL": "Attribute",
-          "ATTRIBUTE_VALUE_LABEL": "Value"
+          "ATTRIBUTE_KEY_LABEL": "Information name",
+          "ATTRIBUTE_VALUE_LABEL": "Value",
+          "ATTRIBUTE_HELP": "Saved on the conversation, for internal team use only"
         }
       },
       "VARIABLE_PICKER": {
-        "LABEL": "Variables available up to here",
-        "EMPTY": "No variables captured before this block yet"
+        "LABEL": "Replies saved so far",
+        "EMPTY": "No replies saved before this block yet"
       }
     }
   }

@@ -53,6 +53,7 @@
         "MISSING_FIELDS": "Preencha os campos obrigatórios de todos os blocos antes de salvar."
       },
       "ADD_NODE": "Adicionar bloco",
+      "ORGANIZE_LAYOUT": "Organizar automaticamente",
       "DELETE_NODE": "Excluir bloco",
       "NODE_TYPES": {
         "START": "Início",
@@ -88,73 +89,81 @@
         "ASK_AND_EXTRACT": {
           "PROMPT_LABEL": "Pergunta enviada ao cliente",
           "PROMPT_PLACEHOLDER": "Ex.: Descreva sua situação",
-          "VARIABLE_NAME_LABEL": "Guardar resposta na variável",
-          "VARIABLE_NAME_PLACEHOLDER": "Ex.: situacao"
+          "VARIABLE_NAME_LABEL": "Dar um nome pra essa resposta",
+          "VARIABLE_NAME_PLACEHOLDER": "Ex.: nome_do_cliente",
+          "VARIABLE_NAME_HELP": "Você vai poder usar essa resposta depois, em outros blocos do fluxo"
         },
         "CONDITION": {
-          "VARIABLE_LABEL": "Variável a comparar",
-          "RULES_LABEL": "Regras",
-          "ADD_RULE": "Adicionar regra",
+          "VARIABLE_LABEL": "O que vamos comparar",
+          "VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo",
+          "RULES_LABEL": "Se a resposta for assim, vai por aqui",
+          "RULES_HELP": "Cada regra abaixo é um caminho diferente que a conversa pode seguir",
+          "ADD_RULE": "Adicionar caminho",
           "OPERATOR_LABEL": "Condição",
           "OPERATORS": {
             "EQUALS": "é igual a",
             "CONTAINS": "contém",
             "IS_PRESENT": "foi preenchida",
-            "REGEX": "combina com o padrão (avançado)"
+            "REGEX": "combina com um texto especial (avançado)"
           },
           "VALUE_LABEL": "Valor",
           "VALUE_PLACEHOLDER": "Valor de comparação"
         },
         "EXTRACT_PATTERN": {
-          "SOURCE_VARIABLE_LABEL": "Variável de origem",
-          "PATTERN_LABEL": "O que extrair",
+          "SOURCE_VARIABLE_LABEL": "De onde tirar a informação",
+          "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo",
+          "PATTERN_LABEL": "O que você quer encontrar nessa resposta",
           "PATTERNS": {
             "CNPJ": "CNPJ",
             "CPF": "CPF",
             "EMAIL": "E-mail",
             "TELEFONE": "Telefone",
-            "PERSONALIZADO": "Personalizado (avançado)"
+            "PERSONALIZADO": "Outro (avançado)"
           },
-          "CUSTOM_PATTERN_LABEL": "Padrão (regex)",
+          "CUSTOM_PATTERN_LABEL": "Texto de busca (avançado)",
           "CUSTOM_PATTERN_PLACEHOLDER": "Padrão de busca avançado",
-          "TARGET_VARIABLE_LABEL": "Guardar resultado na variável",
-          "TARGET_VARIABLE_PLACEHOLDER": "Ex.: cnpj"
+          "CUSTOM_PATTERN_HELP": "Só preencha se você souber o que é uma expressão regular",
+          "TARGET_VARIABLE_LABEL": "Nome para guardar o resultado",
+          "TARGET_VARIABLE_PLACEHOLDER": "Ex.: cnpj",
+          "TARGET_VARIABLE_HELP": "Você vai poder usar isso depois, em outros blocos do fluxo"
         },
         "WEBHOOK": {
+          "INTRO_HELP": "Isso busca informação em outro sistema (ex.: verificar se um CNPJ existe no seu cadastro). É uma configuração mais técnica - se você não usa isso no dia a dia, peça ajuda de quem configurou.",
           "METHOD_LABEL": "Método",
           "URL_LABEL": "Endereço (URL)",
           "URL_PLACEHOLDER": "https://exemplo.com/api?campo={{variavel}}",
-          "HEADERS_LABEL": "Cabeçalhos (autenticação, etc.)",
-          "ADD_HEADER": "Adicionar cabeçalho",
+          "HEADERS_LABEL": "Chaves de acesso (se precisar)",
+          "ADD_HEADER": "Adicionar chave",
           "HEADER_KEY_PLACEHOLDER": "Nome",
           "HEADER_VALUE_PLACEHOLDER": "Valor",
-          "BODY_LABEL": "Corpo da requisição (para POST)",
+          "BODY_LABEL": "Dados enviados (método Enviar)",
           "BODY_PLACEHOLDER": "{\"campo\": \"{{variavel}}\"}",
           "SUCCESS_CHECK_LABEL": "Considerar sucesso quando a resposta trouxer (opcional)",
           "SUCCESS_CHECK_FIELD_PLACEHOLDER": "campo (ex.: found)",
           "SUCCESS_CHECK_VALUE_PLACEHOLDER": "igual a (ex.: true)",
-          "RESPONSE_MAPPINGS_LABEL": "Guardar dados da resposta em variáveis",
-          "ADD_MAPPING": "Adicionar variável",
+          "RESPONSE_MAPPINGS_LABEL": "Guardar dados da resposta",
+          "ADD_MAPPING": "Adicionar informação",
           "JSON_PATH_PLACEHOLDER": "campo da resposta (ex.: nome)",
-          "VARIABLE_NAME_PLACEHOLDER": "nome da variável"
+          "VARIABLE_NAME_PLACEHOLDER": "nome para guardar"
         },
         "CHATWOOT_ACTION": {
           "ACTION_LABEL": "O que fazer",
           "ACTIONS": {
             "ASSIGN_TEAM": "Atribuir a um time",
             "ADD_LABEL": "Adicionar etiqueta",
-            "SET_CUSTOM_ATTRIBUTE": "Definir atributo personalizado",
+            "SET_CUSTOM_ATTRIBUTE": "Guardar uma informação extra na conversa",
             "RESOLVE_CONVERSATION": "Encerrar a conversa"
           },
           "TEAM_LABEL": "Time",
           "LABEL_LABEL": "Etiqueta",
-          "ATTRIBUTE_KEY_LABEL": "Atributo",
-          "ATTRIBUTE_VALUE_LABEL": "Valor"
+          "ATTRIBUTE_KEY_LABEL": "Nome da informação",
+          "ATTRIBUTE_VALUE_LABEL": "Valor",
+          "ATTRIBUTE_HELP": "Fica salvo na conversa, só pra uso interno da equipe"
         }
       },
       "VARIABLE_PICKER": {
-        "LABEL": "Variáveis disponíveis até aqui",
-        "EMPTY": "Nenhuma variável capturada antes deste bloco ainda"
+        "LABEL": "Respostas guardadas até aqui",
+        "EMPTY": "Nenhuma resposta guardada antes deste bloco ainda"
       }
     }
   }

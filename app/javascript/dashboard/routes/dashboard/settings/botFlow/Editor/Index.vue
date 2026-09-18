@@ -17,6 +17,7 @@ import {
   generateNodeId,
   getDefaultNodeData,
   isNodeValid,
+  autoLayoutPositions,
 } from 'dashboard/helper/botFlowHelper';
 
 const { t } = useI18n();
@@ -152,6 +153,10 @@ const addNode = option => {
   nextY += 140;
 };
 
+const organizeLayout = () => {
+  nodes.value = autoLayoutPositions(nodes.value, edges.value);
+};
+
 const removeSelectedNode = () => {
   if (
     !selectedNode.value ||
@@ -280,6 +285,13 @@ const saveFlow = async () => {
           placeholder-trailing-icon
           disable-deselect
           @update:model-value="addNode"
+        />
+        <NextButton
+          icon="i-lucide-layout-grid"
+          slate
+          faded
+          :label="t('BOT_FLOW.EDITOR.ORGANIZE_LAYOUT')"
+          @click="organizeLayout"
         />
         <NextButton
           :label="t('BOT_FLOW.EDITOR.SAVE')"

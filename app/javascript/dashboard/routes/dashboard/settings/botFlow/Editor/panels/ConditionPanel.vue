@@ -61,15 +61,21 @@ const removeRule = index => {
   <div class="flex flex-col gap-4">
     <WithLabel
       :label="t('BOT_FLOW.EDITOR.PANEL.CONDITION.VARIABLE_LABEL')"
+      :help-message="t('BOT_FLOW.EDITOR.PANEL.CONDITION.VARIABLE_HELP')"
       name="variable"
     >
       <SingleSelect v-model="variableModel" :options="variableOptions" />
     </WithLabel>
 
     <div class="flex flex-col gap-3">
-      <span class="text-sm font-medium text-n-slate-11">{{
-        t('BOT_FLOW.EDITOR.PANEL.CONDITION.RULES_LABEL')
-      }}</span>
+      <div>
+        <span class="text-sm font-medium text-n-slate-11">{{
+          t('BOT_FLOW.EDITOR.PANEL.CONDITION.RULES_LABEL')
+        }}</span>
+        <p class="text-xs text-n-slate-10 mt-0.5">
+          {{ t('BOT_FLOW.EDITOR.PANEL.CONDITION.RULES_HELP') }}
+        </p>
+      </div>
       <div
         v-for="(rule, index) in modelValue.rules || []"
         :key="rule.id"

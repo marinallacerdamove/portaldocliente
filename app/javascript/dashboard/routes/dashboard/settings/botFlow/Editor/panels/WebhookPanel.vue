@@ -57,6 +57,10 @@ const removeMapping = index => {
 
 <template>
   <div class="flex flex-col gap-4">
+    <p class="text-xs text-n-slate-10 bg-n-slate-2 rounded-lg p-2">
+      {{ t('BOT_FLOW.EDITOR.PANEL.WEBHOOK.INTRO_HELP') }}
+    </p>
+
     <WithLabel
       :label="t('BOT_FLOW.EDITOR.PANEL.WEBHOOK.METHOD_LABEL')"
       name="method"

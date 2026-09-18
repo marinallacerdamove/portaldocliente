@@ -121,6 +121,9 @@ const attributeValueModel = computed({
     <template v-if="modelValue.action_name === 'set_custom_attribute'">
       <WithLabel
         :label="t('BOT_FLOW.EDITOR.PANEL.CHATWOOT_ACTION.ATTRIBUTE_KEY_LABEL')"
+        :help-message="
+          t('BOT_FLOW.EDITOR.PANEL.CHATWOOT_ACTION.ATTRIBUTE_HELP')
+        "
         name="attribute_key"
       >
         <NextInput v-model="attributeKeyModel" />

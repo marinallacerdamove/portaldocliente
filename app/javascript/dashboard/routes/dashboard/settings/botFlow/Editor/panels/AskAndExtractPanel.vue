@@ -22,6 +22,9 @@ const { t } = useI18n();
     </WithLabel>
     <WithLabel
       :label="t('BOT_FLOW.EDITOR.PANEL.ASK_AND_EXTRACT.VARIABLE_NAME_LABEL')"
+      :help-message="
+        t('BOT_FLOW.EDITOR.PANEL.ASK_AND_EXTRACT.VARIABLE_NAME_HELP')
+      "
       name="variable_name"
     >
       <NextInput
