@@ -7,7 +7,6 @@
 #  id                            :integer          not null, primary key
 #  allow_messages_after_resolved :boolean          default(TRUE)
 #  auto_assignment_config        :jsonb
-#  bot_flow_steps                :jsonb            not null
 #  business_name                 :string
 #  channel_type                  :string
 #  csat_config                   :jsonb            not null
