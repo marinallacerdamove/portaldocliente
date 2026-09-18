@@ -60,6 +60,25 @@ const insertVariable = async option => {
   el.setSelectionRange(newCursor, newCursor);
 };
 
+// Inserção pelos botões sempre visíveis - não depende de já ter digitado
+// "{{" (esse é o único jeito de descobrir a lista sem digitar de cabeça).
+const appendVariable = async option => {
+  const el = fieldRef.value;
+  if (!el) return;
+
+  const cursor = el.selectionStart ?? el.value.length;
+  const before = el.value.slice(0, cursor);
+  const after = el.value.slice(cursor);
+
+  modelValue.value = `${before}{{${option.id}}}${after}`;
+  showSuggestions.value = false;
+
+  await nextTick();
+  const newCursor = before.length + option.id.length + 4;
+  el.focus();
+  el.setSelectionRange(newCursor, newCursor);
+};
+
 const handleBlur = () => {
   // Delay pra permitir o clique numa opção da lista antes de fechar.
   setTimeout(() => {
@@ -113,5 +132,23 @@ const handleBlur = () => {
     >
       {{ t('BOT_FLOW.EDITOR.VARIABLE_PICKER.EMPTY') }}
     </p>
+
+    <!-- Lista sempre visível das variáveis disponíveis - digitar "{{" pra
+    abrir o autocomplete não é algo que uma pessoa não técnica descobre
+    sozinha, então oferecemos os mesmos botões sem exigir digitar nada. -->
+    <div v-if="variableOptions.length" class="flex flex-wrap items-center gap-1 mt-1.5">
+      <span class="text-xs text-n-slate-10">{{
+        t('BOT_FLOW.EDITOR.VARIABLE_PICKER.AVAILABLE_LABEL')
+      }}</span>
+      <button
+        v-for="option in variableOptions"
+        :key="option.id"
+        type="button"
+        class="px-2 py-0.5 rounded-md bg-n-slate-2 hover:bg-n-slate-3 text-xs text-n-slate-12"
+        @mousedown.prevent="appendVariable(option)"
+      >
+        {{ option.name }}
+      </button>
+    </div>
   </div>
 </template>

@@ -107,7 +107,12 @@ const invalid = computed(
     class="min-w-[220px] max-w-[280px] rounded-lg border bg-n-solid-1 shadow-sm"
     :class="selected ? 'border-n-brand ring-1 ring-n-brand' : 'border-n-weak'"
   >
-    <Handle v-if="type !== 'start'" type="target" :position="Position.Left" />
+    <Handle
+      v-if="type !== 'start'"
+      type="target"
+      :position="Position.Left"
+      class="!size-3.5"
+    />
 
     <div class="flex items-center gap-2 px-3 py-2 border-b border-n-weak">
       <Icon :icon="icon" class="size-4 text-n-slate-11 flex-shrink-0" />
@@ -137,7 +142,7 @@ const invalid = computed(
           :id="row.handle"
           type="source"
           :position="Position.Right"
-          class="!static !size-2 !translate-x-0 !translate-y-0 !ms-2"
+          class="!static !size-3.5 !translate-x-0 !translate-y-0 !ms-2"
         />
       </div>
     </div>

@@ -209,6 +209,17 @@ const removeSelectedNode = () => {
   selectedNodeId.value = null;
 };
 
+// Clicar numa linha de conexão seleciona a edge no vue-flow (edge.selected),
+// mas isso é independente de selectedNodeId - sem isso, Delete nunca
+// encontrava nada pra apagar quando o usuário tinha clicado numa linha.
+const removeSelectedEdge = () => {
+  const edge = edges.value.find(e => e.selected);
+  if (!edge) return false;
+  pushHistory();
+  edges.value = edges.value.filter(e => e.id !== edge.id);
+  return true;
+};
+
 const duplicateSelectedNode = () => {
   if (
     !selectedNode.value ||
@@ -250,6 +261,11 @@ const handleKeydown = event => {
   }
 
   if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+
+  if (removeSelectedEdge()) {
+    event.preventDefault();
+    return;
+  }
   if (!selectedNode.value) return;
 
   event.preventDefault();

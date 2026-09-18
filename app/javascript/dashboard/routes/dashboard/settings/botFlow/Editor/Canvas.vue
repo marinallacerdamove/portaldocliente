@@ -59,6 +59,7 @@ watch(
     :default-viewport="{ zoom: 1 }"
     :min-zoom="0.2"
     :max-zoom="1.5"
+    :connection-radius="35"
     fit-view-on-init
     class="w-full h-full"
   >

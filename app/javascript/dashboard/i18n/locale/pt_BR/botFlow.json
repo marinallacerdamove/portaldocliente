@@ -109,7 +109,7 @@
             "AND": "Todas as condições precisam ser verdadeiras (E)",
             "OR": "Qualquer uma das condições (OU)"
           },
-          "VARIABLE_PLACEHOLDER": "Escolha uma resposta guardada",
+          "VARIABLE_PLACEHOLDER": "Resposta guardada",
           "OPERATOR_LABEL": "Condição",
           "OPERATORS": {
             "EQUALS": "é igual a",
@@ -179,7 +179,8 @@
       },
       "VARIABLE_PICKER": {
         "LABEL": "Respostas guardadas até aqui",
-        "EMPTY": "Nenhuma resposta guardada antes deste bloco ainda"
+        "EMPTY": "Nenhuma resposta guardada antes deste bloco ainda",
+        "AVAILABLE_LABEL": "Clique pra inserir:"
       }
     }
   }

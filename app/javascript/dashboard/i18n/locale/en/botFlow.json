@@ -109,7 +109,7 @@
             "AND": "All conditions must be true (AND)",
             "OR": "Any one condition (OR)"
           },
-          "VARIABLE_PLACEHOLDER": "Pick a saved reply",
+          "VARIABLE_PLACEHOLDER": "Saved reply",
           "OPERATOR_LABEL": "Condition",
           "OPERATORS": {
             "EQUALS": "equals",
@@ -179,7 +179,8 @@
       },
       "VARIABLE_PICKER": {
         "LABEL": "Replies saved so far",
-        "EMPTY": "No replies saved before this block yet"
+        "EMPTY": "No replies saved before this block yet",
+        "AVAILABLE_LABEL": "Click to insert:"
       }
     }
   }
