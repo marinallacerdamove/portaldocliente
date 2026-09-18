@@ -34,7 +34,7 @@ export const getDefaultNodeData = type => {
     case BOT_FLOW_NODE_TYPES.ASK_AND_EXTRACT:
       return { prompt: '', variable_name: '' };
     case BOT_FLOW_NODE_TYPES.CONDITION:
-      return { variable: '', rules: [] };
+      return { branches: [] };
     case BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN:
       return {
         source_variable: '',
@@ -64,10 +64,14 @@ export const generateOptionId = () => {
   return `opt${optionIdCounter}_${Date.now().toString(36)}`;
 };
 
-let ruleIdCounter = 0;
-export const generateRuleId = () => {
-  ruleIdCounter += 1;
-  return `rule${ruleIdCounter}_${Date.now().toString(36)}`;
+let idSeq = 0;
+export const generateBranchId = () => {
+  idSeq += 1;
+  return `branch${idSeq}_${Date.now().toString(36)}`;
+};
+export const generateConditionId = () => {
+  idSeq += 1;
+  return `cond${idSeq}_${Date.now().toString(36)}`;
 };
 
 // Handles (saídas) de cada tipo de nó no canvas - usados tanto pra desenhar
@@ -88,15 +92,15 @@ export const staticHandlesFor = type => {
   }
 };
 
-// Menu e Condição têm um número dinâmico de saídas (uma por opção/regra,
+// Menu e Condição têm um número dinâmico de saídas (uma por opção/caminho,
 // mais "senão" na Condição) - calculadas a partir dos dados do próprio nó.
 export const dynamicHandlesFor = data => {
   if (!data) return [];
   if (Array.isArray(data.options)) {
     return data.options.map(option => `option-${option.id}`);
   }
-  if (Array.isArray(data.rules)) {
-    return [...data.rules.map(rule => `rule-${rule.id}`), 'else'];
+  if (Array.isArray(data.branches)) {
+    return [...data.branches.map(branch => `branch-${branch.id}`), 'else'];
   }
   return [];
 };
@@ -111,7 +115,7 @@ const REQUIRED_FIELDS_BY_TYPE = {
   [BOT_FLOW_NODE_TYPES.SEND_MESSAGE]: ['text'],
   [BOT_FLOW_NODE_TYPES.MENU]: ['prompt', 'options'],
   [BOT_FLOW_NODE_TYPES.ASK_AND_EXTRACT]: ['prompt', 'variable_name'],
-  [BOT_FLOW_NODE_TYPES.CONDITION]: ['variable', 'rules'],
+  [BOT_FLOW_NODE_TYPES.CONDITION]: ['branches'],
   [BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN]: [
     'source_variable',
     'pattern',
@@ -121,7 +125,25 @@ const REQUIRED_FIELDS_BY_TYPE = {
   [BOT_FLOW_NODE_TYPES.CHATWOOT_ACTION]: ['action_name'],
 };
 
+const isBranchValid = branch =>
+  Array.isArray(branch.conditions) &&
+  branch.conditions.length > 0 &&
+  branch.conditions.every(
+    condition =>
+      condition.variable &&
+      (condition.operator === 'is_present' || condition.value)
+  );
+
 export const isNodeValid = node => {
+  if (node.type === BOT_FLOW_NODE_TYPES.CONDITION) {
+    const branches = node.data?.branches;
+    return (
+      Array.isArray(branches) &&
+      branches.length > 0 &&
+      branches.every(isBranchValid)
+    );
+  }
+
   const required = REQUIRED_FIELDS_BY_TYPE[node.type] || [];
   return required.every(field => {
     const value = node.data?.[field];

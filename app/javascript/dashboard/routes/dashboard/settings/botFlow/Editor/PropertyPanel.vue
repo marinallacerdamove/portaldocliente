@@ -18,7 +18,7 @@ const props = defineProps({
   edges: { type: Array, required: true },
   isStart: { type: Boolean, default: false },
 });
-const emit = defineEmits(['close', 'remove']);
+const emit = defineEmits(['close', 'remove', 'duplicate']);
 
 const { t } = useI18n();
 
@@ -37,10 +37,23 @@ const title = computed(() =>
   t(`BOT_FLOW.EDITOR.NODE_TYPES.${props.node.type.toUpperCase()}`)
 );
 
-const { variableOptions } = useBotFlowVariables(
+const { variableOptions, insertableVariableOptions } = useBotFlowVariables(
   () => props.nodes,
   () => props.edges,
   () => props.node.id
+);
+
+// Condição/Extrair padrão comparam uma variável capturada diretamente - só
+// essas fazem sentido ali. Os demais tipos usam texto livre com {{...}}, aí
+// as variáveis do sistema (nome/e-mail/telefone do contato) valem também.
+const CAPTURED_ONLY_TYPES = [
+  BOT_FLOW_NODE_TYPES.CONDITION,
+  BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN,
+];
+const panelVariableOptions = computed(() =>
+  CAPTURED_ONLY_TYPES.includes(props.node.type)
+    ? variableOptions.value
+    : insertableVariableOptions.value
 );
 </script>
 
@@ -51,6 +64,15 @@ const { variableOptions } = useBotFlowVariables(
     <div class="flex items-center justify-between">
       <h4 class="text-sm font-medium text-n-slate-12">{{ title }}</h4>
       <div class="flex items-center gap-1">
+        <NextButton
+          v-if="!isStart"
+          v-tooltip.top="t('BOT_FLOW.EDITOR.DUPLICATE_NODE')"
+          icon="i-lucide-copy"
+          slate
+          ghost
+          sm
+          @click="emit('duplicate')"
+        />
         <NextButton
           v-if="!isStart"
           icon="i-lucide-trash-2"
@@ -70,7 +92,7 @@ const { variableOptions } = useBotFlowVariables(
       :is="panelComponent"
       v-else-if="panelComponent"
       :model-value="node.data"
-      :variable-options="variableOptions"
+      :variable-options="panelVariableOptions"
     />
   </div>
 </template>

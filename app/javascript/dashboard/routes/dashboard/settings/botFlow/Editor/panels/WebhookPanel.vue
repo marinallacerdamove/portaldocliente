@@ -6,6 +6,11 @@ import SingleSelect from 'dashboard/components-next/filter/inputs/SingleSelect.v
 import NextInput from 'dashboard/components-next/input/Input.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import VariableAwareTextField from '../components/VariableAwareTextField.vue';
+
+defineProps({
+  variableOptions: { type: Array, default: () => [] },
+});
 
 const modelValue = defineModel({ type: Object, required: true });
 const { t } = useI18n();
@@ -74,8 +79,9 @@ const removeMapping = index => {
     </WithLabel>
 
     <WithLabel :label="t('BOT_FLOW.EDITOR.PANEL.WEBHOOK.URL_LABEL')" name="url">
-      <NextInput
+      <VariableAwareTextField
         v-model="modelValue.url"
+        :variable-options="variableOptions"
         :placeholder="t('BOT_FLOW.EDITOR.PANEL.WEBHOOK.URL_PLACEHOLDER')"
       />
     </WithLabel>
@@ -126,10 +132,12 @@ const removeMapping = index => {
       :label="t('BOT_FLOW.EDITOR.PANEL.WEBHOOK.BODY_LABEL')"
       name="body_template"
     >
-      <textarea
+      <VariableAwareTextField
         v-model="modelValue.body_template"
-        rows="3"
-        class="w-full reset-base rounded-lg border border-n-weak bg-n-solid-1 p-2 text-sm font-mono"
+        multiline
+        monospace
+        :rows="3"
+        :variable-options="variableOptions"
         :placeholder="t('BOT_FLOW.EDITOR.PANEL.WEBHOOK.BODY_PLACEHOLDER')"
       />
     </WithLabel>

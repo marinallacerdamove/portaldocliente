@@ -32,7 +32,7 @@ class BotFlow < ApplicationRecord
     'send_message' => ['text'],
     'menu' => %w[prompt options],
     'ask_and_extract' => %w[prompt variable_name],
-    'condition' => %w[variable rules],
+    'condition' => ['branches'],
     'extract_pattern' => %w[source_variable pattern target_variable],
     'webhook' => %w[url method],
     'chatwoot_action' => ['action_name']

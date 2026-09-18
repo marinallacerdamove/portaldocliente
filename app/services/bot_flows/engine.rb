@@ -105,10 +105,21 @@ class BotFlows::Engine
     run_from(flow, next_node_id(flow, node['id'], "option-#{chosen['id']}"), vars)
   end
 
+  # Cada branch é um caminho de saída que testa uma ou mais condições
+  # (cada uma com sua própria variável), combinadas por "and" (todas
+  # precisam bater) ou "or" (qualquer uma). O primeiro branch que bater
+  # vence; se nenhum bater, cai no "else".
   def evaluate_condition(node, vars)
-    value = vars[node['variable']].to_s
-    rule = (node['rules'] || []).detect { |r| rule_matches?(r, value) }
-    rule ? "rule-#{rule['id']}" : 'else'
+    branch = (node['branches'] || []).detect { |b| branch_matches?(b, vars) }
+    branch ? "branch-#{branch['id']}" : 'else'
+  end
+
+  def branch_matches?(branch, vars)
+    conditions = branch['conditions'] || []
+    return false if conditions.empty?
+
+    results = conditions.map { |condition| rule_matches?(condition, vars[condition['variable']].to_s) }
+    branch['logic'] == 'or' ? results.any? : results.all?
   end
 
   def rule_matches?(rule, value)

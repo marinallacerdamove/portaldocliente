@@ -54,6 +54,9 @@
       },
       "ADD_NODE": "Adicionar bloco",
       "ORGANIZE_LAYOUT": "Organizar automaticamente",
+      "UNDO": "Desfazer",
+      "REDO": "Refazer",
+      "DUPLICATE_NODE": "Duplicar bloco",
       "DELETE_NODE": "Excluir bloco",
       "NODE_TYPES": {
         "START": "Início",
@@ -62,7 +65,7 @@
         "ASK_AND_EXTRACT": "Pedir informação",
         "CONDITION": "Condição",
         "EXTRACT_PATTERN": "Extrair padrão",
-        "WEBHOOK": "Chamar webhook",
+        "WEBHOOK": "Buscar informação em outro sistema",
         "CHATWOOT_ACTION": "Ação do Chatwoot"
       },
       "HANDLES": {
@@ -72,6 +75,9 @@
         "SUCCESS": "Sucesso",
         "ERROR": "Erro",
         "ELSE": "Senão"
+      },
+      "NODE_SUMMARY": {
+        "CONDITION_PATHS": "{n} caminho(s)"
       },
       "PANEL": {
         "SEND_MESSAGE": {
@@ -94,11 +100,15 @@
           "VARIABLE_NAME_HELP": "Você vai poder usar essa resposta depois, em outros blocos do fluxo"
         },
         "CONDITION": {
-          "VARIABLE_LABEL": "O que vamos comparar",
-          "VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo",
-          "RULES_LABEL": "Se a resposta for assim, vai por aqui",
-          "RULES_HELP": "Cada regra abaixo é um caminho diferente que a conversa pode seguir",
-          "ADD_RULE": "Adicionar caminho",
+          "INTRO_HELP": "Cada caminho abaixo é uma direção diferente que a conversa pode seguir, dependendo das respostas do cliente. Se nenhum caminho combinar, a conversa segue pelo \"senão\".",
+          "BRANCH_LABEL": "Caminho {n}",
+          "ADD_BRANCH": "Adicionar caminho",
+          "ADD_CONDITION": "Adicionar condição",
+          "LOGIC": {
+            "AND": "Todas as condições precisam ser verdadeiras (E)",
+            "OR": "Qualquer uma das condições (OU)"
+          },
+          "VARIABLE_PLACEHOLDER": "Escolha uma resposta guardada",
           "OPERATOR_LABEL": "Condição",
           "OPERATORS": {
             "EQUALS": "é igual a",
@@ -128,7 +138,7 @@
           "TARGET_VARIABLE_HELP": "Você vai poder usar isso depois, em outros blocos do fluxo"
         },
         "WEBHOOK": {
-          "INTRO_HELP": "Isso busca informação em outro sistema (ex.: verificar se um CNPJ existe no seu cadastro). É uma configuração mais técnica - se você não usa isso no dia a dia, peça ajuda de quem configurou.",
+          "INTRO_HELP": "Esse bloco vai buscar uma informação em outro sistema/site fora do WhatsApp - por exemplo, verificar se o CNPJ do cliente já está cadastrado no Portal. Preencher isso é mais técnico (parecido com preencher um formulário de programador): se você não souber o que colocar aqui, peça ajuda de quem já configurou um bloco desses antes, ou de um desenvolvedor.",
           "METHOD_LABEL": "Método",
           "URL_LABEL": "Endereço (URL)",
           "URL_PLACEHOLDER": "https://exemplo.com/api?campo={{variavel}}",

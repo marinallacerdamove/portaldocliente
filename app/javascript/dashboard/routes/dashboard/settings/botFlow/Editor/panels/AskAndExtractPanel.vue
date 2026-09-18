@@ -2,6 +2,11 @@
 import { useI18n } from 'vue-i18n';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
 import NextInput from 'dashboard/components-next/input/Input.vue';
+import VariableAwareTextField from '../components/VariableAwareTextField.vue';
+
+defineProps({
+  variableOptions: { type: Array, default: () => [] },
+});
 
 const modelValue = defineModel({ type: Object, required: true });
 const { t } = useI18n();
@@ -13,8 +18,9 @@ const { t } = useI18n();
       :label="t('BOT_FLOW.EDITOR.PANEL.ASK_AND_EXTRACT.PROMPT_LABEL')"
       name="prompt"
     >
-      <NextInput
+      <VariableAwareTextField
         v-model="modelValue.prompt"
+        :variable-options="variableOptions"
         :placeholder="
           t('BOT_FLOW.EDITOR.PANEL.ASK_AND_EXTRACT.PROMPT_PLACEHOLDER')
         "

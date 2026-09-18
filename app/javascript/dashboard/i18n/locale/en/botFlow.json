@@ -54,6 +54,9 @@
       },
       "ADD_NODE": "Add block",
       "ORGANIZE_LAYOUT": "Auto-organize",
+      "UNDO": "Undo",
+      "REDO": "Redo",
+      "DUPLICATE_NODE": "Duplicate block",
       "DELETE_NODE": "Delete block",
       "NODE_TYPES": {
         "START": "Start",
@@ -62,7 +65,7 @@
         "ASK_AND_EXTRACT": "Ask for information",
         "CONDITION": "Condition",
         "EXTRACT_PATTERN": "Extract pattern",
-        "WEBHOOK": "Call webhook",
+        "WEBHOOK": "Look up information in another system",
         "CHATWOOT_ACTION": "Chatwoot action"
       },
       "HANDLES": {
@@ -72,6 +75,9 @@
         "SUCCESS": "Success",
         "ERROR": "Error",
         "ELSE": "Else"
+      },
+      "NODE_SUMMARY": {
+        "CONDITION_PATHS": "{n} path(s)"
       },
       "PANEL": {
         "SEND_MESSAGE": {
@@ -94,11 +100,15 @@
           "VARIABLE_NAME_HELP": "You'll be able to use this reply later, in other blocks"
         },
         "CONDITION": {
-          "VARIABLE_LABEL": "What to compare",
-          "VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow",
-          "RULES_LABEL": "If the reply is like this, go here",
-          "RULES_HELP": "Each rule below is a different path the conversation can take",
-          "ADD_RULE": "Add path",
+          "INTRO_HELP": "Each path below is a different direction the conversation can take, depending on the customer's replies. If no path matches, the conversation follows the \"else\" path.",
+          "BRANCH_LABEL": "Path {n}",
+          "ADD_BRANCH": "Add path",
+          "ADD_CONDITION": "Add condition",
+          "LOGIC": {
+            "AND": "All conditions must be true (AND)",
+            "OR": "Any one condition (OR)"
+          },
+          "VARIABLE_PLACEHOLDER": "Pick a saved reply",
           "OPERATOR_LABEL": "Condition",
           "OPERATORS": {
             "EQUALS": "equals",
@@ -128,7 +138,7 @@
           "TARGET_VARIABLE_HELP": "You'll be able to use this later, in other blocks"
         },
         "WEBHOOK": {
-          "INTRO_HELP": "This looks up information in another system (e.g. checking if a CNPJ exists in your records). It's a more technical setting - if you don't use this day-to-day, ask whoever configured it for help.",
+          "INTRO_HELP": "This block looks up information in another system/site outside of WhatsApp - for example, checking if the customer's CNPJ is already registered in the Portal. Filling this in is more technical (similar to filling out a developer's form): if you're not sure what to put here, ask whoever has set up a block like this before, or a developer.",
           "METHOD_LABEL": "Method",
           "URL_LABEL": "URL",
           "URL_PLACEHOLDER": "https://example.com/api?field={{variable}}",

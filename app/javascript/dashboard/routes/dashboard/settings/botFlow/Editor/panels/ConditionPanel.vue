@@ -1,11 +1,13 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import WithLabel from 'v3/components/Form/WithLabel.vue';
 import SingleSelect from 'dashboard/components-next/filter/inputs/SingleSelect.vue';
 import NextInput from 'dashboard/components-next/input/Input.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
-import { generateRuleId } from 'dashboard/helper/botFlowHelper';
+import {
+  generateBranchId,
+  generateConditionId,
+} from 'dashboard/helper/botFlowHelper';
 
 const props = defineProps({
   variableOptions: { type: Array, default: () => [] },
@@ -27,88 +29,164 @@ const operatorOptions = computed(() => [
   { id: 'regex', name: t('BOT_FLOW.EDITOR.PANEL.CONDITION.OPERATORS.REGEX') },
 ]);
 
-const variableModel = computed({
-  get: () =>
-    props.variableOptions.find(o => o.id === modelValue.value.variable) || null,
-  set: option => {
-    modelValue.value.variable = option?.id || '';
-  },
-});
+const logicOptions = computed(() => [
+  { id: 'and', name: t('BOT_FLOW.EDITOR.PANEL.CONDITION.LOGIC.AND') },
+  { id: 'or', name: t('BOT_FLOW.EDITOR.PANEL.CONDITION.LOGIC.OR') },
+]);
 
-const operatorModelFor = rule =>
+const variableModelFor = condition =>
   computed({
     get: () =>
-      operatorOptions.value.find(o => o.id === rule.operator) ||
-      operatorOptions.value[0],
+      props.variableOptions.find(o => o.id === condition.variable) || null,
     set: option => {
-      rule.operator = option?.id || 'equals';
+      condition.variable = option?.id || '';
     },
   });
 
-const addRule = () => {
-  modelValue.value.rules = [
-    ...(modelValue.value.rules || []),
-    { id: generateRuleId(), operator: 'equals', value: '' },
+const operatorModelFor = condition =>
+  computed({
+    get: () =>
+      operatorOptions.value.find(o => o.id === condition.operator) ||
+      operatorOptions.value[0],
+    set: option => {
+      condition.operator = option?.id || 'equals';
+    },
+  });
+
+const logicModelFor = branch =>
+  computed({
+    get: () =>
+      logicOptions.value.find(o => o.id === branch.logic) ||
+      logicOptions.value[0],
+    set: option => {
+      branch.logic = option?.id || 'and';
+    },
+  });
+
+const addBranch = () => {
+  modelValue.value.branches = [
+    ...(modelValue.value.branches || []),
+    {
+      id: generateBranchId(),
+      logic: 'and',
+      conditions: [
+        {
+          id: generateConditionId(),
+          variable: '',
+          operator: 'equals',
+          value: '',
+        },
+      ],
+    },
   ];
 };
 
-const removeRule = index => {
-  modelValue.value.rules = modelValue.value.rules.filter((_, i) => i !== index);
+const removeBranch = index => {
+  modelValue.value.branches = modelValue.value.branches.filter(
+    (_, i) => i !== index
+  );
+};
+
+const addCondition = branch => {
+  branch.conditions = [
+    ...(branch.conditions || []),
+    { id: generateConditionId(), variable: '', operator: 'equals', value: '' },
+  ];
+};
+
+const removeCondition = (branch, index) => {
+  branch.conditions = branch.conditions.filter((_, i) => i !== index);
 };
 </script>
 
 <template>
   <div class="flex flex-col gap-4">
-    <WithLabel
-      :label="t('BOT_FLOW.EDITOR.PANEL.CONDITION.VARIABLE_LABEL')"
-      :help-message="t('BOT_FLOW.EDITOR.PANEL.CONDITION.VARIABLE_HELP')"
-      name="variable"
-    >
-      <SingleSelect v-model="variableModel" :options="variableOptions" />
-    </WithLabel>
+    <p class="text-xs text-n-slate-10 bg-n-slate-2 rounded-lg p-2">
+      {{ t('BOT_FLOW.EDITOR.PANEL.CONDITION.INTRO_HELP') }}
+    </p>
 
-    <div class="flex flex-col gap-3">
-      <div>
-        <span class="text-sm font-medium text-n-slate-11">{{
-          t('BOT_FLOW.EDITOR.PANEL.CONDITION.RULES_LABEL')
-        }}</span>
-        <p class="text-xs text-n-slate-10 mt-0.5">
-          {{ t('BOT_FLOW.EDITOR.PANEL.CONDITION.RULES_HELP') }}
-        </p>
+    <div
+      v-for="(branch, branchIndex) in modelValue.branches || []"
+      :key="branch.id"
+      class="flex flex-col gap-3 p-3 border border-n-weak rounded-lg"
+    >
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-medium text-n-slate-12">
+          {{
+            t('BOT_FLOW.EDITOR.PANEL.CONDITION.BRANCH_LABEL', {
+              n: branchIndex + 1,
+            })
+          }}
+        </span>
+        <NextButton
+          icon="i-lucide-trash-2"
+          slate
+          ghost
+          sm
+          @click="removeBranch(branchIndex)"
+        />
       </div>
+
+      <SingleSelect
+        v-model="logicModelFor(branch).value"
+        :options="logicOptions"
+        disable-search
+        disable-deselect
+      />
+
       <div
-        v-for="(rule, index) in modelValue.rules || []"
-        :key="rule.id"
-        class="flex flex-col gap-2 p-2 border border-n-weak rounded-lg"
+        v-for="(condition, conditionIndex) in branch.conditions || []"
+        :key="condition.id"
+        class="flex flex-col gap-2"
       >
         <div class="flex items-center gap-2">
           <SingleSelect
-            v-model="operatorModelFor(rule).value"
+            v-model="variableModelFor(condition).value"
+            :options="variableOptions"
+            :placeholder="
+              t('BOT_FLOW.EDITOR.PANEL.CONDITION.VARIABLE_PLACEHOLDER')
+            "
+            class="flex-1"
+          />
+          <SingleSelect
+            v-model="operatorModelFor(condition).value"
             :options="operatorOptions"
+            disable-search
+            disable-deselect
             class="flex-1"
           />
           <NextButton
-            icon="i-lucide-trash-2"
+            icon="i-lucide-x"
             slate
             ghost
             sm
-            @click="removeRule(index)"
+            @click="removeCondition(branch, conditionIndex)"
           />
         </div>
         <NextInput
-          v-if="rule.operator !== 'is_present'"
-          v-model="rule.value"
+          v-if="condition.operator !== 'is_present'"
+          v-model="condition.value"
           :placeholder="t('BOT_FLOW.EDITOR.PANEL.CONDITION.VALUE_PLACEHOLDER')"
         />
       </div>
+
       <NextButton
         sm
         slate
         faded
         icon="i-lucide-plus"
-        :label="t('BOT_FLOW.EDITOR.PANEL.CONDITION.ADD_RULE')"
-        @click="addRule"
+        :label="t('BOT_FLOW.EDITOR.PANEL.CONDITION.ADD_CONDITION')"
+        @click="addCondition(branch)"
       />
     </div>
+
+    <NextButton
+      sm
+      slate
+      faded
+      icon="i-lucide-plus"
+      :label="t('BOT_FLOW.EDITOR.PANEL.CONDITION.ADD_BRANCH')"
+      @click="addBranch"
+    />
   </div>
 </template>

@@ -3,7 +3,12 @@ import { useI18n } from 'vue-i18n';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import NextInput from 'dashboard/components-next/input/Input.vue';
+import VariableAwareTextField from '../components/VariableAwareTextField.vue';
 import { generateOptionId } from 'dashboard/helper/botFlowHelper';
+
+defineProps({
+  variableOptions: { type: Array, default: () => [] },
+});
 
 const modelValue = defineModel({ type: Object, required: true });
 const { t } = useI18n();
@@ -28,8 +33,9 @@ const removeOption = index => {
       :label="t('BOT_FLOW.EDITOR.PANEL.MENU.PROMPT_LABEL')"
       name="prompt"
     >
-      <NextInput
+      <VariableAwareTextField
         v-model="modelValue.prompt"
+        :variable-options="variableOptions"
         :placeholder="t('BOT_FLOW.EDITOR.PANEL.MENU.PROMPT_PLACEHOLDER')"
       />
     </WithLabel>
@@ -38,7 +44,10 @@ const removeOption = index => {
       :label="t('BOT_FLOW.EDITOR.PANEL.MENU.RETRY_PROMPT_LABEL')"
       name="retry_prompt"
     >
-      <NextInput v-model="modelValue.retry_prompt" />
+      <VariableAwareTextField
+        v-model="modelValue.retry_prompt"
+        :variable-options="variableOptions"
+      />
     </WithLabel>
 
     <div class="flex flex-col gap-2">

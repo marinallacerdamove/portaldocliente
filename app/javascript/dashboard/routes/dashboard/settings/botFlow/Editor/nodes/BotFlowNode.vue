@@ -43,7 +43,11 @@ const summary = computed(() => {
     case BOT_FLOW_NODE_TYPES.ASK_AND_EXTRACT:
       return data.prompt;
     case BOT_FLOW_NODE_TYPES.CONDITION:
-      return data.variable ? `{{${data.variable}}}` : '';
+      return (data.branches || []).length
+        ? t('BOT_FLOW.EDITOR.NODE_SUMMARY.CONDITION_PATHS', {
+            n: data.branches.length,
+          })
+        : '';
     case BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN:
       return data.source_variable
         ? `{{${data.source_variable}}} → {{${data.target_variable || '?'}}}`
@@ -73,9 +77,11 @@ const outputRows = computed(() => {
   }
   if (props.type === BOT_FLOW_NODE_TYPES.CONDITION) {
     return [
-      ...(data.rules || []).map(rule => ({
-        handle: `rule-${rule.id}`,
-        label: `${t(`BOT_FLOW.EDITOR.PANEL.CONDITION.OPERATORS.${(rule.operator || 'equals').toUpperCase()}`)} "${rule.value || ''}"`,
+      ...(data.branches || []).map((branch, index) => ({
+        handle: `branch-${branch.id}`,
+        label: t('BOT_FLOW.EDITOR.PANEL.CONDITION.BRANCH_LABEL', {
+          n: index + 1,
+        }),
       })),
       { handle: 'else', label: t('BOT_FLOW.EDITOR.HANDLES.ELSE') },
     ];

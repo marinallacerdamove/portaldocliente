@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
@@ -50,6 +50,34 @@ const selectedNodeId = ref(null);
 const selectedNode = computed(
   () => nodes.value.find(n => n.id === selectedNodeId.value) || null
 );
+
+// Desfazer/refazer: pilha de fotos do estado (nodes+edges) antes de cada
+// ação estrutural (adicionar/excluir/duplicar/organizar/conectar/mover) -
+// edição de texto dentro do painel não entra aqui de propósito.
+const undoStack = ref([]);
+const redoStack = ref([]);
+const snapshot = () =>
+  structuredClone({ nodes: nodes.value, edges: edges.value });
+const pushHistory = () => {
+  undoStack.value.push(snapshot());
+  redoStack.value = [];
+};
+const undo = () => {
+  if (!undoStack.value.length) return;
+  redoStack.value.push(snapshot());
+  const previous = undoStack.value.pop();
+  nodes.value = previous.nodes;
+  edges.value = previous.edges;
+  selectedNodeId.value = null;
+};
+const redo = () => {
+  if (!redoStack.value.length) return;
+  undoStack.value.push(snapshot());
+  const next = redoStack.value.pop();
+  nodes.value = next.nodes;
+  edges.value = next.edges;
+  selectedNodeId.value = null;
+};
 
 const triggerTypeOptions = computed(() => [
   {
@@ -140,6 +168,7 @@ onMounted(async () => {
 let nextY = 260;
 const addNode = option => {
   if (!option) return;
+  pushHistory();
   const type = option.id;
   nodes.value = [
     ...nodes.value,
@@ -154,6 +183,7 @@ const addNode = option => {
 };
 
 const organizeLayout = () => {
+  pushHistory();
   nodes.value = autoLayoutPositions(nodes.value, edges.value);
 };
 
@@ -163,11 +193,62 @@ const removeSelectedNode = () => {
     selectedNode.value.type === BOT_FLOW_NODE_TYPES.START
   )
     return;
+  pushHistory();
   const id = selectedNode.value.id;
   nodes.value = nodes.value.filter(n => n.id !== id);
   edges.value = edges.value.filter(e => e.source !== id && e.target !== id);
   selectedNodeId.value = null;
 };
+
+const duplicateSelectedNode = () => {
+  if (
+    !selectedNode.value ||
+    selectedNode.value.type === BOT_FLOW_NODE_TYPES.START
+  )
+    return;
+  pushHistory();
+  const original = selectedNode.value;
+  const clone = {
+    id: generateNodeId(original.type),
+    type: original.type,
+    position: { x: original.position.x + 40, y: original.position.y + 40 },
+    data: structuredClone(original.data),
+  };
+  nodes.value = [...nodes.value, clone];
+  selectedNodeId.value = clone.id;
+};
+
+// Deleta o bloco selecionado com a tecla Delete/Backspace - mas não quando o
+// foco está num campo de texto (senão apagar uma letra apagaria o bloco).
+const handleKeydown = event => {
+  const target = event.target;
+  const isEditingText =
+    target.tagName === 'INPUT' ||
+    target.tagName === 'TEXTAREA' ||
+    target.isContentEditable;
+  if (isEditingText) return;
+
+  const isUndoKey =
+    (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z';
+  if (isUndoKey) {
+    event.preventDefault();
+    if (event.shiftKey) {
+      redo();
+    } else {
+      undo();
+    }
+    return;
+  }
+
+  if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+  if (!selectedNode.value) return;
+
+  event.preventDefault();
+  removeSelectedNode();
+};
+
+onMounted(() => window.addEventListener('keydown', handleKeydown));
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
 const validationError = computed(() => {
   if (!name.value.trim()) return t('BOT_FLOW.EDITOR.VALIDATION.NAME_REQUIRED');
@@ -287,6 +368,22 @@ const saveFlow = async () => {
           @update:model-value="addNode"
         />
         <NextButton
+          v-tooltip.top="t('BOT_FLOW.EDITOR.UNDO')"
+          icon="i-lucide-undo-2"
+          slate
+          ghost
+          :disabled="!undoStack.length"
+          @click="undo"
+        />
+        <NextButton
+          v-tooltip.top="t('BOT_FLOW.EDITOR.REDO')"
+          icon="i-lucide-redo-2"
+          slate
+          ghost
+          :disabled="!redoStack.length"
+          @click="redo"
+        />
+        <NextButton
           icon="i-lucide-layout-grid"
           slate
           faded
@@ -306,7 +403,9 @@ const saveFlow = async () => {
         <Canvas
           v-model:nodes="nodes"
           v-model:edges="edges"
+          :selected-node-id="selectedNodeId"
           @select-node="id => (selectedNodeId = id)"
+          @before-change="pushHistory"
         />
       </div>
       <PropertyPanel
@@ -317,6 +416,7 @@ const saveFlow = async () => {
         :is-start="selectedNode.type === BOT_FLOW_NODE_TYPES.START"
         @close="selectedNodeId = null"
         @remove="removeSelectedNode"
+        @duplicate="duplicateSelectedNode"
       />
     </div>
   </div>
