@@ -2,6 +2,14 @@ class Webhooks::Trigger
   SUPPORTED_ERROR_HANDLE_EVENTS = %w[message_created message_updated].freeze
   RETRYABLE_AGENT_BOT_STATUSES = [429, 500].freeze
 
+  # 408 (servidor demorou a receber) e 429/5xx são falha do lado do destino/
+  # rede - uma nova tentativa pode dar certo. Escopado só a :account_webhook
+  # (o tipo usado por integrações REST genéricas assinando eventos de conta,
+  # como o Portal) para não alterar o comportamento de :api_inbox_webhook.
+  # Reaproveita a MESMA RetryableError que :agent_bot_webhook já usa, em vez
+  # de criar uma classe/pipeline paralelo.
+  RETRYABLE_ACCOUNT_WEBHOOK_STATUSES = [408, 429, *(500..599)].freeze
+
   class RetryableError < StandardError
     attr_reader :status
 
@@ -26,14 +34,22 @@ class Webhooks::Trigger
   def execute
     perform_request
   rescue StandardError => e
-    raise RetryableError.new(status: http_status(e), message: e.message) if retryable_agent_bot_error?(e)
+    raise RetryableError.new(status: http_status(e), message: e.message) if retryable_agent_bot_error?(e) || retryable_account_webhook_error?(e)
 
     handle_failure(e)
   end
 
+  # Só chega aqui pra falha que NÃO vira RetryableError (erro definitivo, ou
+  # a chamada de handle_failure feita pelo AgentBots::WebhookJob depois de
+  # esgotar as tentativas - ver retry_on em app/jobs/agent_bots/webhook_job.rb).
+  # Como :account_webhook agora propaga RetryableError direto (sem retry_on
+  # próprio - ver comentário em WebhookJob), o Sidekiq já reporta cada
+  # tentativa que falha via sentry-sidekiq automaticamente; aqui cobre o
+  # caminho que NÃO relança (não tinha nenhum report antes desta mudança).
   def handle_failure(error)
     handle_error(error)
     Rails.logger.warn "Exception: Invalid webhook URL #{@url} : #{error.message}"
+    ChatwootExceptionTracker.new(error).capture_exception
   end
 
   private
@@ -124,6 +140,17 @@ class Webhooks::Trigger
 
   def retryable_agent_bot_error?(error)
     @webhook_type == :agent_bot_webhook && RETRYABLE_AGENT_BOT_STATUSES.include?(http_status(error))
+  end
+
+  # SafeFetch::FetchError (timeout, conexão recusada, DNS etc. - ver
+  # lib/safe_fetch/fetcher.rb) não carrega status HTTP nenhum: é sempre uma
+  # falha de rede/servidor, sempre retryable pra este tipo. SafeFetch::HttpError
+  # só é retryable nos status acima - um 4xx (URL/payload rejeitados pelo
+  # destino) não é, repetir o mesmo corpo falha de novo.
+  def retryable_account_webhook_error?(error)
+    return false unless @webhook_type == :account_webhook
+
+    error.is_a?(SafeFetch::FetchError) || RETRYABLE_ACCOUNT_WEBHOOK_STATUSES.include?(http_status(error))
   end
 
   def http_status(error)

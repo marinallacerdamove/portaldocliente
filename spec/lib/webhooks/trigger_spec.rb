@@ -173,6 +173,71 @@ describe Webhooks::Trigger do
       expect { trigger.execute(url, payload, webhook_type) }.not_to raise_error
       expect(message.reload.status).to eq('failed')
     end
+
+    context 'when webhook type is account_webhook (P0: Portal reliability fix)' do
+      let(:webhook_type) { :account_webhook }
+      let(:exception_tracker) { instance_double(ChatwootExceptionTracker, capture_exception: true) }
+
+      before { allow(ChatwootExceptionTracker).to receive(:new).and_return(exception_tracker) }
+
+      it 'delivers successfully, same as before' do
+        expect(SafeFetch).to receive(:fetch).with(
+          url, method: :post, body: payload.to_json, headers: base_headers,
+               open_timeout: webhook_timeout, read_timeout: webhook_timeout, validate_content_type: false
+        ).and_yield(fetch_result)
+
+        trigger.execute(url, payload, webhook_type)
+
+        expect(ChatwootExceptionTracker).not_to have_received(:new)
+      end
+
+      it 'raises RetryableError (Sidekiq retries) when the connection is refused' do
+        expect(SafeFetch).to receive(:fetch).and_raise(SafeFetch::FetchError.new('Connection refused - connect(2)'))
+
+        expect { trigger.execute(url, payload, webhook_type) }.to raise_error(Webhooks::Trigger::RetryableError)
+      end
+
+      it 'raises RetryableError (Sidekiq retries) on a timeout' do
+        expect(SafeFetch).to receive(:fetch).and_raise(SafeFetch::FetchError.new('execution expired'))
+
+        expect { trigger.execute(url, payload, webhook_type) }.to raise_error(Webhooks::Trigger::RetryableError)
+      end
+
+      it 'raises RetryableError for HTTP 500' do
+        expect(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError.new('500 Internal Server Error'))
+
+        expect { trigger.execute(url, payload, webhook_type) }
+          .to(raise_error do |error|
+            expect(error.class.name).to eq('Webhooks::Trigger::RetryableError')
+            expect(error.status).to eq(500)
+          end)
+      end
+
+      it 'raises RetryableError for HTTP 429' do
+        expect(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError.new('429 Too Many Requests'))
+
+        expect { trigger.execute(url, payload, webhook_type) }
+          .to(raise_error do |error|
+            expect(error.class.name).to eq('Webhooks::Trigger::RetryableError')
+            expect(error.status).to eq(429)
+          end)
+      end
+
+      it 'does NOT raise for a permanent HTTP 4xx - logs and reports instead of retrying forever' do
+        expect(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError.new('422 Unprocessable Entity'))
+
+        expect { trigger.execute(url, payload, webhook_type) }.not_to raise_error
+        expect(ChatwootExceptionTracker).to have_received(:new).with(instance_of(SafeFetch::HttpError))
+        expect(exception_tracker).to have_received(:capture_exception)
+      end
+
+      it 'does NOT raise for a totally unexpected error either - same deliberate scope as other types, now reported' do
+        expect(SafeFetch).to receive(:fetch).and_raise(StandardError, 'bug inesperado, não é erro de rede nem HTTP conhecido')
+
+        expect { trigger.execute(url, payload, webhook_type) }.not_to raise_error
+        expect(exception_tracker).to have_received(:capture_exception)
+      end
+    end
   end
 
   describe 'request headers' do
