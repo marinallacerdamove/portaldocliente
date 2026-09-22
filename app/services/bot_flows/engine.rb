@@ -9,7 +9,7 @@ class BotFlows::Engine
   STATE_VARS_KEY = 'bot_flow_vars'.freeze
 
   PRESET_PATTERNS = {
-    'cnpj' => /\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/,
+    'cnpj' => %r{\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}},
     'cpf' => /\d{3}\.?\d{3}\.?\d{3}-?\d{2}/,
     'email' => URI::MailTo::EMAIL_REGEXP,
     'telefone' => /\(?\d{2}\)?\s?\d{4,5}-?\d{4}/
@@ -163,7 +163,7 @@ class BotFlows::Engine
   end
 
   def interpolate(template, vars)
-    BotFlows::Interpolation.render(template, variables: vars, contact: @conversation.contact)
+    BotFlows::Interpolation.render(template, variables: vars, conversation: @conversation)
   end
 
   def send_text(content, private: false)

@@ -4,13 +4,16 @@ import { useI18n } from 'vue-i18n';
 import SingleSelect from 'dashboard/components-next/filter/inputs/SingleSelect.vue';
 import NextInput from 'dashboard/components-next/input/Input.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import VariableSelect from '../components/variables/VariableSelect.vue';
 import {
   generateBranchId,
   generateConditionId,
 } from 'dashboard/helper/botFlowHelper';
 
-const props = defineProps({
-  variableOptions: { type: Array, default: () => [] },
+defineProps({
+  entries: { type: Array, default: () => [] },
+  recentIds: { type: Array, default: () => [] },
+  recordUsage: { type: Function, default: () => {} },
 });
 
 const modelValue = defineModel({ type: Object, required: true });
@@ -33,15 +36,6 @@ const logicOptions = computed(() => [
   { id: 'and', name: t('BOT_FLOW.EDITOR.PANEL.CONDITION.LOGIC.AND') },
   { id: 'or', name: t('BOT_FLOW.EDITOR.PANEL.CONDITION.LOGIC.OR') },
 ]);
-
-const variableModelFor = condition =>
-  computed({
-    get: () =>
-      props.variableOptions.find(o => o.id === condition.variable) || null,
-    set: option => {
-      condition.variable = option?.id || '';
-    },
-  });
 
 const operatorModelFor = condition =>
   computed({
@@ -140,9 +134,11 @@ const removeCondition = (branch, index) => {
         class="flex flex-col gap-2"
       >
         <div class="flex items-center gap-2">
-          <SingleSelect
-            v-model="variableModelFor(condition).value"
-            :options="variableOptions"
+          <VariableSelect
+            v-model="condition.variable"
+            :entries="entries"
+            :recent-ids="recentIds"
+            :record-usage="recordUsage"
             :placeholder="
               t('BOT_FLOW.EDITOR.PANEL.CONDITION.VARIABLE_PLACEHOLDER')
             "

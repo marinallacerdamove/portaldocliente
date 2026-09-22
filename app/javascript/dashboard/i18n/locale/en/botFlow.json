@@ -58,6 +58,10 @@
       "REDO": "Redo",
       "DUPLICATE_NODE": "Duplicate block",
       "DELETE_NODE": "Delete block",
+      "SAMPLE_CONTACT": {
+        "LABEL": "Preview with contact",
+        "PLACEHOLDER": "Search a sample contact..."
+      },
       "NODE_TYPES": {
         "START": "Start",
         "SEND_MESSAGE": "Send message",
@@ -83,6 +87,14 @@
         "PRIVATE_PREFIX": "[Internal]"
       },
       "PANEL": {
+        "SECTIONS": {
+          "MESSAGE": "Message",
+          "SAVE_RESPONSE": "Save reply",
+          "SOURCE": "Source",
+          "REQUEST": "Request",
+          "RESPONSE": "Response",
+          "ACTION": "Action"
+        },
         "SEND_MESSAGE": {
           "TEXT_LABEL": "Message",
           "TEXT_PLACEHOLDER": "Type the text that will be sent to the customer",
@@ -100,9 +112,9 @@
         "ASK_AND_EXTRACT": {
           "PROMPT_LABEL": "Question sent to the customer",
           "PROMPT_PLACEHOLDER": "E.g.: Describe your situation",
-          "VARIABLE_NAME_LABEL": "Give this reply a name",
-          "VARIABLE_NAME_PLACEHOLDER": "E.g.: customer_name",
-          "VARIABLE_NAME_HELP": "You'll be able to use this reply later, in other blocks"
+          "VARIABLE_LABEL_LABEL": "Information name",
+          "VARIABLE_LABEL_PLACEHOLDER": "E.g.: Customer CNPJ",
+          "VARIABLE_PREVIEW": "This reply will be available as {token}"
         },
         "CONDITION": {
           "INTRO_HELP": "Each path below is a different direction the conversation can take, depending on the customer's replies. If no path matches, the conversation follows the \"else\" path.",
@@ -126,7 +138,6 @@
         },
         "EXTRACT_PATTERN": {
           "SOURCE_VARIABLE_LABEL": "Where to get the information from",
-          "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow",
           "PATTERN_LABEL": "What to find in that reply",
           "PATTERNS": {
             "CNPJ": "CNPJ",
@@ -139,8 +150,7 @@
           "CUSTOM_PATTERN_PLACEHOLDER": "Advanced search pattern",
           "CUSTOM_PATTERN_HELP": "Only fill this in if you know what a regular expression is",
           "TARGET_VARIABLE_LABEL": "Name to save the result as",
-          "TARGET_VARIABLE_PLACEHOLDER": "E.g.: cnpj",
-          "TARGET_VARIABLE_HELP": "You'll be able to use this later, in other blocks"
+          "TARGET_VARIABLE_PLACEHOLDER": "E.g.: cnpj"
         },
         "WEBHOOK": {
           "INTRO_HELP": "This block looks up information in another system/site outside of WhatsApp - for example, checking if the customer's CNPJ is already registered in the Portal. Filling this in is more technical (similar to filling out a developer's form): if you're not sure what to put here, ask whoever has set up a block like this before, or a developer.",
@@ -176,21 +186,79 @@
           "ATTRIBUTE_HELP": "Saved on the conversation, for internal team use only"
         },
         "CNPJ_LOOKUP": {
-          "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and checks if that company is already registered in the Portal. When found, the company name becomes available as {'{'}{'{'}empresa_nome{'}'}{'}'} to use in the next message.",
-          "SOURCE_VARIABLE_LABEL": "Where to look for the CNPJ",
-          "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow"
+          "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and checks if that company is already registered in the Portal. When found, the company name becomes available as a new piece of information to use in the next message.",
+          "SOURCE_VARIABLE_LABEL": "Use CNPJ from"
         },
         "RECEITA_CNPJ_LOOKUP": {
           "INTRO_HELP": "Already built in: finds a CNPJ inside the chosen reply and looks up that company's official data straight from the tax authority (a free public source). Good for recognizing a new customer before even replying.",
-          "SOURCE_VARIABLE_LABEL": "Where to look for the CNPJ",
-          "SOURCE_VARIABLE_HELP": "Pick a reply that was already saved earlier in this flow",
+          "SOURCE_VARIABLE_LABEL": "Use CNPJ from",
           "VARIABLES_HELP": "After this block you'll have: legal name, trade name, business activity, registration status, company size, phone, start date, and address (full and by part)."
         }
       },
       "VARIABLE_PICKER": {
-        "LABEL": "Replies saved so far",
-        "EMPTY": "No replies saved before this block yet",
-        "AVAILABLE_LABEL": "Click to insert:"
+        "TRIGGER_LABEL": "Insert data",
+        "SEARCH_PLACEHOLDER": "Search information...",
+        "SELECT_PLACEHOLDER": "Select information",
+        "SHOW_ALL": "Show all information",
+        "EMPTY": "No information found"
+      },
+      "VARIABLES": {
+        "CATEGORIES": {
+          "RECENT": "Recently used",
+          "FLOW_CAPTURED": "Replies from this flow",
+          "CONTACT_STANDARD": "Customer",
+          "CONTACT_CUSTOM": "Customer custom fields",
+          "CONVERSATION_STANDARD": "Conversation",
+          "CONVERSATION_CUSTOM": "Conversation custom fields",
+          "INBOX_STANDARD": "Inbox",
+          "AGENT_STANDARD": "Agent"
+        },
+        "CONTACT": {
+          "NAME": "Customer name",
+          "EMAIL": "Customer email",
+          "PHONE_NUMBER": "Customer phone",
+          "IDENTIFIER": "Customer identifier"
+        },
+        "CONVERSATION": {
+          "ID": "Conversation number",
+          "STATUS": "Conversation status",
+          "PRIORITY": "Conversation priority"
+        },
+        "INBOX": {
+          "NAME": "Inbox name"
+        },
+        "AGENT": {
+          "NAME": "Agent name",
+          "EMAIL": "Agent email"
+        },
+        "ORIGIN": {
+          "CHATWOOT_STANDARD": "Chatwoot",
+          "CHATWOOT_CUSTOM": "Chatwoot custom field",
+          "FLOW_BLOCK": "Reply from block \"{blockLabel}\""
+        },
+        "CNPJ_LOOKUP": {
+          "EMPRESA_NOME": "Company name"
+        },
+        "RECEITA": {
+          "RAZAO_SOCIAL": "Legal name",
+          "NOME_FANTASIA": "Trade name",
+          "CNAE": "Business activity (CNAE)",
+          "SITUACAO": "Registration status",
+          "PORTE": "Company size",
+          "TELEFONE": "Phone",
+          "DATA_ABERTURA": "Start date",
+          "ENDERECO": "Full address",
+          "LOGRADOURO": "Street",
+          "NUMERO": "Number",
+          "BAIRRO": "Neighborhood",
+          "MUNICIPIO": "City",
+          "UF": "State",
+          "CEP": "ZIP code"
+        }
+      },
+      "WARNINGS": {
+        "STALE_REFERENCE": "\"{label}\" was not found - the field or source block may have been removed",
+        "SUMMARY": "{n} warning(s) found in the flow - the flow was saved anyway"
       }
     }
   }

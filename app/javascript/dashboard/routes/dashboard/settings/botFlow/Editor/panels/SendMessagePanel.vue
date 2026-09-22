@@ -2,10 +2,13 @@
 import { useI18n } from 'vue-i18n';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
-import VariableAwareTextField from '../components/VariableAwareTextField.vue';
+import InspectorSection from '../components/InspectorSection.vue';
+import VariableTextArea from '../components/variables/VariableTextArea.vue';
 
 defineProps({
-  variableOptions: { type: Array, default: () => [] },
+  entries: { type: Array, default: () => [] },
+  recentIds: { type: Array, default: () => [] },
+  recordUsage: { type: Function, default: () => {} },
 });
 
 const modelValue = defineModel({ type: Object, required: true });
@@ -13,16 +16,18 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <InspectorSection :title="t('BOT_FLOW.EDITOR.PANEL.SECTIONS.MESSAGE')">
     <WithLabel
       :label="t('BOT_FLOW.EDITOR.PANEL.SEND_MESSAGE.TEXT_LABEL')"
       name="text"
+      required
     >
-      <VariableAwareTextField
+      <VariableTextArea
         v-model="modelValue.text"
-        multiline
-        :rows="4"
-        :variable-options="variableOptions"
+        :rows="6"
+        :entries="entries"
+        :recent-ids="recentIds"
+        :record-usage="recordUsage"
         :placeholder="t('BOT_FLOW.EDITOR.PANEL.SEND_MESSAGE.TEXT_PLACEHOLDER')"
       />
     </WithLabel>
@@ -38,5 +43,5 @@ const { t } = useI18n();
         </span>
       </span>
     </label>
-  </div>
+  </InspectorSection>
 </template>

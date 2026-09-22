@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import NextButton from 'dashboard/components-next/button/Button.vue';
-import { useBotFlowVariables } from 'dashboard/composables/useBotFlowVariables';
+import { useVariableRegistry } from './composables/useVariableRegistry';
 import { BOT_FLOW_NODE_TYPES } from 'dashboard/helper/botFlowHelper';
 import SendMessagePanel from './panels/SendMessagePanel.vue';
 import MenuPanel from './panels/MenuPanel.vue';
@@ -19,6 +19,8 @@ const props = defineProps({
   nodes: { type: Array, required: true },
   edges: { type: Array, required: true },
   isStart: { type: Boolean, default: false },
+  botFlowId: { type: [String, Number], default: null },
+  sampleContact: { type: Object, default: null },
 });
 const emit = defineEmits(['close', 'remove', 'duplicate']);
 
@@ -41,31 +43,21 @@ const title = computed(() =>
   t(`BOT_FLOW.EDITOR.NODE_TYPES.${props.node.type.toUpperCase()}`)
 );
 
-const { variableOptions, insertableVariableOptions } = useBotFlowVariables(
-  () => props.nodes,
-  () => props.edges,
-  () => props.node.id
-);
-
-// Condição/Extrair padrão comparam uma variável capturada diretamente - só
-// essas fazem sentido ali. Os demais tipos usam texto livre com {{...}}, aí
-// as variáveis do sistema (nome/e-mail/telefone do contato) valem também.
-const CAPTURED_ONLY_TYPES = [
-  BOT_FLOW_NODE_TYPES.CONDITION,
-  BOT_FLOW_NODE_TYPES.EXTRACT_PATTERN,
-  BOT_FLOW_NODE_TYPES.CNPJ_LOOKUP,
-  BOT_FLOW_NODE_TYPES.RECEITA_CNPJ_LOOKUP,
-];
-const panelVariableOptions = computed(() =>
-  CAPTURED_ONLY_TYPES.includes(props.node.type)
-    ? variableOptions.value
-    : insertableVariableOptions.value
-);
+// Catálogo único de variáveis (Chatwoot padrão + custom attributes reais da
+// conta + o que o próprio fluxo captura) - cada painel filtra/prioriza por
+// tipo no ponto de uso (ver VariableSelect `priority-types`), não aqui.
+const registry = useVariableRegistry({
+  nodes: () => props.nodes,
+  edges: () => props.edges,
+  currentNodeId: () => props.node.id,
+  botFlowId: () => props.botFlowId,
+  sampleContact: () => props.sampleContact,
+});
 </script>
 
 <template>
   <div
-    class="flex flex-col gap-4 h-full overflow-y-auto p-4 w-80 border-s border-n-weak"
+    class="flex flex-col gap-4 h-full overflow-y-auto p-4 w-[480px] shrink-0 border-s border-n-weak"
   >
     <div class="flex items-center justify-between">
       <h4 class="text-sm font-medium text-n-slate-12">{{ title }}</h4>
@@ -98,7 +90,9 @@ const panelVariableOptions = computed(() =>
       :is="panelComponent"
       v-else-if="panelComponent"
       :model-value="node.data"
-      :variable-options="panelVariableOptions"
+      :entries="registry.catalog.value"
+      :recent-ids="registry.recentIds.value"
+      :record-usage="registry.recordUsage"
     />
   </div>
 </template>

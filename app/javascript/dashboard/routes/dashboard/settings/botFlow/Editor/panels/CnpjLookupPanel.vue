@@ -1,25 +1,22 @@
 <script setup>
-import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
-import SingleSelect from 'dashboard/components-next/filter/inputs/SingleSelect.vue';
+import InspectorSection from '../components/InspectorSection.vue';
+import VariableSelect from '../components/variables/VariableSelect.vue';
 
-const props = defineProps({
-  variableOptions: { type: Array, default: () => [] },
+defineProps({
+  entries: { type: Array, default: () => [] },
+  recentIds: { type: Array, default: () => [] },
+  recordUsage: { type: Function, default: () => {} },
 });
 
 const modelValue = defineModel({ type: Object, required: true });
 const { t } = useI18n();
 
-const sourceVariableModel = computed({
-  get: () =>
-    props.variableOptions.find(
-      o => o.id === modelValue.value.source_variable
-    ) || null,
-  set: option => {
-    modelValue.value.source_variable = option?.id || '';
-  },
-});
+// Prioriza variáveis do tipo "documento" e texto capturado (a fonte real mais
+// comum é a resposta livre de um "Pedir informação") - "Ver todas" continua
+// disponível pra qualquer outro caso.
+const PRIORITY_TYPES = ['document', 'string'];
 </script>
 
 <template>
@@ -28,14 +25,20 @@ const sourceVariableModel = computed({
       {{ t('BOT_FLOW.EDITOR.PANEL.CNPJ_LOOKUP.INTRO_HELP') }}
     </p>
 
-    <WithLabel
-      :label="t('BOT_FLOW.EDITOR.PANEL.CNPJ_LOOKUP.SOURCE_VARIABLE_LABEL')"
-      :help-message="
-        t('BOT_FLOW.EDITOR.PANEL.CNPJ_LOOKUP.SOURCE_VARIABLE_HELP')
-      "
-      name="source_variable"
-    >
-      <SingleSelect v-model="sourceVariableModel" :options="variableOptions" />
-    </WithLabel>
+    <InspectorSection :title="t('BOT_FLOW.EDITOR.PANEL.SECTIONS.SOURCE')">
+      <WithLabel
+        :label="t('BOT_FLOW.EDITOR.PANEL.CNPJ_LOOKUP.SOURCE_VARIABLE_LABEL')"
+        name="source_variable"
+        required
+      >
+        <VariableSelect
+          v-model="modelValue.source_variable"
+          :entries="entries"
+          :recent-ids="recentIds"
+          :record-usage="recordUsage"
+          :priority-types="PRIORITY_TYPES"
+        />
+      </WithLabel>
+    </InspectorSection>
   </div>
 </template>

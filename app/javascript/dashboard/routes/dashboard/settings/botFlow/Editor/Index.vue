@@ -11,6 +11,7 @@ import SingleSelect from 'dashboard/components-next/filter/inputs/SingleSelect.v
 import MultiSelect from 'dashboard/components-next/filter/inputs/MultiSelect.vue';
 import Canvas from './Canvas.vue';
 import PropertyPanel from './PropertyPanel.vue';
+import SampleContactPicker from './components/SampleContactPicker.vue';
 import {
   BOT_FLOW_NODE_TYPES,
   BOT_FLOW_ADDABLE_NODE_TYPES,
@@ -18,6 +19,7 @@ import {
   getDefaultNodeData,
   isNodeValid,
   autoLayoutPositions,
+  collectVariableWarnings,
 } from 'dashboard/helper/botFlowHelper';
 
 const { t } = useI18n();
@@ -30,6 +32,11 @@ const isEditing = computed(() => !!botFlowId.value);
 
 const botFlows = useMapGetter('botFlows/getBotFlows');
 const inboxes = useMapGetter('inboxes/getInboxes');
+const contactAttributes = useMapGetter('attributes/getContactAttributes');
+const conversationAttributes = useMapGetter(
+  'attributes/getConversationAttributes'
+);
+const sampleContact = ref(null);
 const whatsappInboxOptions = computed(() =>
   inboxes.value
     .filter(inbox => inbox.channel_type === 'Channel::Whatsapp')
@@ -50,6 +57,30 @@ const selectedNodeId = ref(null);
 const selectedNode = computed(
   () => nodes.value.find(n => n.id === selectedNodeId.value) || null
 );
+
+const backendNodeToFlow = node => {
+  const { id, type, position, ...data } = node;
+  return { id, type, position: position || { x: 100, y: 100 }, data };
+};
+
+const backendEdgeToFlow = (edge, index) => ({
+  id: `e-${index}-${edge.source}-${edge.sourceHandle}-${edge.target}`,
+  source: edge.source,
+  target: edge.target,
+  sourceHandle: edge.sourceHandle,
+});
+
+const flowNodeToBackend = node => ({
+  id: node.id,
+  type: node.type,
+  position: { x: node.position.x, y: node.position.y },
+  ...node.data,
+});
+const flowEdgeToBackend = edge => ({
+  source: edge.source,
+  target: edge.target,
+  sourceHandle: edge.sourceHandle,
+});
 
 // Desfazer/refazer: pilha de fotos do estado (nodes+edges) antes de cada
 // ação estrutural (adicionar/excluir/duplicar/organizar/conectar/mover) -
@@ -111,30 +142,6 @@ const addNodeOptions = computed(() =>
   }))
 );
 
-const backendNodeToFlow = node => {
-  const { id, type, position, ...data } = node;
-  return { id, type, position: position || { x: 100, y: 100 }, data };
-};
-
-const backendEdgeToFlow = (edge, index) => ({
-  id: `e-${index}-${edge.source}-${edge.sourceHandle}-${edge.target}`,
-  source: edge.source,
-  target: edge.target,
-  sourceHandle: edge.sourceHandle,
-});
-
-const flowNodeToBackend = node => ({
-  id: node.id,
-  type: node.type,
-  position: { x: node.position.x, y: node.position.y },
-  ...node.data,
-});
-const flowEdgeToBackend = edge => ({
-  source: edge.source,
-  target: edge.target,
-  sourceHandle: edge.sourceHandle,
-});
-
 const loadFlow = flow => {
   name.value = flow.name;
   description.value = flow.description || '';
@@ -162,6 +169,9 @@ const initNewFlow = () => {
 
 onMounted(async () => {
   if (!inboxes.value.length) await store.dispatch('inboxes/get');
+  if (!contactAttributes.value.length && !conversationAttributes.value.length) {
+    store.dispatch('attributes/get');
+  }
 
   if (isEditing.value) {
     if (!botFlows.value.length) await store.dispatch('botFlows/get');
@@ -288,10 +298,28 @@ const validationError = computed(() => {
   return null;
 });
 
+// Avisos não bloqueantes (referência a variável removida, nome de resposta
+// duplicado) - não impedem salvar, só chamam atenção antes de sair da tela.
+const variableWarnings = computed(() =>
+  collectVariableWarnings(nodes.value, edges.value, {
+    contactAttributeKeys: contactAttributes.value.map(a => a.attributeKey),
+    conversationAttributeKeys: conversationAttributes.value.map(
+      a => a.attributeKey
+    ),
+  })
+);
+
 const saveFlow = async () => {
   if (validationError.value) {
     useAlert(validationError.value);
     return;
+  }
+  if (variableWarnings.value.length) {
+    useAlert(
+      t('BOT_FLOW.EDITOR.WARNINGS.SUMMARY', {
+        n: variableWarnings.value.length,
+      })
+    );
   }
 
   const payload = {
@@ -335,55 +363,60 @@ const saveFlow = async () => {
 
 <template>
   <div class="flex flex-col h-[calc(100vh-7rem)]">
-    <div class="flex flex-wrap items-end gap-4 p-4 border-b border-n-weak">
-      <WithLabel
-        :label="t('BOT_FLOW.EDITOR.NAME_LABEL')"
-        name="name"
-        class="w-64"
-      >
-        <NextInput
-          v-model="name"
-          :placeholder="t('BOT_FLOW.EDITOR.NAME_PLACEHOLDER')"
-        />
-      </WithLabel>
+    <div class="flex flex-col gap-3 p-4 border-b border-n-weak">
+      <div class="flex flex-wrap items-end gap-4">
+        <WithLabel
+          :label="t('BOT_FLOW.EDITOR.NAME_LABEL')"
+          name="name"
+          class="w-64"
+        >
+          <NextInput
+            v-model="name"
+            :placeholder="t('BOT_FLOW.EDITOR.NAME_PLACEHOLDER')"
+          />
+        </WithLabel>
 
-      <WithLabel
-        :label="t('BOT_FLOW.EDITOR.TRIGGER_LABEL')"
-        name="trigger_type"
-        class="w-64"
-      >
-        <SingleSelect
-          v-model="triggerTypeModel"
-          :options="triggerTypeOptions"
-          disable-search
-          disable-deselect
-        />
-      </WithLabel>
+        <WithLabel
+          :label="t('BOT_FLOW.EDITOR.TRIGGER_LABEL')"
+          name="trigger_type"
+          class="w-64"
+        >
+          <SingleSelect
+            v-model="triggerTypeModel"
+            :options="triggerTypeOptions"
+            disable-search
+            disable-deselect
+          />
+        </WithLabel>
 
-      <WithLabel
-        v-if="triggerType === 'keyword'"
-        :label="t('BOT_FLOW.EDITOR.KEYWORDS_LABEL')"
-        name="keywords"
-        class="w-64"
-      >
-        <NextInput
-          v-model="keywordsText"
-          :placeholder="t('BOT_FLOW.EDITOR.KEYWORDS_PLACEHOLDER')"
-        />
-      </WithLabel>
+        <WithLabel
+          v-if="triggerType === 'keyword'"
+          :label="t('BOT_FLOW.EDITOR.KEYWORDS_LABEL')"
+          name="keywords"
+          class="w-64"
+        >
+          <NextInput
+            v-model="keywordsText"
+            :placeholder="t('BOT_FLOW.EDITOR.KEYWORDS_PLACEHOLDER')"
+          />
+        </WithLabel>
 
-      <WithLabel
-        :label="t('BOT_FLOW.EDITOR.INBOXES_LABEL')"
-        name="inbox_ids"
-        class="w-64"
-      >
-        <MultiSelect
-          v-model="selectedInboxes"
-          :options="whatsappInboxOptions"
-        />
-      </WithLabel>
+        <WithLabel
+          :label="t('BOT_FLOW.EDITOR.INBOXES_LABEL')"
+          name="inbox_ids"
+          class="w-64"
+        >
+          <MultiSelect
+            v-model="selectedInboxes"
+            :options="whatsappInboxOptions"
+          />
+        </WithLabel>
+      </div>
 
-      <div class="ms-auto flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        <SampleContactPicker
+          @update:contact="contact => (sampleContact = contact)"
+        />
         <SingleSelect
           :model-value="null"
           :options="addNodeOptions"
@@ -439,6 +472,8 @@ const saveFlow = async () => {
         :nodes="nodes"
         :edges="edges"
         :is-start="selectedNode.type === BOT_FLOW_NODE_TYPES.START"
+        :bot-flow-id="botFlowId"
+        :sample-contact="sampleContact"
         @close="selectedNodeId = null"
         @remove="removeSelectedNode"
         @duplicate="duplicateSelectedNode"

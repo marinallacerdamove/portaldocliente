@@ -6,6 +6,7 @@ import WithLabel from 'v3/components/Form/WithLabel.vue';
 import SingleSelect from 'dashboard/components-next/filter/inputs/SingleSelect.vue';
 import MultiSelect from 'dashboard/components-next/filter/inputs/MultiSelect.vue';
 import NextInput from 'dashboard/components-next/input/Input.vue';
+import InspectorSection from '../components/InspectorSection.vue';
 
 const modelValue = defineModel({ type: Object, required: true });
 const { t } = useI18n();
@@ -89,7 +90,7 @@ const attributeValueModel = computed({
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <InspectorSection :title="t('BOT_FLOW.EDITOR.PANEL.SECTIONS.ACTION')">
     <WithLabel
       :label="t('BOT_FLOW.EDITOR.PANEL.CHATWOOT_ACTION.ACTION_LABEL')"
       name="action_name"
@@ -137,5 +138,5 @@ const attributeValueModel = computed({
         <NextInput v-model="attributeValueModel" />
       </WithLabel>
     </template>
-  </div>
+  </InspectorSection>
 </template>

@@ -6,6 +6,7 @@ defineProps({
   hasError: { type: Boolean, default: false },
   helpMessage: { type: String, default: '' },
   errorMessage: { type: String, default: '' },
+  required: { type: Boolean, default: false },
 });
 </script>
 
@@ -18,7 +19,7 @@ defineProps({
       :class="{ 'text-n-ruby-12': hasError }"
     >
       <slot name="label">
-        {{ label }}
+        {{ label }}<span v-if="required" class="text-n-ruby-9"> *</span>
       </slot>
       <slot name="rightOfLabel" />
     </label>

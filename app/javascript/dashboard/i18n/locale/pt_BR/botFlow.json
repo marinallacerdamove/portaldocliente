@@ -58,6 +58,10 @@
       "REDO": "Refazer",
       "DUPLICATE_NODE": "Duplicar bloco",
       "DELETE_NODE": "Excluir bloco",
+      "SAMPLE_CONTACT": {
+        "LABEL": "Pré-visualizar com contato",
+        "PLACEHOLDER": "Buscar contato de exemplo..."
+      },
       "NODE_TYPES": {
         "START": "Início",
         "SEND_MESSAGE": "Enviar mensagem",
@@ -83,6 +87,14 @@
         "PRIVATE_PREFIX": "[Interno]"
       },
       "PANEL": {
+        "SECTIONS": {
+          "MESSAGE": "Mensagem",
+          "SAVE_RESPONSE": "Salvar resposta",
+          "SOURCE": "Origem",
+          "REQUEST": "Requisição",
+          "RESPONSE": "Resposta",
+          "ACTION": "Ação"
+        },
         "SEND_MESSAGE": {
           "TEXT_LABEL": "Mensagem",
           "TEXT_PLACEHOLDER": "Digite o texto que será enviado ao cliente",
@@ -100,9 +112,9 @@
         "ASK_AND_EXTRACT": {
           "PROMPT_LABEL": "Pergunta enviada ao cliente",
           "PROMPT_PLACEHOLDER": "Ex.: Descreva sua situação",
-          "VARIABLE_NAME_LABEL": "Dar um nome pra essa resposta",
-          "VARIABLE_NAME_PLACEHOLDER": "Ex.: nome_do_cliente",
-          "VARIABLE_NAME_HELP": "Você vai poder usar essa resposta depois, em outros blocos do fluxo"
+          "VARIABLE_LABEL_LABEL": "Nome da informação",
+          "VARIABLE_LABEL_PLACEHOLDER": "Ex.: CNPJ do cliente",
+          "VARIABLE_PREVIEW": "A resposta ficará disponível como {token}"
         },
         "CONDITION": {
           "INTRO_HELP": "Cada caminho abaixo é uma direção diferente que a conversa pode seguir, dependendo das respostas do cliente. Se nenhum caminho combinar, a conversa segue pelo \"senão\".",
@@ -126,7 +138,6 @@
         },
         "EXTRACT_PATTERN": {
           "SOURCE_VARIABLE_LABEL": "De onde tirar a informação",
-          "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo",
           "PATTERN_LABEL": "O que você quer encontrar nessa resposta",
           "PATTERNS": {
             "CNPJ": "CNPJ",
@@ -139,8 +150,7 @@
           "CUSTOM_PATTERN_PLACEHOLDER": "Padrão de busca avançado",
           "CUSTOM_PATTERN_HELP": "Só preencha se você souber o que é uma expressão regular",
           "TARGET_VARIABLE_LABEL": "Nome para guardar o resultado",
-          "TARGET_VARIABLE_PLACEHOLDER": "Ex.: cnpj",
-          "TARGET_VARIABLE_HELP": "Você vai poder usar isso depois, em outros blocos do fluxo"
+          "TARGET_VARIABLE_PLACEHOLDER": "Ex.: cnpj"
         },
         "WEBHOOK": {
           "INTRO_HELP": "Esse bloco vai buscar uma informação em outro sistema/site fora do WhatsApp - por exemplo, verificar se o CNPJ do cliente já está cadastrado no Portal. Preencher isso é mais técnico (parecido com preencher um formulário de programador): se você não souber o que colocar aqui, peça ajuda de quem já configurou um bloco desses antes, ou de um desenvolvedor.",
@@ -176,21 +186,79 @@
           "ATTRIBUTE_HELP": "Fica salvo na conversa, só pra uso interno da equipe"
         },
         "CNPJ_LOOKUP": {
-          "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e verifica se essa empresa já está cadastrada no Portal. Se encontrar, o nome da empresa fica disponível como {'{'}{'{'}empresa_nome{'}'}{'}'} pra usar na próxima mensagem.",
-          "SOURCE_VARIABLE_LABEL": "Onde procurar o CNPJ",
-          "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo"
+          "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e verifica se essa empresa já está cadastrada no Portal. Se encontrar, o nome da empresa fica disponível como uma nova informação pra usar na próxima mensagem.",
+          "SOURCE_VARIABLE_LABEL": "Usar CNPJ de"
         },
         "RECEITA_CNPJ_LOOKUP": {
           "INTRO_HELP": "Já vem pronto: acha um CNPJ dentro da resposta escolhida e busca os dados oficiais dessa empresa direto na Receita Federal (fonte pública, gratuita). Bom pra reconhecer um cliente novo antes mesmo de responder.",
-          "SOURCE_VARIABLE_LABEL": "Onde procurar o CNPJ",
-          "SOURCE_VARIABLE_HELP": "Escolha uma resposta que já foi guardada antes nesse fluxo",
+          "SOURCE_VARIABLE_LABEL": "Usar CNPJ de",
           "VARIABLES_HELP": "Depois desse bloco ficam disponíveis: razão social, nome fantasia, atividade (CNAE), situação cadastral, porte, telefone, data de abertura e endereço (completo e por partes)."
         }
       },
       "VARIABLE_PICKER": {
-        "LABEL": "Respostas guardadas até aqui",
-        "EMPTY": "Nenhuma resposta guardada antes deste bloco ainda",
-        "AVAILABLE_LABEL": "Clique pra inserir:"
+        "TRIGGER_LABEL": "Inserir dado",
+        "SEARCH_PLACEHOLDER": "Buscar informação...",
+        "SELECT_PLACEHOLDER": "Selecione uma informação",
+        "SHOW_ALL": "Ver todas as informações",
+        "EMPTY": "Nenhuma informação encontrada"
+      },
+      "VARIABLES": {
+        "CATEGORIES": {
+          "RECENT": "Usados recentemente",
+          "FLOW_CAPTURED": "Respostas deste fluxo",
+          "CONTACT_STANDARD": "Cliente",
+          "CONTACT_CUSTOM": "Campos personalizados do cliente",
+          "CONVERSATION_STANDARD": "Conversa",
+          "CONVERSATION_CUSTOM": "Campos personalizados da conversa",
+          "INBOX_STANDARD": "Caixa de entrada",
+          "AGENT_STANDARD": "Atendente"
+        },
+        "CONTACT": {
+          "NAME": "Nome do cliente",
+          "EMAIL": "E-mail do cliente",
+          "PHONE_NUMBER": "Telefone do cliente",
+          "IDENTIFIER": "Identificador do cliente"
+        },
+        "CONVERSATION": {
+          "ID": "Número da conversa",
+          "STATUS": "Status da conversa",
+          "PRIORITY": "Prioridade da conversa"
+        },
+        "INBOX": {
+          "NAME": "Nome da caixa de entrada"
+        },
+        "AGENT": {
+          "NAME": "Nome do atendente",
+          "EMAIL": "E-mail do atendente"
+        },
+        "ORIGIN": {
+          "CHATWOOT_STANDARD": "Chatwoot",
+          "CHATWOOT_CUSTOM": "Campo personalizado do Chatwoot",
+          "FLOW_BLOCK": "Resposta do bloco \"{blockLabel}\""
+        },
+        "CNPJ_LOOKUP": {
+          "EMPRESA_NOME": "Nome da empresa"
+        },
+        "RECEITA": {
+          "RAZAO_SOCIAL": "Razão social",
+          "NOME_FANTASIA": "Nome fantasia",
+          "CNAE": "Atividade (CNAE)",
+          "SITUACAO": "Situação cadastral",
+          "PORTE": "Porte",
+          "TELEFONE": "Telefone",
+          "DATA_ABERTURA": "Data de abertura",
+          "ENDERECO": "Endereço completo",
+          "LOGRADOURO": "Logradouro",
+          "NUMERO": "Número",
+          "BAIRRO": "Bairro",
+          "MUNICIPIO": "Município",
+          "UF": "UF",
+          "CEP": "CEP"
+        }
+      },
+      "WARNINGS": {
+        "STALE_REFERENCE": "\"{label}\" não foi encontrada - o campo ou bloco de origem pode ter sido removido",
+        "SUMMARY": "{n} aviso(s) encontrado(s) no fluxo - o fluxo foi salvo mesmo assim"
       }
     }
   }

@@ -36,7 +36,7 @@ class BotFlows::WebhookCaller
   private
 
   def interpolate(template)
-    BotFlows::Interpolation.render(template, variables: @vars, contact: @conversation.contact)
+    BotFlows::Interpolation.render(template, variables: @vars, conversation: @conversation)
   end
 
   # SafeFetch::Fetcher already raises SafeFetch::HttpError for a non-2xx response (rescued above),
