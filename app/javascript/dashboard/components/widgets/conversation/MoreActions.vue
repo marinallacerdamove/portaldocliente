@@ -16,6 +16,7 @@ import {
   CMD_SEND_TRANSCRIPT,
   CMD_UNMUTE_CONVERSATION,
 } from 'dashboard/helper/commandbar/events';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 // No props needed as we're getting currentChat from the store directly
 const store = useStore();
@@ -51,6 +52,13 @@ const actionMenuSections = computed(() => {
     label: t('CONTACT_PANEL.SEND_TRANSCRIPT'),
     action: 'send_transcript',
     value: 'send_transcript',
+  });
+
+  generalItems.push({
+    icon: 'i-lucide-list-checks',
+    label: t('CONTACT_PANEL.SELECT_MESSAGES'),
+    action: 'select_messages',
+    value: 'select_messages',
   });
 
   return [
@@ -103,6 +111,8 @@ const handleActionClick = ({ action, value }) => {
     useAlert(t('CONTACT_PANEL.UNMUTED_SUCCESS'));
   } else if (action === 'send_transcript') {
     toggleEmailModal();
+  } else if (action === 'select_messages') {
+    emitter.emit(BUS_EVENTS.TOGGLE_MESSAGE_SELECTION_MODE);
   } else if (action === 'ticket_link') {
     ticketLinkDialogRef.value?.open(value);
   }

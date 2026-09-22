@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, nextTick } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
@@ -281,9 +281,32 @@ const reset = () => {
   attachedFiles.value = [];
 };
 
-const open = () => {
+// prefill vem de fora (ex.: seleção de mensagens no Message.vue) já resolvido
+// - contato no mesmo formato camelCase que selectContact() espera, mensagem
+// já em HTML. O editor de mensagem é contenteditable e só sincroniza DOM -> estado
+// (onMessageInput), nunca o contrário, então além de formState.message
+// precisamos escrever o innerHTML manualmente depois que o Dialog montar o
+// conteúdo (isOpen vira true de forma síncrona, mas o slot só renderiza no
+// próximo tick).
+const open = (prefill = null) => {
   reset();
   dialogRef.value?.open();
+
+  if (!prefill) return;
+
+  if (prefill.contact) {
+    formState.contact = prefill.contact;
+    query.value = prefill.contact.name || '';
+  }
+  if (prefill.subject) formState.subject = prefill.subject;
+  if (prefill.message) {
+    formState.message = prefill.message;
+    nextTick(() => {
+      if (messageEditorRef.value) {
+        messageEditorRef.value.innerHTML = prefill.message;
+      }
+    });
+  }
 };
 
 const close = () => {

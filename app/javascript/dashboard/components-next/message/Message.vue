@@ -47,6 +47,7 @@ import WhatsappReferral from './bubbles/Text/WhatsappReferral.vue';
 import MessageError from './MessageError.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
+import Checkbox from 'next/checkbox/Checkbox.vue';
 
 /**
  * @typedef {Object} Attachment
@@ -138,9 +139,11 @@ const props = defineProps({
   senderId: { type: Number, default: null },
   senderType: { type: String, default: null },
   sourceId: { type: String, default: '' }, // eslint-disable-line vue/no-unused-properties
+  selectionModeActive: { type: Boolean, default: false },
+  selected: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['retry']);
+const emit = defineEmits(['retry', 'toggleSelect']);
 
 const contextMenuPosition = ref({});
 const showBackgroundHighlight = ref(false);
@@ -558,6 +561,13 @@ const setupHighlightTimer = () => {
 
 onMounted(setupHighlightTimer);
 
+// Mensagem de atividade (ex.: "conversa reaberta pelo sistema") não tem
+// conteúdo de verdade pra citar num ticket interno - não faz sentido
+// oferecer o checkbox nela.
+const isSelectable = computed(
+  () => variant.value !== MESSAGE_VARIANTS.ACTIVITY
+);
+
 provideMessageContext({
   ...toRefs(props),
   isPrivate: computed(() => props.private),
@@ -574,76 +584,89 @@ provideMessageContext({
   <div
     v-if="shouldRenderMessage"
     :id="`message${props.id}`"
-    class="flex w-full mb-2 message-bubble-container"
+    class="flex w-full items-start mb-2"
     :data-message-id="props.id"
-    :class="[
-      flexOrientationClass,
-      {
-        'group-with-next': shouldGroupWithNext,
-        'bg-n-alpha-1': showBackgroundHighlight,
-      },
-    ]"
   >
-    <div v-if="variant === MESSAGE_VARIANTS.ACTIVITY">
-      <ActivityBubble :content="content" />
+    <div
+      v-if="selectionModeActive && isSelectable"
+      class="flex items-center justify-center w-6 h-6 mt-1 shrink-0"
+    >
+      <Checkbox
+        :model-value="selected"
+        @update:model-value="emit('toggleSelect', props.id)"
+      />
     </div>
     <div
-      v-else
+      class="flex flex-1 min-w-0 message-bubble-container"
       :class="[
-        gridClass,
+        flexOrientationClass,
         {
-          'gap-y-2': contentAttributes.externalError,
-          'w-full': variant === MESSAGE_VARIANTS.EMAIL,
+          'group-with-next': shouldGroupWithNext,
+          'bg-n-alpha-1': showBackgroundHighlight,
         },
       ]"
-      class="gap-x-2"
-      :style="{
-        gridTemplateAreas: gridTemplate,
-      }"
     >
-      <div
-        v-if="!shouldGroupWithNext && shouldShowAvatar"
-        v-tooltip.left-end="avatarTooltip"
-        class="[grid-area:avatar] flex items-end"
-      >
-        <Avatar v-bind="avatarInfo" :size="24" />
+      <div v-if="variant === MESSAGE_VARIANTS.ACTIVITY">
+        <ActivityBubble :content="content" />
       </div>
       <div
-        class="[grid-area:bubble] flex min-w-0"
-        :class="{
-          'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
-          'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
-          'flex-col items-start gap-2': shouldShowWhatsappReferral,
+        v-else
+        :class="[
+          gridClass,
+          {
+            'gap-y-2': contentAttributes.externalError,
+            'w-full': variant === MESSAGE_VARIANTS.EMAIL,
+          },
+        ]"
+        class="gap-x-2"
+        :style="{
+          gridTemplateAreas: gridTemplate,
         }"
-        @contextmenu="openContextMenu($event)"
       >
-        <WhatsappReferral
-          v-if="shouldShowWhatsappReferral"
-          :referral="contentAttributes.referral"
+        <div
+          v-if="!shouldGroupWithNext && shouldShowAvatar"
+          v-tooltip.left-end="avatarTooltip"
+          class="[grid-area:avatar] flex items-end"
+        >
+          <Avatar v-bind="avatarInfo" :size="24" />
+        </div>
+        <div
+          class="[grid-area:bubble] flex min-w-0"
+          :class="{
+            'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
+            'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
+            'flex-col items-start gap-2': shouldShowWhatsappReferral,
+          }"
+          @contextmenu="openContextMenu($event)"
+        >
+          <WhatsappReferral
+            v-if="shouldShowWhatsappReferral"
+            :referral="contentAttributes.referral"
+          />
+          <Component :is="componentToRender" />
+        </div>
+        <MessageError
+          v-if="contentAttributes.externalError"
+          class="[grid-area:meta]"
+          :class="flexOrientationClass"
+          :error="contentAttributes.externalError"
+          @retry="emit('retry')"
         />
-        <Component :is="componentToRender" />
       </div>
-      <MessageError
-        v-if="contentAttributes.externalError"
-        class="[grid-area:meta]"
-        :class="flexOrientationClass"
-        :error="contentAttributes.externalError"
-        @retry="emit('retry')"
-      />
-    </div>
-    <div v-if="shouldShowContextMenu" class="context-menu-wrap">
-      <ContextMenu
-        v-if="isBubble"
-        :context-menu-position="contextMenuPosition"
-        :is-open="showContextMenu"
-        :enabled-options="contextMenuEnabledOptions"
-        :message="payloadForContextMenu"
-        hide-button
-        @open="openContextMenu"
-        @close="closeContextMenu"
-        @reply-to="handleReplyTo"
-        @edit="isEditing = true"
-      />
+      <div v-if="shouldShowContextMenu" class="context-menu-wrap">
+        <ContextMenu
+          v-if="isBubble"
+          :context-menu-position="contextMenuPosition"
+          :is-open="showContextMenu"
+          :enabled-options="contextMenuEnabledOptions"
+          :message="payloadForContextMenu"
+          hide-button
+          @open="openContextMenu"
+          @close="closeContextMenu"
+          @reply-to="handleReplyTo"
+          @edit="isEditing = true"
+        />
+      </div>
     </div>
   </div>
 </template>

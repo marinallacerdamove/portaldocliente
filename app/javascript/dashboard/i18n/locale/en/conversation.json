@@ -34,6 +34,11 @@
     },
     "UNREAD_MESSAGES": "Unread Messages",
     "UNREAD_MESSAGE": "Unread Message",
+    "MESSAGE_SELECTION": {
+      "COUNT": "{count} message selected | {count} messages selected",
+      "CANCEL": "Cancel",
+      "CREATE_TICKET": "Create internal ticket"
+    },
     "CLICK_HERE": "Click here",
     "LOADING_INBOXES": "Loading inboxes",
     "LOADING_CONVERSATIONS": "Loading Conversations",
@@ -578,6 +583,7 @@
     "SUBJECT_LABEL": "Subject",
     "MESSAGE_LABEL": "Message",
     "MESSAGE_PLACEHOLDER": "Type something...",
+    "SELECTION_ATTACHMENT_PLACEHOLDER": "[attachment]",
     "ATTACH_BUTTON": "Attach file",
     "SAVE_BUTTON": "Create ticket",
     "NONE_OPTION": "None",

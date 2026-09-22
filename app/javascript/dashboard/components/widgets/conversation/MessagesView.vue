@@ -1,9 +1,12 @@
 <script>
-import { ref, provide, useTemplateRef } from 'vue';
+import { ref, computed, provide, useTemplateRef } from 'vue';
 import { useElementSize } from '@vueuse/core';
 // composable
 import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
+import { useMapGetter } from 'dashboard/composables/store';
+import { useMessageSelection } from 'dashboard/composables/useMessageSelection';
+import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 
 // components
 import ReplyBox from './ReplyBox.vue';
@@ -13,6 +16,8 @@ import Banner from 'dashboard/components/ui/Banner.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import ResizableEditorWrapper from './ResizableEditorWrapper.vue';
 import ReferralBubble from 'dashboard/components-next/Conversation/ReferralBubble.vue';
+import NewInternalTicket from 'dashboard/components-next/NewConversation/NewInternalTicket.vue';
+import NextButton from 'dashboard/components-next/button/Button.vue';
 
 // stores and apis
 import { mapGetters } from 'vuex';
@@ -49,6 +54,8 @@ export default {
     Spinner,
     ResizableEditorWrapper,
     ReferralBubble,
+    NewInternalTicket,
+    NextButton,
   },
   mixins: [inboxMixin],
   setup() {
@@ -65,6 +72,21 @@ export default {
       getLabelSuggestions,
     } = useLabelSuggestions();
 
+    const currentChatGetter = useMapGetter('getSelectedChat');
+    const conversationId = computed(() => currentChatGetter.value.id);
+    const {
+      isSelectionModeActive,
+      selectedMessageIds,
+      selectedCount,
+      toggleSelectionMode,
+      toggleMessageSelection,
+      clearSelection,
+    } = useMessageSelection(conversationId);
+
+    const { getPlainText } = useMessageFormatter();
+
+    const newInternalTicketRef = useTemplateRef('newInternalTicketRef');
+
     provide('contextMenuElementTarget', conversationPanelRef);
 
     return {
@@ -77,6 +99,14 @@ export default {
       topBannerRef,
       containerHeight,
       topBannerHeight,
+      isSelectionModeActive,
+      selectedMessageIds,
+      selectedCount,
+      toggleSelectionMode,
+      toggleMessageSelection,
+      clearSelection,
+      getPlainText,
+      newInternalTicketRef,
     };
   },
   data() {
@@ -144,6 +174,11 @@ export default {
     },
     referralData() {
       return this.currentChat?.additional_attributes?.referral || null;
+    },
+    selectedMessagesSorted() {
+      return this.getMessages
+        .filter(message => this.selectedMessageIds.includes(message.id))
+        .sort((a, b) => a.created_at - b.created_at);
     },
     readMessages() {
       return getReadMessages(
@@ -278,6 +313,10 @@ export default {
     emitter.on(BUS_EVENTS.MESSAGE_SENT, () => {
       this.messageSentSinceOpened = true;
     });
+    emitter.on(
+      BUS_EVENTS.TOGGLE_MESSAGE_SELECTION_MODE,
+      this.toggleSelectionMode
+    );
   },
 
   mounted() {
@@ -338,6 +377,10 @@ export default {
     },
     removeBusListeners() {
       emitter.off(BUS_EVENTS.SCROLL_TO_MESSAGE, this.onScrollToMessage);
+      emitter.off(
+        BUS_EVENTS.TOGGLE_MESSAGE_SELECTION_MODE,
+        this.toggleSelectionMode
+      );
     },
     onScrollToMessage({ messageId = '' } = {}) {
       this.$nextTick(() => {
@@ -457,6 +500,50 @@ export default {
     resetReplyEditorHeight() {
       this.resizableEditorWrapperRef?.resetEditorHeight?.();
     },
+    escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      };
+      return text.replace(/[&<>"']/g, char => map[char]);
+    },
+    buildSelectionQuoteHtml(messages) {
+      return messages
+        .map(message => {
+          const senderName =
+            message.sender?.name || this.$t('CONVERSATION.BOT');
+          const text = message.content
+            ? this.getPlainText(message.content)
+            : this.$t(
+                'NEW_INTERNAL_TICKET_DIALOG.SELECTION_ATTACHMENT_PLACEHOLDER'
+              );
+          return `<p><strong>${this.escapeHtml(senderName)}:</strong> ${this.escapeHtml(text)}</p>`;
+        })
+        .join('');
+    },
+    // A ficha do cliente sempre é o contato da conversa nativa de origem -
+    // resolve via store (não busca) pra garantir que é exatamente o mesmo
+    // registro, no formato camelCase que formState.contact espera.
+    async handleCreateInternalTicketFromSelection() {
+      if (!this.selectedCount) return;
+
+      const messageHtml = this.buildSelectionQuoteHtml(
+        this.selectedMessagesSorted
+      );
+
+      const contactId = this.currentChat.meta?.sender?.id;
+      let contact = null;
+      if (contactId) {
+        await this.$store.dispatch('contacts/show', { id: contactId });
+        contact = this.$store.getters['contacts/getContactById'](contactId);
+      }
+
+      this.toggleSelectionMode();
+      this.newInternalTicketRef?.open({ message: messageHtml, contact });
+    },
   },
 };
 </script>
@@ -498,7 +585,10 @@ export default {
       :is-an-email-channel="isAnEmailChannel"
       :inbox-supports-reply-to="inboxSupportsReplyTo"
       :messages="getMessages"
+      :selection-mode-active="isSelectionModeActive"
+      :selected-message-ids="selectedMessageIds"
       @retry="handleMessageRetry"
+      @toggle-select="toggleMessageSelection"
     >
       <template #beforeAll>
         <transition name="slide-up">
@@ -534,6 +624,32 @@ export default {
     </MessageList>
     <div class="flex relative flex-col bg-n-surface-1">
       <div
+        v-if="isSelectionModeActive"
+        class="flex items-center justify-between gap-2 px-4 py-2 border-t border-n-weak bg-n-solid-2"
+      >
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-sm text-n-slate-11 truncate">
+            {{
+              $t('CONVERSATION.MESSAGE_SELECTION.COUNT', {
+                count: selectedCount,
+              })
+            }}
+          </span>
+          <NextButton
+            :label="$t('CONVERSATION.MESSAGE_SELECTION.CANCEL')"
+            ghost
+            sm
+            @click="toggleSelectionMode"
+          />
+        </div>
+        <NextButton
+          :label="$t('CONVERSATION.MESSAGE_SELECTION.CREATE_TICKET')"
+          sm
+          :disabled="!selectedCount"
+          @click="handleCreateInternalTicketFromSelection"
+        />
+      </div>
+      <div
         v-if="isAnyoneTyping"
         class="absolute flex items-center w-full h-0 -top-7"
       >
@@ -555,5 +671,6 @@ export default {
         <ReplyBox @toggle-editor-size="toggleReplyEditorSize" />
       </ResizableEditorWrapper>
     </div>
+    <NewInternalTicket ref="newInternalTicketRef" />
   </div>
 </template>

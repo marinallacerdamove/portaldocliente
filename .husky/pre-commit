@@ -2,7 +2,11 @@
 . "$(dirname "$0")/_/husky.sh"
 
 # lint js and vue files
-npx --no-install lint-staged
+# ESLINT_USE_FLAT_CONFIG=false: this repo only has a legacy .eslintrc.js, but
+# ESLint 8.57's auto-detection walks up past this repo and picks up an
+# unrelated eslint.config.mjs (Next.js project) in the parent directory,
+# which has no "eslint" package installed and crashes the hook.
+ESLINT_USE_FLAT_CONFIG=false npx --no-install lint-staged
 
 # lint only staged ruby files that still exist (not deleted)
 git diff --name-only --cached | xargs -I {} sh -c 'test -f "{}" && echo "{}"' | grep '\.rb$' | xargs -I {} bundle exec rubocop --force-exclusion -a "{}" || true

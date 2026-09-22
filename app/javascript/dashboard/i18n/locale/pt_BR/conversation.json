@@ -27,6 +27,11 @@
     },
     "UNREAD_MESSAGES": "Mensagens não lidas",
     "UNREAD_MESSAGE": "Mensagem não lida",
+    "MESSAGE_SELECTION": {
+      "COUNT": "{count} mensagem selecionada | {count} mensagens selecionadas",
+      "CANCEL": "Cancelar",
+      "CREATE_TICKET": "Criar ticket interno"
+    },
     "CLICK_HERE": "Clique aqui",
     "LOADING_INBOXES": "Carregando caixas de entrada",
     "LOADING_CONVERSATIONS": "Carregando conversas",
@@ -532,6 +537,7 @@
     "SUBJECT_LABEL": "Assunto",
     "MESSAGE_LABEL": "Mensagem",
     "MESSAGE_PLACEHOLDER": "Digite algo...",
+    "SELECTION_ATTACHMENT_PLACEHOLDER": "[anexo]",
     "ATTACH_BUTTON": "Anexar arquivo",
     "SAVE_BUTTON": "Criar ticket",
     "NONE_OPTION": "Nenhum",
