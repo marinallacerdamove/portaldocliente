@@ -54,6 +54,9 @@ const closeReasonAttribute = computed(() => {
 const arrowDownButtonRef = ref(null);
 const isLoading = ref(false);
 const resolveAttributesModalRef = ref(null);
+// PATCH LOCAL (fork) - atributos que vão junto com esta resolução (ex.: status
+// "Fechado" escolhido no cabeçalho), gravados no mesmo update do motivo.
+const pendingExtraAttributes = ref({});
 
 const [showActionsDropdown, toggleDropdown] = useToggle();
 const closeDropdown = () => toggleDropdown(false);
@@ -134,7 +137,11 @@ const toggleStatus = (status, snoozedUntil, customAttributes = null) => {
 const handleResolveWithAttributes = ({ attributes, context }) => {
   if (context) {
     const currentCustomAttributes = currentChat.value.custom_attributes || {};
-    const mergedAttributes = { ...currentCustomAttributes, ...attributes };
+    const mergedAttributes = {
+      ...currentCustomAttributes,
+      ...pendingExtraAttributes.value,
+      ...attributes,
+    };
     toggleStatus(
       wootConstants.STATUS_TYPE.RESOLVED,
       context.snoozedUntil,
@@ -147,7 +154,8 @@ const onCmdOpenConversation = () => {
   toggleStatus(wootConstants.STATUS_TYPE.OPEN);
 };
 
-const onCmdResolveConversation = async () => {
+const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
+  pendingExtraAttributes.value = attributes;
   await loadCustomFields();
   if (missingOnResolve.value.length) {
     useAlert(
@@ -179,6 +187,11 @@ const onCmdResolveConversation = async () => {
       currentCustomAttributes,
       conversationContext
     );
+  } else if (Object.keys(attributes).length) {
+    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED, null, {
+      ...currentCustomAttributes,
+      ...attributes,
+    });
   } else {
     toggleStatus(wootConstants.STATUS_TYPE.RESOLVED);
   }
@@ -235,7 +248,7 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
         no-animation
         class="ltr:rounded-r-none rtl:rounded-l-none !outline-0"
         :is-loading="isLoading"
-        @click="onCmdResolveConversation"
+        @click="() => onCmdResolveConversation()"
       />
       <Button
         v-else-if="isResolved"

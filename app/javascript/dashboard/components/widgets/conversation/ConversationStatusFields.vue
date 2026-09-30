@@ -3,7 +3,8 @@
 // cabeçalho da conversa, ao lado do Resolver.
 import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAlert } from 'dashboard/composables';
+import { emitter } from 'shared/helpers/mitt';
+import { CMD_RESOLVE_CONVERSATION } from 'dashboard/helper/commandbar/events';
 import { useMapGetter } from 'dashboard/composables/store';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import {
@@ -18,18 +19,15 @@ import {
   activeInScope,
   justificationsForStatus,
 } from 'dashboard/helper/ticketCatalogRules';
-import { useConversationCustomFields } from 'dashboard/composables/useConversationCustomFields';
 import { useSaveConversationAttributes } from 'dashboard/composables/useSaveConversationAttributes';
 
-// Status do cadastro que resolvem a conversa (TicketStatusSync no backend).
-const CONCLUDING_STATUS_BASES = ['resolvido', 'fechado'];
+// Status do cadastro que resolvem a conversa (TicketStatus::CONVERSATION_STATUS).
+const CONCLUDING_STATUS_BASES = ['resolvido', 'fechado', 'cancelado'];
 
 const { t } = useI18n();
 const currentChat = useMapGetter('getSelectedChat');
 const getInbox = useMapGetter('inboxes/getInbox');
 const { state: catalog, fetchList } = useTicketCatalog();
-const { missingOnResolve, load: loadCustomFields } =
-  useConversationCustomFields(currentChat);
 const saveConversationAttributes = useSaveConversationAttributes();
 
 const customAttributes = computed(
@@ -96,25 +94,10 @@ onMounted(() => {
 
 // Trocar o status limpa a justificativa que não vale pro status novo, no
 // mesmo update. O backend acompanha o status nativo da conversa.
-const onSelectStatus = async selectedItem => {
+const onSelectStatus = selectedItem => {
   const statusName =
     assignedStatus.value?.id === selectedItem.id ? '' : selectedItem.id;
   const status = catalog.statuses.find(item => item.name === statusName);
-  // Status que resolve a conversa passa pela mesma trava do Resolver:
-  // campo adicional obrigatório na conclusão precisa estar preenchido.
-  if (CONCLUDING_STATUS_BASES.includes(status?.base)) {
-    await loadCustomFields();
-    if (missingOnResolve.value.length) {
-      useAlert(
-        t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.MISSING_ON_RESOLVE', {
-          fields: missingOnResolve.value
-            .map(item => item.field.name)
-            .join(', '),
-        })
-      );
-      return;
-    }
-  }
   const currentJustificativa =
     customAttributes.value[JUSTIFICATIVA_ATTRIBUTE_KEY];
   const stillValid = justificationsForStatus(
@@ -122,10 +105,20 @@ const onSelectStatus = async selectedItem => {
     status,
     ticketScope.value
   ).some(item => item.name === currentJustificativa);
-  saveConversationAttributes(currentChat.value, {
+  const changes = {
     [STATUS_ATENDIMENTO_ATTRIBUTE_KEY]: statusName,
     [JUSTIFICATIVA_ATTRIBUTE_KEY]: stillValid ? currentJustificativa : '',
-  });
+  };
+  // Status que resolve uma conversa ainda aberta vai pelo próprio Resolver:
+  // mesma trava de campos obrigatórios e mesma pergunta do motivo.
+  if (
+    CONCLUDING_STATUS_BASES.includes(status?.base) &&
+    currentChat.value.status !== 'resolved'
+  ) {
+    emitter.emit(CMD_RESOLVE_CONVERSATION, { attributes: changes });
+    return;
+  }
+  saveConversationAttributes(currentChat.value, changes);
 };
 
 const onSelectJustificativa = selectedItem => {
