@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { emitter } from 'shared/helpers/mitt';
 import { CMD_RESOLVE_CONVERSATION } from 'dashboard/helper/commandbar/events';
 import { useMapGetter } from 'dashboard/composables/store';
-import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
+import HeaderSelectDropdown from './HeaderSelectDropdown.vue';
 import {
   STATUS_ATENDIMENTO_ATTRIBUTE_KEY,
   JUSTIFICATIVA_ATTRIBUTE_KEY,
@@ -40,25 +40,21 @@ const noneOption = computed(() => ({
   id: '',
   name: t('CONVERSATION.PRIORITY.OPTIONS.NONE'),
 }));
-// Valor gravado que saiu da lista (inativado, ou veio do Portal) continua
-// aparecendo como selecionado em vez de sumir.
 const catalogOptions = names => [
   noneOption.value,
   ...names.map(name => ({ id: name, name })),
 ];
-const selectedOption = (options, key) => {
-  const current = customAttributes.value[key];
-  if (!current) return null;
-  return (
-    options.find(opt => opt.id === current) || { id: current, name: current }
-  );
-};
+// Valor gravado que saiu da lista (inativado, ou veio do Portal) continua
+// aparecendo pelo nome em vez de sumir (HeaderSelectDropdown).
+const currentStatus = computed(
+  () => customAttributes.value[STATUS_ATENDIMENTO_ATTRIBUTE_KEY] || ''
+);
+const currentJustificativa = computed(
+  () => customAttributes.value[JUSTIFICATIVA_ATTRIBUTE_KEY] || ''
+);
 
 const selectedStatus = computed(() =>
-  catalog.statuses.find(
-    item =>
-      item.name === customAttributes.value[STATUS_ATENDIMENTO_ATTRIBUTE_KEY]
-  )
+  catalog.statuses.find(item => item.name === currentStatus.value)
 );
 const statusOptions = computed(() =>
   catalogOptions(
@@ -75,16 +71,10 @@ const statusJustifications = computed(() =>
 const justificativaOptions = computed(() =>
   catalogOptions(statusJustifications.value.map(item => item.name))
 );
-const assignedStatus = computed(() =>
-  selectedOption(statusOptions.value, STATUS_ATENDIMENTO_ATTRIBUTE_KEY)
-);
-const assignedJustificativa = computed(() =>
-  selectedOption(justificativaOptions.value, JUSTIFICATIVA_ATTRIBUTE_KEY)
-);
 const isJustificationMissing = computed(
   () =>
     !!selectedStatus.value?.requires_justification &&
-    !customAttributes.value[JUSTIFICATIVA_ATTRIBUTE_KEY]
+    !currentJustificativa.value
 );
 
 onMounted(() => {
@@ -96,18 +86,16 @@ onMounted(() => {
 // mesmo update. O backend acompanha o status nativo da conversa.
 const onSelectStatus = selectedItem => {
   const statusName =
-    assignedStatus.value?.id === selectedItem.id ? '' : selectedItem.id;
+    currentStatus.value === selectedItem.id ? '' : selectedItem.id;
   const status = catalog.statuses.find(item => item.name === statusName);
-  const currentJustificativa =
-    customAttributes.value[JUSTIFICATIVA_ATTRIBUTE_KEY];
   const stillValid = justificationsForStatus(
     catalog.justifications,
     status,
     ticketScope.value
-  ).some(item => item.name === currentJustificativa);
+  ).some(item => item.name === currentJustificativa.value);
   const changes = {
     [STATUS_ATENDIMENTO_ATTRIBUTE_KEY]: statusName,
-    [JUSTIFICATIVA_ATTRIBUTE_KEY]: stillValid ? currentJustificativa : '',
+    [JUSTIFICATIVA_ATTRIBUTE_KEY]: stillValid ? currentJustificativa.value : '',
   };
   // Status que resolve uma conversa ainda aberta vai pelo próprio Resolver:
   // mesma trava de campos obrigatórios e mesma pergunta do motivo.
@@ -122,7 +110,7 @@ const onSelectStatus = selectedItem => {
 };
 
 const onSelectJustificativa = selectedItem => {
-  const isSame = assignedJustificativa.value?.id === selectedItem.id;
+  const isSame = currentJustificativa.value === selectedItem.id;
   saveConversationAttributes(currentChat.value, {
     [JUSTIFICATIVA_ATTRIBUTE_KEY]: isSame ? '' : selectedItem.id,
   });
@@ -131,53 +119,25 @@ const onSelectJustificativa = selectedItem => {
 
 <template>
   <div class="flex items-center gap-2">
-    <div
-      class="w-44 [&_.mb-2]:!mb-0"
+    <HeaderSelectDropdown
+      :options="statusOptions"
+      :selected-id="currentStatus"
+      :placeholder="t('CONVERSATION_SIDEBAR.STATUS_ATENDIMENTO_LABEL')"
       :title="t('CONVERSATION_SIDEBAR.STATUS_ATENDIMENTO_LABEL')"
-    >
-      <MultiselectDropdown
-        :options="statusOptions"
-        :selected-item="assignedStatus"
-        :multiselector-title="
-          t('CONVERSATION_SIDEBAR.STATUS_ATENDIMENTO_LABEL')
-        "
-        :multiselector-placeholder="
-          t('CONVERSATION_SIDEBAR.STATUS_ATENDIMENTO_LABEL')
-        "
-        :no-search-result="
-          t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.AGENT')
-        "
-        :input-placeholder="
-          t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
-        "
-        @select="onSelectStatus"
-      />
-    </div>
-    <div
+      @select="onSelectStatus"
+    />
+    <HeaderSelectDropdown
       v-if="statusJustifications.length"
-      class="w-44 rounded-lg [&_.mb-2]:!mb-0"
-      :class="{ 'ring-1 ring-n-amber-9': isJustificationMissing }"
+      :options="justificativaOptions"
+      :selected-id="currentJustificativa"
+      :placeholder="t('CONVERSATION_SIDEBAR.JUSTIFICATIVA_LABEL')"
       :title="
         isJustificationMissing
           ? t('CONVERSATION_SIDEBAR.JUSTIFICATION_REQUIRED')
           : t('CONVERSATION_SIDEBAR.JUSTIFICATIVA_LABEL')
       "
-    >
-      <MultiselectDropdown
-        :options="justificativaOptions"
-        :selected-item="assignedJustificativa"
-        :multiselector-title="t('CONVERSATION_SIDEBAR.JUSTIFICATIVA_LABEL')"
-        :multiselector-placeholder="
-          t('CONVERSATION_SIDEBAR.JUSTIFICATIVA_LABEL')
-        "
-        :no-search-result="
-          t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.AGENT')
-        "
-        :input-placeholder="
-          t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
-        "
-        @select="onSelectJustificativa"
-      />
-    </div>
+      :highlight="isJustificationMissing"
+      @select="onSelectJustificativa"
+    />
   </div>
 </template>
