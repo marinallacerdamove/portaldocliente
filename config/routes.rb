@@ -239,6 +239,10 @@ Rails.application.routes.draw do
               end
               resources :conversations, only: [:index]
               resources :notes, only: [:index]
+              # PATCH LOCAL (fork) - aba Documentos (arquivos moram no Portal)
+              resources :portal_documents, only: [:index, :create, :update, :destroy] do
+                get :download, on: :member
+              end
             end
           end
           resources :contacts, only: [:index, :show, :update, :create, :destroy] do

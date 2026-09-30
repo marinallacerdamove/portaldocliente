@@ -150,6 +150,24 @@
           "SUCCESS": "Company deleted.",
           "ERROR": "Could not delete the company."
         }
+      },
+      "DOCUMENTS": {
+        "TITLE": "Documents",
+        "ADD_FILE": "Add file",
+        "UPLOADING": "Uploading…",
+        "EMPTY": "No documents yet.",
+        "OBSERVATION": "Note",
+        "OBSERVATION_PLACEHOLDER": "Note about this file...",
+        "REMOVE": "Remove",
+        "CANCEL": "Cancel",
+        "SAVE": "Save",
+        "SAVING": "Saving…",
+        "NOT_LINKED": "This company is not linked to a Customer Portal company yet (linked by CPF/CNPJ).",
+        "LOAD_ERROR": "Could not load the documents.",
+        "UPLOAD_ERROR": "Could not upload the file.",
+        "UPDATE_ERROR": "Could not save the note.",
+        "REMOVE_ERROR": "Could not remove the file.",
+        "DOWNLOAD_ERROR": "Could not download the file."
       }
     },
     "EMPTY_STATE": {

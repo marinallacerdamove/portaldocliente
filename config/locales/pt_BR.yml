@@ -20,6 +20,8 @@ pt_BR:
   hello: 'Olá, mundo'
   portal_assistant:
     portal_unavailable: 'O Assistente está indisponível agora (o Portal não respondeu). Tente de novo em instantes.'
+  portal_documents:
+    portal_unavailable: 'Os documentos estão indisponíveis agora (o Portal não respondeu). Tente de novo em instantes.'
   inbox:
     reauthorization:
       success: 'Canal reautenticado com sucesso'

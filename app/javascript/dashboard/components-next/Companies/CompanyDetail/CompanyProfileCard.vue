@@ -15,6 +15,7 @@ import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import { useCompaniesStore } from 'dashboard/stores/companies';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
 import InfoCardFields from 'dashboard/components-next/InfoCard/InfoCardFields.vue';
+import CompanyDocuments from './CompanyDocuments.vue';
 import {
   SEGMENTOS,
   CLASSIFICACOES,
@@ -56,6 +57,7 @@ const CARD_TABS = computed(() =>
     { key: 'dados', label: 'Visão geral' },
     canViewFinanceiro.value && { key: 'financeiro', label: 'Contrato' },
     { key: 'contabilidade', label: 'Contabilidade' },
+    { key: 'documentos', label: 'Documentos' },
   ].filter(Boolean)
 );
 const activeTabKey = ref('dados');
@@ -1144,5 +1146,11 @@ const contabilidadeItems = computed(() => [
         </div>
       </template>
     </InfoCard>
+
+    <!-- Aba: Documentos - arquivos moram no Portal -->
+    <CompanyDocuments
+      v-if="activeTabKey === 'documentos'"
+      :company-id="company.id"
+    />
   </div>
 </template>

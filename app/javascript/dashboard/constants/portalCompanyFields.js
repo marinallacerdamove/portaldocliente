@@ -92,3 +92,11 @@ export const ESTADOS_BR = [
   { value: 'SE', label: 'Sergipe' },
   { value: 'TO', label: 'Tocantins' },
 ];
+
+// Mesmas categorias da aba Documentos da empresa no Portal
+// (Empresa::FILE_CATEGORIES / frontend/src/constants/empresa.js lá).
+export const FILE_CATEGORIAS = [
+  { value: 'implantacao', label: 'Implantação' },
+  { value: 'suporte', label: 'Suporte' },
+  { value: 'financeiro', label: 'Financeiro' },
+];

@@ -58,6 +58,34 @@ class CompanyAPI extends ApiClient {
   destroyAvatar(id) {
     return axios.delete(`${this.url}/${id}/avatar`);
   }
+
+  // PATCH LOCAL (fork) - aba Documentos (arquivos moram no Portal do Cliente)
+  listDocuments(id) {
+    return axios.get(`${this.url}/${id}/portal_documents`);
+  }
+
+  uploadDocument(id, categoria, file) {
+    const formData = new FormData();
+    formData.append('categoria', categoria);
+    formData.append('file', file);
+    return axios.post(`${this.url}/${id}/portal_documents`, formData);
+  }
+
+  updateDocument(id, fileId, observacao) {
+    return axios.patch(`${this.url}/${id}/portal_documents/${fileId}`, {
+      observacao,
+    });
+  }
+
+  removeDocument(id, fileId) {
+    return axios.delete(`${this.url}/${id}/portal_documents/${fileId}`);
+  }
+
+  downloadDocument(id, fileId) {
+    return axios.get(`${this.url}/${id}/portal_documents/${fileId}/download`, {
+      responseType: 'blob',
+    });
+  }
 }
 
 export default new CompanyAPI();
