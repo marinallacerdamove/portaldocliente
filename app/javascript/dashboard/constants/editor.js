@@ -5,7 +5,14 @@ export const FORMATTING = {
   // Channel formatting
   'Channel::Email': {
     marks: ['strong', 'em', 'code', 'link'],
-    nodes: ['bulletList', 'orderedList', 'codeBlock', 'blockquote', 'image'],
+    nodes: [
+      'bulletList',
+      'orderedList',
+      'codeBlock',
+      'blockquote',
+      'image',
+      'table',
+    ],
     menu: [
       'copilot',
       'strong',
@@ -21,7 +28,14 @@ export const FORMATTING = {
   },
   'Channel::WebWidget': {
     marks: ['strong', 'em', 'code', 'link', 'strike'],
-    nodes: ['bulletList', 'orderedList', 'codeBlock', 'blockquote', 'image'],
+    nodes: [
+      'bulletList',
+      'orderedList',
+      'codeBlock',
+      'blockquote',
+      'image',
+      'table',
+    ],
     menu: [
       'copilot',
       'strong',
@@ -36,10 +50,22 @@ export const FORMATTING = {
       'redo',
     ],
   },
+  // PATCH LOCAL (fork) - caixas do Portal do Cliente: o webhook entrega HTML
+  // (MessageContentPresenter#webhook_content), então link, lista e tabela
+  // chegam formatados no ticket.
   'Channel::Api': {
-    marks: ['strong', 'em'],
-    nodes: ['image'],
-    menu: ['copilot', 'strong', 'em', 'undo', 'redo'],
+    marks: ['strong', 'em', 'link'],
+    nodes: ['bulletList', 'orderedList', 'image', 'table'],
+    menu: [
+      'copilot',
+      'strong',
+      'em',
+      'link',
+      'bulletList',
+      'orderedList',
+      'undo',
+      'redo',
+    ],
   },
   'Channel::FacebookPage': {
     marks: ['strong', 'em', 'code', 'strike'],
@@ -117,9 +143,19 @@ export const FORMATTING = {
     menu: [],
   },
   // Special contexts (not actual channels)
+  // PATCH LOCAL (fork) - 'image': print colado na nota interna entra
+  // embutido no texto (sem o node, colar quebrava com "Não foi possível
+  // fazer o upload da imagem").
   'Context::PrivateNote': {
     marks: ['strong', 'em', 'code', 'link', 'strike'],
-    nodes: ['bulletList', 'orderedList', 'codeBlock', 'blockquote'],
+    nodes: [
+      'bulletList',
+      'orderedList',
+      'codeBlock',
+      'blockquote',
+      'table',
+      'image',
+    ],
     menu: [
       'copilot',
       'strong',

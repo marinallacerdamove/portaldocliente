@@ -137,9 +137,27 @@ Rails.application.routes.draw do
             post :clone
           end
           resources :bot_flows, only: [:index, :create, :show, :update, :destroy]
+          # PATCH LOCAL (fork) - Assistente (IA com base na wiki), repassado pro Portal.
+          get 'portal_assistant/questions', to: 'portal_assistant#questions'
+          post 'portal_assistant/questions', to: 'portal_assistant#ask'
+          patch 'portal_assistant/questions/:question_id', to: 'portal_assistant#rate'
+          get 'portal_assistant/areas', to: 'portal_assistant#areas'
+          patch 'portal_assistant/areas/:area_id', to: 'portal_assistant#update_area'
+          get 'portal_assistant/answers', to: 'portal_assistant#answers'
+          post 'portal_assistant/answers', to: 'portal_assistant#create_answer'
+          patch 'portal_assistant/answers/:answer_id', to: 'portal_assistant#update_answer'
+          get 'portal_assistant/sync', to: 'portal_assistant#sync'
+          post 'portal_assistant/sync', to: 'portal_assistant#start_sync'
           resources :macros, only: [:index, :create, :show, :update, :destroy] do
             post :execute, on: :member
           end
+          # PATCH LOCAL (fork) - cadastros de atendimento (sem destroy: só inativa).
+          resources :ticket_services, only: [:index, :create, :show, :update]
+          resources :ticket_categories, only: [:index, :create, :show, :update]
+          resources :ticket_statuses, only: [:index, :create, :show, :update]
+          resources :ticket_justifications, only: [:index, :create, :show, :update]
+          resources :ticket_custom_fields, only: [:index, :create, :show, :update]
+          resources :ticket_field_rules, only: [:index, :create, :show, :update]
           resources :sla_policies, only: [:index, :create, :show, :update, :destroy]
           resources :custom_roles, only: [:index, :create, :show, :update, :destroy]
           resources :agent_capacity_policies, only: [:index, :create, :show, :update, :destroy] do
@@ -184,6 +202,7 @@ Rails.application.routes.draw do
               post :transcript
               post :toggle_status
               post :toggle_priority
+              post :copy_messages
               post :toggle_typing_status
               post :update_last_seen
               post :unread

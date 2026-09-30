@@ -1,3 +1,5 @@
+import { isWhatsAppChannel } from 'dashboard/helper/inbox';
+
 /**
  * Determines the last non-activity message between store and API messages.
  * @param {Object} messageInStore - The last non-activity message from the store.
@@ -67,6 +69,14 @@ export const getLastMessage = m => {
     lastNonActivityMessageInStore,
     lastNonActivityMessageFromAPI
   );
+};
+
+// PATCH LOCAL (fork) - na lista de conversas, ticket (Portal ou interno) mostra
+// o assunto no lugar da última mensagem; WhatsApp mantém o padrão do Chatwoot.
+// Sem assunto gravado, também cai no padrão.
+export const getConversationListSubject = (chat, inbox) => {
+  if (isWhatsAppChannel(inbox?.channel_type, inbox?.medium)) return '';
+  return chat?.custom_attributes?.assunto?.trim() || '';
 };
 
 /**

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { MESSAGE_VARIABLES } from 'shared/constants/messages';
+import { PORTAL_VARIABLES } from 'shared/constants/portalVariables';
 import { useMapGetter } from 'dashboard/composables/store';
 import { sanitizeVariableSearchKey } from 'dashboard/helper/commons';
 import { resolveVariableText } from 'dashboard/helper/editorHelper';
@@ -32,9 +33,21 @@ const searchQuery = ref(sanitizeVariableSearchKey(props.searchKey));
 
 const searchTerm = computed(() => searchQuery.value.trim().toLowerCase());
 
-const standardVariables = computed(() =>
-  MESSAGE_VARIABLES.map(({ key, label }) => ({ key, description: label }))
+// PATCH LOCAL (fork) - nossas variáveis (nome em português) primeiro; as do
+// upstream que repetem a chave ficam de fora.
+const portalVariables = computed(() =>
+  PORTAL_VARIABLES.map(({ key, label }) => ({
+    key,
+    description: t(`MACROS.VARIABLES.${label}`),
+  }))
 );
+
+const standardVariables = computed(() => [
+  ...portalVariables.value,
+  ...MESSAGE_VARIABLES.filter(
+    ({ key }) => !PORTAL_VARIABLES.some(variable => variable.key === key)
+  ).map(({ key, label }) => ({ key, description: label })),
+]);
 
 const CUSTOM_ATTRIBUTE_PREFIXES = {
   conversation_attribute: 'conversation',

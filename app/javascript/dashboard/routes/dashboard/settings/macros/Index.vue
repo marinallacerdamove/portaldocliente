@@ -2,6 +2,7 @@
 import { useAlert } from 'dashboard/composables';
 import { picoSearch } from '@chatwoot/pico-search';
 import MacrosTableRow from './MacrosTableRow.vue';
+import { compareMacroGroups } from './macroHelper';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 import { computed, onMounted, ref } from 'vue';
@@ -20,19 +21,28 @@ const showDeleteConfirmationPopup = ref(false);
 const selectedMacro = ref({});
 const searchQuery = ref('');
 
-const records = computed(() => getters['macros/getMacros'].value);
+// PATCH LOCAL (fork) - ordenada por grupo e nome (grupo vazio no fim).
+const records = computed(() =>
+  [...getters['macros/getMacros'].value].sort(
+    (a, b) =>
+      compareMacroGroups(a.group_name, b.group_name) ||
+      a.name.localeCompare(b.name)
+  )
+);
 const uiFlags = computed(() => getters['macros/getUIFlags'].value);
 
 const filteredRecords = computed(() => {
   const query = searchQuery.value.trim();
   if (!query) return records.value;
-  return picoSearch(records.value, query, ['name']);
+  return picoSearch(records.value, query, ['name', 'group_name']);
 });
 
 const deleteMessage = computed(() => ` ${selectedMacro.value.name}?`);
 
 onMounted(() => {
   store.dispatch('macros/get');
+  store.dispatch('teams/get');
+  store.dispatch('agents/get');
 });
 
 const deleteMacro = async id => {
@@ -61,6 +71,7 @@ const confirmDeletion = () => {
 const tableHeaders = computed(() => {
   return [
     t('MACROS.LIST.TABLE_HEADER.NAME'),
+    t('MACROS.LIST_EXTRA.GROUP'),
     t('MACROS.LIST.TABLE_HEADER.CREATED BY'),
     t('MACROS.LIST.TABLE_HEADER.LAST_UPDATED_BY'),
     t('MACROS.LIST.TABLE_HEADER.VISIBILITY'),

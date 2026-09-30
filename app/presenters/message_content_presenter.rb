@@ -1,7 +1,7 @@
 class MessageContentPresenter < SimpleDelegator
   def outgoing_content
     Messages::MarkdownRendererService.new(
-      content_with_survey_link,
+      content_for_delivery,
       conversation.inbox.channel_type,
       conversation.inbox.channel
     ).render
@@ -20,6 +20,22 @@ class MessageContentPresenter < SimpleDelegator
   end
 
   private
+
+  # Identifica o agente humano que respondeu, em markdown, antes do render
+  # por canal (assim cada canal formata o negrito do próprio jeito: WhatsApp
+  # vira *Nome*, e-mail/Portal viram <strong>). O Portal já mostra o nome do
+  # remetente no cabeçalho de cada mensagem, então fica de fora aqui pra não
+  # duplicar.
+  def content_for_delivery
+    text = content_with_survey_link
+    return text unless prepend_sender_name?(text)
+
+    "**#{sender.name}**: #{text}"
+  end
+
+  def prepend_sender_name?(text)
+    text.present? && sender.is_a?(User) && conversation.inbox.channel_type != 'Channel::Api'
+  end
 
   def content_with_survey_link
     if should_append_survey_link?

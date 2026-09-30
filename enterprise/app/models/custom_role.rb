@@ -23,6 +23,11 @@
 # - 'contact_manage': Can manage contacts.
 # - 'report_manage': Can manage reports.
 # - 'knowledge_base_manage': Can manage knowledge base portals.
+# - 'financeiro_manage': PATCH LOCAL (fork) - vê/edita os campos de
+#   Contrato/Financeiro da Empresa (aba "Financeiro" no CompanyProfileCard).
+#   Substitui a gambiarra anterior que reaproveitava report_manage pra isso -
+#   agora é enforced no backend (CompanyPolicy#financeiro_manage?), não só
+#   escondido no frontend.
 
 class CustomRole < ApplicationRecord
   belongs_to :account
@@ -39,6 +44,7 @@ class CustomRole < ApplicationRecord
     contact_manage
     report_manage
     knowledge_base_manage
+    financeiro_manage
   ].freeze
 
   validates :name, presence: true

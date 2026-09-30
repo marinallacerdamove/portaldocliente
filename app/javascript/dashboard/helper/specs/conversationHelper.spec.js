@@ -1,5 +1,6 @@
 import {
   filterDuplicateSourceMessages,
+  getConversationListSubject,
   getLastMessage,
   getReadMessages,
   getUnreadMessages,
@@ -97,5 +98,33 @@ describe('conversationHelper', () => {
         testConversation.messages[1]
       );
     });
+  });
+});
+
+describe('getConversationListSubject', () => {
+  const chat = { custom_attributes: { assunto: '  Emissão de NF  ' } };
+
+  it('returns the subject for non-WhatsApp inboxes', () => {
+    expect(
+      getConversationListSubject(chat, { channel_type: 'Channel::Api' })
+    ).toBe('Emissão de NF');
+  });
+
+  it('returns empty for WhatsApp Cloud and Twilio WhatsApp inboxes', () => {
+    expect(
+      getConversationListSubject(chat, { channel_type: 'Channel::Whatsapp' })
+    ).toBe('');
+    expect(
+      getConversationListSubject(chat, {
+        channel_type: 'Channel::TwilioSms',
+        medium: 'whatsapp',
+      })
+    ).toBe('');
+  });
+
+  it('returns empty when there is no subject', () => {
+    expect(
+      getConversationListSubject({}, { channel_type: 'Channel::Api' })
+    ).toBe('');
   });
 });

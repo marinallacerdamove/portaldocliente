@@ -21,3 +21,9 @@ export const getFileName = (id, actionType, files) => {
   }
   return '';
 };
+
+// PATCH LOCAL (fork) - ordem por grupo (sem grupo por último) e depois nome.
+export const compareMacroGroups = (groupA, groupB) => {
+  if (!groupA !== !groupB) return groupA ? -1 : 1;
+  return (groupA || '').localeCompare(groupB || '');
+};

@@ -50,6 +50,6 @@ module EmailHelper
       'conversation' => ConversationDrop.new(conversation),
       'inbox' => InboxDrop.new(conversation.inbox),
       'account' => AccountDrop.new(conversation.account)
-    }
+    }.merge(PortalVariables.assigns(conversation)) # PATCH LOCAL (fork): {{ticket.*}}, {{saudacao}}
   end
 end

@@ -1,4 +1,6 @@
 class Macros::ExecutionService < ActionService
+  include TicketFieldActions # PATCH LOCAL (fork)
+
   def initialize(macro, conversation, user)
     super(conversation)
     @macro = macro
@@ -45,6 +47,22 @@ class Macros::ExecutionService < ActionService
     # Added reload here to ensure conversation us persistent with the latest updates
     mb = Messages::MessageBuilder.new(@user, @conversation.reload, params)
     mb.perform
+  end
+
+  # PATCH LOCAL (fork) - preenche o editor de resposta no navegador
+  # (useMacroExecution); aqui no servidor não há nada a fazer.
+  def fill_reply(_params); end
+
+  # PATCH LOCAL (fork) - set_subject e set_custom_attribute: TicketFieldActions.
+
+  # PATCH LOCAL (fork) - troca todas as etiquetas pelas da macro.
+  def replace_labels(labels)
+    @conversation.update_labels(labels)
+  end
+
+  # PATCH LOCAL (fork)
+  def remove_all_labels(_params)
+    @conversation.update_labels([])
   end
 
   def send_attachment(blob_ids)

@@ -1,0 +1,270 @@
+{
+  "TICKET_CATALOG": {
+    "SIDEBAR": {
+      "SERVICES": "Serviços",
+      "CATEGORIES": "Tipos de solicitação",
+      "STATUSES": "Status",
+      "JUSTIFICATIONS": "Justificativas",
+      "CUSTOM_FIELDS": "Campos adicionais",
+      "FIELD_RULES": "Regras de exibição"
+    },
+    "TICKET_SCOPES": {
+      "publico": "Tickets públicos",
+      "interno": "Tickets internos",
+      "ambos": "Ambos"
+    },
+    "PRIORITIES": {
+      "NONE": "Nenhuma",
+      "low": "1 - Baixa",
+      "medium": "2 - Média",
+      "high": "3 - Alta",
+      "urgent": "4 - Crítica"
+    },
+    "STATUS_BASES": {
+      "novo": "Novo",
+      "em_atendimento": "Em atendimento",
+      "parado": "Parado",
+      "resolvido": "Resolvido",
+      "fechado": "Fechado",
+      "cancelado": "Cancelado"
+    },
+    "LIST": {
+      "SEARCH_PLACEHOLDER": "Buscar por nome",
+      "LOADING": "Carregando...",
+      "NO_RESULTS": "Nenhum registro encontrado para esse filtro",
+      "COUNT": "{n} registro | {n} registros",
+      "FILTERS": {
+        "active": "Ativos",
+        "inactive": "Inativos",
+        "all": "Todos"
+      },
+      "TABLE_HEADER": {
+        "NAME": "Nome",
+        "TICKET_SCOPE": "Tipo de ticket",
+        "ACTIVE": "Situação",
+        "ACTIONS": "Ações"
+      },
+      "ACTIVE": "Ativo",
+      "INACTIVE": "Inativo",
+      "YES": "Sim",
+      "EMPTY_VALUE": "--",
+      "EDIT_TOOLTIP": "Editar",
+      "VIEW_TOOLTIP": "Ver",
+      "LOAD_ERROR": "Não foi possível carregar a lista, tente de novo"
+    },
+    "FORM": {
+      "CANCEL": "Cancelar",
+      "SUBMIT": "Salvar",
+      "READ_ONLY": "Só administradores alteram este cadastro. Você pode ver os dados, mas não salvar.",
+      "MAIN_TITLE": "Principal",
+      "NAME_LABEL": "Nome",
+      "NAME_PLACEHOLDER": "Digite o nome",
+      "NAME_REQUIRED": "Informe o nome",
+      "TICKET_SCOPE_LABEL": "Tipo de ticket",
+      "TICKET_SCOPE_HINT": "Em quais tickets este item aparece para escolha",
+      "ACTIVE_LABEL": "Ativo",
+      "ACTIVE_HINT": "Inativo sai das listas de escolha, mas continua nos tickets que já usam",
+      "INACTIVE_OPTION": "{name} (inativo)",
+      "LOAD_ERROR": "Não foi possível carregar o cadastro, tente de novo",
+      "CREATE_SUCCESS": "Cadastro criado",
+      "UPDATE_SUCCESS": "Cadastro atualizado",
+      "SAVE_ERROR": "Não foi possível salvar, tente de novo"
+    },
+    "SERVICES": {
+      "HEADER": "Serviços",
+      "DESCRIPTION": "Serviços do atendimento em árvore. O atendente escolhe o serviço na conversa e o cliente, no Portal.",
+      "NEW": "Novo serviço",
+      "EMPTY": "Nenhum serviço cadastrado ainda",
+      "NEW_TITLE": "Novo serviço",
+      "EDIT_TITLE": "Editar serviço",
+      "SUBTITLE": "Defina onde o serviço fica na árvore, quem vê e o que ele preenche na conversa.",
+      "INTERNAL_BADGE": "Interno",
+      "FORM": {
+        "DETAILS_TITLE": "Detalhes",
+        "DESCRIPTION_LABEL": "Descrição",
+        "DESCRIPTION_PLACEHOLDER": "Explique quando usar este serviço",
+        "PARENT_LABEL": "Serviço pai",
+        "PARENT_NONE": "Nenhum (serviço raiz)",
+        "VISIBLE_LABEL": "Visível para o cliente",
+        "VISIBLE_HINT": "O cliente vê este serviço ao abrir ticket no Portal",
+        "INTERNAL_HINT": "Serviço interno: só agentes veem, o cliente não vê no Portal",
+        "ALLOW_FINISH_LABEL": "Permite finalizar ticket",
+        "ALLOW_FINISH_HINT": "O ticket pode ser resolvido com este serviço",
+        "RULES_TITLE": "Tipos de solicitação e padrões",
+        "ALL_CATEGORIES_LABEL": "Todos os tipos de solicitação",
+        "ALL_CATEGORIES_HINT": "Desligue para escolher só alguns tipos",
+        "CATEGORIES_LABEL": "Tipos de solicitação permitidos",
+        "NO_CATEGORIES": "Nenhum tipo de solicitação ativo cadastrado",
+        "DEFAULT_CATEGORY_LABEL": "Tipo de solicitação padrão",
+        "DEFAULT_CATEGORY_NONE": "Nenhuma",
+        "DEFAULT_PRIORITY_LABEL": "Urgência padrão",
+        "MACRO_LABEL": "Macro aplicada ao escolher o serviço",
+        "MACRO_NONE": "Nenhuma",
+        "MACRO_HINT": "Quando o atendente escolher este serviço na conversa, a macro roda na hora"
+      }
+    },
+    "CATEGORIES": {
+      "HEADER": "Tipos de solicitação",
+      "DESCRIPTION": "Tipos de solicitação (Categoria no Movidesk) e as urgências que cada um aceita.",
+      "NEW": "Novo tipo de solicitação",
+      "EMPTY": "Nenhum tipo de solicitação cadastrado ainda",
+      "NEW_TITLE": "Novo tipo de solicitação",
+      "EDIT_TITLE": "Editar tipo de solicitação",
+      "SUBTITLE": "Defina o nome, o tipo de ticket e as urgências permitidas.",
+      "TABLE_HEADER": {
+        "PRIORITIES": "Urgências permitidas"
+      },
+      "ALL_PRIORITIES": "Todas as urgências",
+      "FORM": {
+        "PRIORITIES_TITLE": "Urgências permitidas",
+        "PRIORITIES_HINT": "Nenhuma marcada, todas as urgências ficam liberadas"
+      }
+    },
+    "STATUSES": {
+      "HEADER": "Status",
+      "DESCRIPTION": "Status do atendimento. Cada um aponta para um tipo, que define o status da conversa no Chatwoot.",
+      "NEW": "Novo status",
+      "EMPTY": "Nenhum status cadastrado ainda",
+      "NEW_TITLE": "Novo status",
+      "EDIT_TITLE": "Editar status",
+      "SUBTITLE": "Defina o nome, o tipo do status e se ele pede justificativa.",
+      "TABLE_HEADER": {
+        "BASE": "Tipo do status",
+        "REQUIRES_JUSTIFICATION": "Requer justificativa"
+      },
+      "FORM": {
+        "BEHAVIOR_TITLE": "Comportamento",
+        "BASE_LABEL": "Tipo do status",
+        "BASE_HINT": "Define o status da conversa no Chatwoot: Novo e Em atendimento = aberta, Parado = pendente, Resolvido/Fechado/Cancelado = resolvida",
+        "REQUIRES_JUSTIFICATION_LABEL": "Requer justificativa",
+        "REQUIRES_JUSTIFICATION_HINT": "O atendente precisa escolher uma justificativa ao usar este status"
+      }
+    },
+    "JUSTIFICATIONS": {
+      "HEADER": "Justificativas",
+      "DESCRIPTION": "Justificativas escolhidas pelo atendente ao usar um status que exige justificativa.",
+      "NEW": "Nova justificativa",
+      "EMPTY": "Nenhuma justificativa cadastrada ainda",
+      "NEW_TITLE": "Nova justificativa",
+      "EDIT_TITLE": "Editar justificativa",
+      "SUBTITLE": "Defina o nome, o tipo de ticket e em quais status ela pode ser usada.",
+      "TABLE_HEADER": {
+        "STATUSES": "Status"
+      },
+      "FORM": {
+        "STATUSES_TITLE": "Status em que pode ser usada",
+        "STATUSES_HINT": "A justificativa só aparece para os status marcados",
+        "NO_STATUSES": "Nenhum status ativo cadastrado"
+      }
+    },
+    "CUSTOM_FIELDS": {
+      "HEADER": "Campos adicionais",
+      "DESCRIPTION": "Campos extras do ticket (checklists, classificações). Só aparecem quando uma regra de exibição inclui o campo.",
+      "NEW": "Novo campo",
+      "EMPTY": "Nenhum campo adicional cadastrado ainda",
+      "NEW_TITLE": "Novo campo adicional",
+      "EDIT_TITLE": "Editar campo adicional",
+      "SUBTITLE": "Defina o nome, o tipo e as opções. Onde e quando ele aparece fica na regra de exibição.",
+      "TABLE_HEADER": {
+        "TYPE": "Tipo"
+      },
+      "TYPES": {
+        "text": "Texto de uma linha",
+        "textarea": "Texto com várias linhas",
+        "list": "Lista de valores",
+        "single_select": "Seleção única",
+        "multi_select": "Seleção múltipla",
+        "date": "Data",
+        "datetime": "Data e hora"
+      },
+      "FORM": {
+        "DETAILS_TITLE": "Tipo e opções",
+        "TYPE_LABEL": "Tipo",
+        "KEY_LABEL": "Chave",
+        "KEY_HINT": "Gerada do nome na criação, não muda. É por ela que o valor sincroniza com o Portal.",
+        "HINT_LABEL": "Texto de ajuda (opcional)",
+        "HINT_PLACEHOLDER": "Aparece junto do campo no ticket",
+        "OPTIONS_LABEL": "Opções",
+        "OPTIONS_PLACEHOLDER": "Uma opção por linha",
+        "OPTIONS_HINT": "Uma opção por linha, na ordem em que devem aparecer"
+      },
+      "CONVERSATION": {
+        "EMPTY": "Nenhum campo adicional para o serviço e tipo de solicitação deste ticket",
+        "REQUIRED": "Obrigatório ao resolver",
+        "SELECT_PLACEHOLDER": "Selecione",
+        "SAVE_ERROR": "Não foi possível salvar o campo, tente de novo",
+        "MISSING_ON_RESOLVE": "Preencha os campos adicionais obrigatórios antes de resolver: {fields}"
+      }
+    },
+    "FIELD_RULES": {
+      "HEADER": "Regras de exibição",
+      "DESCRIPTION": "Quando cada campo adicional aparece no ticket: por serviço, tipo de solicitação, valor de outro campo e mais.",
+      "NEW": "Nova regra",
+      "EMPTY": "Nenhuma regra de exibição cadastrada ainda",
+      "NEW_TITLE": "Nova regra de exibição",
+      "EDIT_TITLE": "Editar regra de exibição",
+      "SUBTITLE": "Defina as condições e os campos que aparecem quando elas batem.",
+      "TABLE_HEADER": {
+        "FIELDS": "Campos exibidos"
+      },
+      "GROUPS": {
+        "all": {
+          "TITLE": "Condições combinadas",
+          "HINT": "A regra precisa bater com todas estas condições"
+        },
+        "any": {
+          "TITLE": "Condições independentes",
+          "HINT": "A regra precisa bater com pelo menos uma destas condições"
+        }
+      },
+      "ATTRIBUTES": {
+        "servico": "Serviço",
+        "tipo_de_solicitacao": "Tipo de solicitação",
+        "status": "Status",
+        "campo": "Campo adicional",
+        "origem": "Aberto via",
+        "empresa": "Empresa",
+        "equipe": "Equipe",
+        "responsavel": "Responsável"
+      },
+      "OPERATORS": {
+        "equal_to": "Igual a",
+        "not_equal_to": "Diferente de",
+        "is_present": "Informado"
+      },
+      "ORIGINS": {
+        "cliente": "Cliente (Portal)",
+        "agente": "Agente",
+        "chat": "Chat",
+        "whatsapp": "WhatsApp",
+        "email": "E-mail"
+      },
+      "STATUS_NOT_CONCLUDED": "Não concluído",
+      "REQUIRED_ON": {
+        "nao_exigir": "Não exigir",
+        "abertura_agente": "Na abertura para o agente",
+        "abertura_cliente": "Na abertura para o cliente",
+        "abertura": "Na abertura para agente e cliente",
+        "conclusao": "Na conclusão do ticket"
+      },
+      "FLAGS": {
+        "visible_to_clients": "Parceiro vê e preenche na abertura",
+        "editable_by_clients": "Parceiro edita depois de aberto",
+        "editable_by_agents": "Agente edita"
+      },
+      "FORM": {
+        "CONDITIONS_TITLE": "Condições",
+        "CONDITIONS_HINT": "Usando os dois tipos, o ticket precisa bater com todas as combinadas e também com pelo menos uma das independentes. Sem condição nenhuma, a regra vale pra todo ticket.",
+        "ADD_CONDITION": "Adicionar condição",
+        "FIELD_PLACEHOLDER": "Escolha o campo",
+        "VALUE_PLACEHOLDER": "Valor",
+        "REMOVE": "Remover",
+        "FIELDS_TITLE": "Campos exibidos",
+        "FIELDS_HINT": "Na ordem em que aparecem no ticket. Colunas: largura do campo numa linha de 12.",
+        "ADD_FIELD": "Adicionar campo",
+        "COLUMNS_LABEL": "Colunas",
+        "REQUIRED_ON_LABEL": "Obrigatório"
+      }
+    }
+  }
+}

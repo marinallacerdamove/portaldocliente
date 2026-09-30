@@ -3,13 +3,28 @@
 import { mapGetters } from 'vuex';
 import { useAlert } from 'dashboard/composables';
 import { useAgentsList } from 'dashboard/composables/useAgentsList';
+import { useMacroExecution } from 'dashboard/composables/useMacroExecution';
 import ContactDetailsItem from './ContactDetailsItem.vue';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import ConversationLabels from './labels/LabelBox.vue';
 import CustomAttribute from 'dashboard/components/CustomAttribute.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 import LinkedTicketCard from './LinkedTicketCard.vue';
-import { PORTAL_INFO_ATTRIBUTE_KEYS } from 'dashboard/constants/ticketDetailAttributes';
+import {
+  PORTAL_INFO_ATTRIBUTE_KEYS,
+  SERVICO_ATTRIBUTE_KEY,
+  TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
+} from 'dashboard/constants/ticketDetailAttributes';
+import {
+  useTicketCatalog,
+  conversationTicketScope,
+} from 'dashboard/composables/useTicketCatalog';
+import {
+  activeInScope,
+  allowedCategories,
+  filterPriorityOptions,
+} from 'dashboard/helper/ticketCatalogRules';
+import { useSaveConversationAttributes } from 'dashboard/composables/useSaveConversationAttributes';
 import { CONVERSATION_PRIORITY } from '../../../../shared/constants/messages';
 import { CONVERSATION_EVENTS } from '../../../helper/AnalyticsHelper/events';
 import { useTrack } from 'dashboard/composables';
@@ -33,8 +48,17 @@ export default {
   },
   setup() {
     const { agentsList } = useAgentsList(true, { includeAgentBots: true });
+    const { execute: executeMacro, dismissPendingAttributes } =
+      useMacroExecution();
+    const { state: catalog, fetchList } = useTicketCatalog();
+    const saveConversationAttributes = useSaveConversationAttributes();
     return {
+      saveConversationAttributes,
       agentsList,
+      executeMacro,
+      dismissPendingAttributes,
+      catalog,
+      fetchList,
     };
   },
   data() {
@@ -74,28 +98,62 @@ export default {
       currentUser: 'getCurrentUser',
       teams: 'teams/getTeams',
       getAttributesByModel: 'attributes/getAttributesByModel',
+      getInbox: 'inboxes/getInbox',
     }),
-    servicoDefinition() {
-      return this.getAttributesByModel('conversation_attribute').find(
-        attr => attr.attribute_key === 'servico'
-      );
+    // PATCH LOCAL (fork) - Serviço e Tipo de solicitação vêm dos
+    // cadastros de atendimento (Configurações), filtrados pelo tipo de ticket
+    // da conversa. A conversa continua guardando os valores por nome em
+    // custom_attributes (servico = full_name do serviço).
+    customAttributes() {
+      return this.currentChat.custom_attributes || {};
+    },
+    ticketScope() {
+      return conversationTicketScope(this.getInbox(this.currentChat.inbox_id));
+    },
+    noneOption() {
+      return { id: '', name: this.$t('CONVERSATION.PRIORITY.OPTIONS.NONE') };
+    },
+    selectedService() {
+      const current = this.customAttributes[SERVICO_ATTRIBUTE_KEY];
+      return this.catalog.services.find(item => item.full_name === current);
+    },
+    selectedCategory() {
+      const current = this.customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY];
+      return this.catalog.categories.find(item => item.name === current);
     },
     servicoOptions() {
-      const values = this.servicoDefinition
-        ? this.servicoDefinition.attribute_values
-        : [];
-      return [
-        { id: '', name: this.$t('CONVERSATION.PRIORITY.OPTIONS.NONE') },
-        ...(values || []).map(value => ({ id: value, name: value })),
-      ];
-    },
-    categoriaDefinition() {
-      return this.getAttributesByModel('conversation_attribute').find(
-        attr => attr.attribute_key === 'categoria'
+      return this.catalogOptions(
+        activeInScope(this.catalog.services, this.ticketScope).map(
+          item => item.full_name
+        )
       );
     },
-    categoriaValue() {
-      return (this.currentChat.custom_attributes || {}).categoria || '';
+    tipoDeSolicitacaoOptions() {
+      return this.catalogOptions(
+        allowedCategories(
+          this.catalog.categories,
+          this.selectedService,
+          this.ticketScope
+        ).map(item => item.name)
+      );
+    },
+    assignedTipoDeSolicitacao() {
+      return this.selectedCatalogOption(
+        this.tipoDeSolicitacaoOptions,
+        TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY
+      );
+    },
+    // Tipo de solicitação com prioridades permitidas limita o seletor de prioridade.
+    availablePriorityOptions() {
+      return filterPriorityOptions(this.priorityOptions, this.selectedCategory);
+    },
+    empresaDefinition() {
+      return this.getAttributesByModel('conversation_attribute').find(
+        attr => attr.attribute_key === 'empresa'
+      );
+    },
+    empresaValue() {
+      return (this.currentChat.custom_attributes || {}).empresa || '';
     },
     hasAnAssignedTeam() {
       return !!this.currentChat?.meta?.team;
@@ -187,34 +245,11 @@ export default {
           });
       },
     },
-    assignedServico: {
-      get() {
-        const current =
-          (this.currentChat.custom_attributes || {}).servico || '';
-        return (
-          this.servicoOptions.find(opt => opt.id === current) ||
-          this.servicoOptions[0]
-        );
-      },
-      set(item) {
-        const conversationId = this.currentChat.id;
-        const updatedAttributes = {
-          ...(this.currentChat.custom_attributes || {}),
-        };
-        if (item && item.id) {
-          updatedAttributes.servico = item.id;
-        } else {
-          delete updatedAttributes.servico;
-        }
-        this.$store
-          .dispatch('updateCustomAttributes', {
-            conversationId,
-            customAttributes: updatedAttributes,
-          })
-          .then(() => {
-            useAlert(this.$t('CUSTOM_ATTRIBUTES.FORM.UPDATE.SUCCESS'));
-          });
-      },
+    assignedServico() {
+      return this.selectedCatalogOption(
+        this.servicoOptions,
+        SERVICO_ATTRIBUTE_KEY
+      );
     },
     ticketPaiId() {
       return (this.currentChat.custom_attributes || {}).ticket_pai_id || null;
@@ -250,7 +285,29 @@ export default {
       return false;
     },
   },
+  mounted() {
+    ['services', 'categories'].forEach(kind => this.fetchList(kind));
+  },
   methods: {
+    // PATCH LOCAL (fork) - opções dos seletores dos cadastros ("Nenhuma" +
+    // nomes). Valor gravado que não está mais na lista (inativado, ou veio do
+    // Portal) continua aparecendo como selecionado em vez de sumir.
+    catalogOptions(names) {
+      return [this.noneOption, ...names.map(name => ({ id: name, name }))];
+    },
+    selectedCatalogOption(options, key) {
+      const current = this.customAttributes[key];
+      if (!current) return this.noneOption;
+      return (
+        options.find(opt => opt.id === current) || {
+          id: current,
+          name: current,
+        }
+      );
+    },
+    saveCatalogAttributes(changes) {
+      return this.saveConversationAttributes(this.currentChat, changes);
+    },
     onSelfAssign() {
       const {
         account_id,
@@ -304,14 +361,76 @@ export default {
         : selectedPriorityItem;
     },
 
-    onClickAssignServico(selectedItem) {
-      const isSame =
-        this.assignedServico && this.assignedServico.id === selectedItem.id;
+    // PATCH LOCAL (fork) - serviço com macro (Movidesk): escolher o serviço na
+    // conversa aplica a macro ligada a ele (service.macro_id). Se ela resolve
+    // a conversa e falta atributo obrigatório, roda sem resolver.
+    async runServicoMacro(service, conversationId) {
+      if (!this.$store.getters['macros/getMacros'].length) {
+        await this.$store.dispatch('macros/get');
+      }
+      const macro = this.$store.getters['macros/getMacros'].find(
+        item => item.id === service.macro_id
+      );
+      if (!macro) return;
 
-      this.assignedServico = isSame ? this.servicoOptions[0] : selectedItem;
+      const pending = this.executeMacro(macro, conversationId, {
+        silent: true,
+      });
+      if (pending) this.dismissPendingAttributes();
+      useAlert(
+        this.$t('MACROS.EXECUTE.APPLIED_BY_SERVICE', { name: macro.name })
+      );
     },
 
-    async onUpdateCategoria(key, value) {
+    // PATCH LOCAL (fork) - escolher o serviço grava o tipo de solicitação padrão dele
+    // (ou limpa a atual se o novo serviço não a permite), aplica a
+    // prioridade padrão e roda a macro ligada.
+    async onClickAssignServico(selectedItem) {
+      const isSame = this.assignedServico.id === selectedItem.id;
+      const servico = isSame ? '' : selectedItem.id;
+      const service = this.catalog.services.find(
+        item => item.full_name === servico
+      );
+      const defaultCategory =
+        service?.default_category_id &&
+        this.catalog.categories.find(
+          item => item.id === service.default_category_id
+        );
+      const currentTipo =
+        this.customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY];
+      const allowedNames = allowedCategories(
+        this.catalog.categories,
+        service,
+        this.ticketScope
+      ).map(item => item.name);
+      let categoria = currentTipo;
+      if (defaultCategory) categoria = defaultCategory.name;
+      else if (!allowedNames.includes(currentTipo)) categoria = '';
+
+      const conversationId = this.currentChat.id;
+      const saved = await this.saveCatalogAttributes({
+        [SERVICO_ATTRIBUTE_KEY]: servico,
+        [TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY]: categoria,
+      });
+      if (!saved || !service) return;
+
+      const defaultPriority =
+        service.default_priority &&
+        this.priorityOptions.find(opt => opt.id === service.default_priority);
+      if (defaultPriority) this.assignedPriority = defaultPriority;
+      if (service.macro_id) this.runServicoMacro(service, conversationId);
+    },
+
+    onClickAssignTipoDeSolicitacao(selectedItem) {
+      const isSame = this.assignedTipoDeSolicitacao.id === selectedItem.id;
+      this.saveCatalogAttributes({
+        [TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY]: isSame ? '' : selectedItem.id,
+      });
+    },
+
+    // Handler genérico reaproveitado por Tipo de solicitação e Empresa -
+    // seguem o mesmo formato de update de custom attribute de conversa.
+    async onUpdatePortalAttribute(key, value) {
       const conversationId = this.currentChat.id;
       const updatedAttributes = {
         ...(this.currentChat.custom_attributes || {}),
@@ -356,6 +475,42 @@ export default {
         />
       </div>
     </div>
+    <!-- PATCH LOCAL (fork) - Tipo de solicitação (= Categoria do Movidesk) vem do cadastro, limitado pelo serviço -->
+    <div>
+      <ContactDetailsItem
+        compact
+        :title="$t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')"
+      />
+      <MultiselectDropdown
+        :options="tipoDeSolicitacaoOptions"
+        :selected-item="assignedTipoDeSolicitacao"
+        :multiselector-title="
+          $t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
+        "
+        :multiselector-placeholder="$t('AGENT_MGMT.MULTI_SELECTOR.PLACEHOLDER')"
+        :no-search-result="
+          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.AGENT')
+        "
+        :input-placeholder="
+          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
+        "
+        @select="onClickAssignTipoDeSolicitacao"
+      />
+    </div>
+    <div v-if="empresaDefinition">
+      <CustomAttribute
+        class="!px-0 !py-0"
+        attribute-key="empresa"
+        :attribute-type="empresaDefinition.attribute_display_type"
+        :label="empresaDefinition.attribute_display_name"
+        :description="empresaDefinition.attribute_description"
+        :attribute-regex="empresaDefinition.regex_pattern"
+        :regex-cue="empresaDefinition.regex_cue"
+        :values="empresaDefinition.attribute_values"
+        :value="empresaValue"
+        @update="onUpdatePortalAttribute"
+      />
+    </div>
     <div>
       <ContactDetailsItem
         compact
@@ -373,18 +528,6 @@ export default {
           $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
         "
         @select="onClickAssignServico"
-      />
-    </div>
-    <div v-if="categoriaDefinition">
-      <CustomAttribute
-        attribute-key="categoria"
-        :attribute-type="categoriaDefinition.attribute_display_type"
-        :label="categoriaDefinition.attribute_display_name"
-        :description="categoriaDefinition.attribute_description"
-        :attribute-regex="categoriaDefinition.regex_pattern"
-        :regex-cue="categoriaDefinition.regex_cue"
-        :value="categoriaValue"
-        @update="onUpdateCategoria"
       />
     </div>
     <div>
@@ -441,7 +584,7 @@ export default {
     <div>
       <ContactDetailsItem compact :title="$t('CONVERSATION.PRIORITY.TITLE')" />
       <MultiselectDropdown
-        :options="priorityOptions"
+        :options="availablePriorityOptions"
         :selected-item="assignedPriority"
         :multiselector-title="$t('CONVERSATION.PRIORITY.TITLE')"
         :multiselector-placeholder="

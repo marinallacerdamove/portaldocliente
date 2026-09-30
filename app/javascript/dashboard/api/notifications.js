@@ -26,6 +26,12 @@ class NotificationsAPI extends ApiClient {
     return axios.get(`${this.url}/unread_count`);
   }
 
+  getMentionUnreadCount() {
+    return axios.get(`${this.url}/unread_count`, {
+      params: { notification_type: 'conversation_mention' },
+    });
+  }
+
   read(primaryActorType, primaryActorId) {
     return axios.post(`${this.url}/read_all`, {
       primary_actor_type: primaryActorType,

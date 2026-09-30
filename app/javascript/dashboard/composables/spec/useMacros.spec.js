@@ -147,7 +147,7 @@ describe('useMacros', () => {
     const { getMacroDropdownValues } = useMacros();
     const result = getMacroDropdownValues('assign_agent');
     expect(result[0]).toEqual({ id: 'nil', name: 'AUTOMATION.NONE_OPTION' });
-    expect(result[1]).toEqual({ id: 'self', name: 'Self' });
+    expect(result[1]).toEqual({ id: 'self', name: 'MACROS.EDITOR.SELF_AGENT' });
     expect(result.slice(2)).toEqual(mockAgents);
   });
 
@@ -208,14 +208,33 @@ describe('useMacros', () => {
     ]);
   });
 
-  it('resolves actions the macro builder does not offer', () => {
+  // PATCH LOCAL (fork) - o construtor passou a oferecer change_status.
+  it('resolves the status of a change_status action', () => {
     const { resolveMacroActions } = useMacros();
     const macro = {
       actions: [{ action_name: 'change_status', action_params: ['resolved'] }],
     };
 
     expect(resolveMacroActions(macro)).toEqual([
-      { actionName: 'CHANGE_STATUS', actionValue: 'resolved' },
+      {
+        actionName: 'CHANGE_STATUS',
+        actionValue: 'MACROS.STATUS_TYPES.RESOLVED',
+      },
+    ]);
+  });
+
+  it('resolves the text of fill_reply and set_subject actions', () => {
+    const { resolveMacroActions } = useMacros();
+    const macro = {
+      actions: [
+        { action_name: 'fill_reply', action_params: ['Empresa:', 'note'] },
+        { action_name: 'set_subject', action_params: ['Importação'] },
+      ],
+    };
+
+    expect(resolveMacroActions(macro)).toEqual([
+      { actionName: 'FILL_REPLY', actionValue: 'Empresa:' },
+      { actionName: 'SET_SUBJECT', actionValue: 'Importação' },
     ]);
   });
 
@@ -233,7 +252,7 @@ describe('useMacros', () => {
     ]);
     expect(getMacroDropdownValues('assign_agent')).toEqual([
       { id: 'nil', name: 'AUTOMATION.NONE_OPTION' },
-      { id: 'self', name: 'Self' },
+      { id: 'self', name: 'MACROS.EDITOR.SELF_AGENT' },
     ]);
   });
 });

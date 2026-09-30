@@ -105,8 +105,10 @@ const createCompany = async company => {
     createDialogRef.value?.onSuccess();
     emit('select', { id: payload.id, name: payload.name });
     useAlert(t('COMPANIES.CREATE.MESSAGES.SUCCESS'));
-  } catch {
-    useAlert(t('COMPANIES.CREATE.MESSAGES.ERROR'));
+  } catch (error) {
+    useAlert(
+      error?.response?.data?.message || t('COMPANIES.CREATE.MESSAGES.ERROR')
+    );
   } finally {
     isCreatingCompany.value = false;
   }

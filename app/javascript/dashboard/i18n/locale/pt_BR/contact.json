@@ -6,6 +6,13 @@
     "IDENTIFIER": "Identificador",
     "COPY_SUCCESSFUL": "Copiado para área de transferência com sucesso",
     "COMPANY": "Empresa",
+    "COMPANY_LABEL": "Empresa",
+    "OTHER_COMPANIES": "Também vinculado a",
+    "REQUESTER_NAME": "Nome",
+    "COMPANY_DOCUMENT": "CNPJ/CPF",
+    "COMPANY_WEBSITE": "Site",
+    "VIEW_COMPANY": "Ver detalhes da empresa",
+    "REQUESTER_LABEL": "Solicitante",
     "LOCATION": "Localização",
     "BROWSER_LANGUAGE": "Idioma do navegador",
     "CONVERSATION_TITLE": "Detalhes da conversa",
@@ -60,7 +67,8 @@
       "CONTACT_LABELS": "Etiquetas de contato",
       "PREVIOUS_CONVERSATIONS": "Conversas anteriores",
       "NO_RECORDS_FOUND": "Nenhum atributo encontrado"
-    }
+    },
+    "CLASSIFICATION": "Classificação"
   },
   "EDIT_CONTACT": {
     "BUTTON_LABEL": "Editar Contato",
@@ -504,6 +512,17 @@
           "SUCCESS_MESSAGE": "Avatar excluído com sucesso",
           "ERROR_MESSAGE": "Não foi possível excluir o avatar. Por favor, tente novamente mais tarde."
         }
+      },
+      "INFO_CARD": {
+        "DETAILS_TITLE": "Dados do contato",
+        "SOCIAL_TITLE": "Redes sociais",
+        "NAME": "Nome",
+        "EMAIL": "E-mail",
+        "PHONE": "Telefone",
+        "COMPANY": "Empresa",
+        "LINKED_COMPANIES": "Empresas vinculadas",
+        "BIO": "Biografia",
+        "NO_SOCIAL": "Nenhuma rede social cadastrada"
       }
     },
     "SIDEBAR": {

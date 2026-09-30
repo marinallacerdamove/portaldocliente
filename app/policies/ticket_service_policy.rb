@@ -1,0 +1,2 @@
+class TicketServicePolicy < TicketCatalogPolicy
+end

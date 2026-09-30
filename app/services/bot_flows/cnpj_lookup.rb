@@ -4,7 +4,7 @@
 # token e formato da resposta ficam fixos aqui - a tela só pede de onde
 # tirar o CNPJ, nada técnico.
 class BotFlows::CnpjLookup
-  CNPJ_REGEX = /\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/.freeze
+  CNPJ_REGEX = %r{\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}}
   RESULT_VARIABLE = 'empresa_nome'.freeze
 
   def initialize(node, vars, conversation)
@@ -29,6 +29,9 @@ class BotFlows::CnpjLookup
     # O webhook genérico fala "success"/"error" - esse nó promete
     # "found"/"not_found" pra fora (mesmo vocabulário do Extrair padrão),
     # então qualquer coisa que não seja sucesso conta como "não encontrado".
-    [handle == 'success' ? 'found' : 'not_found', vars]
+    return ['not_found', vars] unless handle == 'success'
+
+    @conversation.save! if @conversation.assign_empresa(vars[RESULT_VARIABLE])
+    ['found', vars]
   end
 end

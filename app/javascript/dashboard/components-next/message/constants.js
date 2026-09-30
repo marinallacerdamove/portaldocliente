@@ -15,6 +15,13 @@ export const MESSAGE_VARIANTS = {
   TEMPLATE: 'template',
   EMAIL: 'email',
   UNSUPPORTED: 'unsupported',
+  IMPORTED_TICKET_HISTORY: 'imported_ticket_history',
+};
+
+export const IMPORTED_TICKET_HISTORY_ROLES = {
+  CUSTOMER: 'customer',
+  AGENT: 'agent',
+  INTERNAL: 'internal',
 };
 
 export const SENDER_TYPES = {

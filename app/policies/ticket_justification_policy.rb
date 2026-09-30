@@ -1,0 +1,2 @@
+class TicketJustificationPolicy < TicketCatalogPolicy
+end

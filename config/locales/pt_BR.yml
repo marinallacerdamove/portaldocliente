@@ -18,6 +18,8 @@
 #available at https://guides.rubyonrails.org/i18n.html.
 pt_BR:
   hello: 'Olá, mundo'
+  portal_assistant:
+    portal_unavailable: 'O Assistente está indisponível agora (o Portal não respondeu). Tente de novo em instantes.'
   inbox:
     reauthorization:
       success: 'Canal reautenticado com sucesso'
@@ -113,6 +115,8 @@ pt_BR:
     companies:
       domain:
         invalid: deve ser um nome de domínio válido
+      cnpj:
+        taken: 'CPF/CNPJ já cadastrado para a empresa %{name}'
       search:
         query_missing: Especifique a string de busca com o parâmetro q
     messages:

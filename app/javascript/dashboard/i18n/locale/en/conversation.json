@@ -1,5 +1,9 @@
 {
   "CONVERSATION": {
+    "ACTIVITIES_TOGGLE": {
+      "SHOW": "Show activities ({count})",
+      "HIDE": "Hide activities"
+    },
     "REFERRAL": {
       "AD_LABEL": "Ad",
       "POST_LABEL": "Post",
@@ -37,7 +41,8 @@
     "MESSAGE_SELECTION": {
       "COUNT": "{count} message selected | {count} messages selected",
       "CANCEL": "Cancel",
-      "CREATE_TICKET": "Create internal ticket"
+      "CREATE_TICKET": "Create internal ticket",
+      "ADD_TO_TICKET": "Add to existing ticket"
     },
     "CLICK_HERE": "Click here",
     "LOADING_INBOXES": "Loading inboxes",
@@ -65,6 +70,13 @@
     "UNKNOWN_FILE_TYPE": "Unknown File",
     "SAVE_CONTACT": "Save Contact",
     "NO_CONTENT": "No content to display",
+    "IMPORTED_TICKET_HISTORY": {
+      "ROLE_CUSTOMER": "Customer message",
+      "ROLE_AGENT": "Reply",
+      "ROLE_INTERNAL": "Internal note",
+      "ORIGIN": "Origin: {inbox}",
+      "NO_CONTENT": "No text content"
+    },
     "SHARED_ATTACHMENT": {
       "CONTACT": "{sender} has shared a contact",
       "LOCATION": "{sender} has shared a location",
@@ -87,6 +99,18 @@
     "SUCCESS_EDIT_MESSAGE": "Message updated successfully",
     "FAIL_EDIT_MESSAGE": "Couldn't update message! Try again",
     "EDITED": "(edited)",
+    "EDITING_IN_PROGRESS": "Editing…",
+    "MESSAGE_EDIT_BAR": {
+      "TITLE": "Editing message",
+      "TITLE_WITH_SENDER": "Editing message from {name}",
+      "CANCEL": "Cancel",
+      "SAVE": "Save edit",
+      "PLACEHOLDER": "Type your message…",
+      "ADD_ATTACHMENT": "Attach file",
+      "EMPTY_ERROR": "Message can't be empty",
+      "SUCCESS": "Message updated",
+      "ERROR": "Couldn't update message, try again"
+    },
     "NO_RESPONSE": "No response",
     "RESPONSE": "Response",
     "RATING_TITLE": "Rating",
@@ -469,6 +493,10 @@
     "SELF_ASSIGN": "Assign to me",
     "TEAM_LABEL": "Assigned Team",
     "SERVICO_LABEL": "Service",
+    "TIPO_DE_SOLICITACAO_LABEL": "Request type",
+    "STATUS_ATENDIMENTO_LABEL": "Status",
+    "JUSTIFICATIVA_LABEL": "Justification",
+    "JUSTIFICATION_REQUIRED": "This status requires a justification",
     "LINKED_TICKETS": {
       "SECTION_TITLE": "Related Tickets",
       "PARENT_LABEL": "Parent ticket",
@@ -483,7 +511,7 @@
       "CONVERSATION_ACTIONS": "Conversation Actions",
       "CONVERSATION_LABELS": "Conversation Labels",
       "CONVERSATION_INFO": "Conversation Information",
-      "TICKET_DETAILS": "Development & Delivery Tracking",
+      "TICKET_DETAILS": "Additional fields",
       "PORTAL_INFO": "Customer Portal Information",
       "CONTACT_NOTES": "Contact Notes",
       "CONTACT_ATTRIBUTES": "Contact Attributes",
@@ -664,5 +692,20 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Unable to download attachment. Please try again"
+  },
+  "ADD_TO_TICKET_DIALOG": {
+    "TITLE": "Add to existing ticket",
+    "DESCRIPTION": "The selected message will be copied to the chosen ticket as history. | The {count} selected messages will be copied to the chosen ticket as history.",
+    "CONTACT_TICKETS": "Open tickets for this contact",
+    "LOADING": "Loading tickets...",
+    "EMPTY": "No open tickets for this contact.",
+    "NO_SUBJECT": "(no subject)",
+    "NUMBER_LABEL": "Or enter the ticket number",
+    "NUMBER_PLACEHOLDER": "E.g.: 235",
+    "CONFIRM": "Add",
+    "SUCCESS": "Messages added to ticket #{id}",
+    "INVALID_TICKET": "Ticket not found. Enter the number of a ticket (Customer Portal or Internal Tickets).",
+    "ERROR": "Could not add the messages to the ticket.",
+    "TICKET_NUMBER": "#{id}"
   }
 }

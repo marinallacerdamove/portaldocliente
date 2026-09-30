@@ -56,10 +56,8 @@ class Api::V1::Accounts::MacrosController < Api::V1::Accounts::BaseController
   private
 
   def permitted_params
-    params.permit(
-      :name, :visibility,
-      actions: [:action_name, { action_params: [] }]
-    )
+    # PATCH LOCAL (fork): group_name e team_ids/user_ids (macro de equipe/agentes).
+    params.permit(:name, :visibility, :group_name, team_ids: [], user_ids: [], actions: [:action_name, { action_params: [] }])
   end
 
   def macros_with_user

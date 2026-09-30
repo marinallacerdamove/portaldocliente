@@ -22,6 +22,9 @@ import WootMessageEditor from 'dashboard/components/widgets/WootWriter/Editor.vu
 import AudioRecorder from 'dashboard/components/widgets/WootWriter/AudioRecorder.vue';
 import { AUDIO_FORMATS } from 'shared/constants/messages';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { FILL_REPLY_MODES } from 'dashboard/routes/dashboard/settings/macros/constants';
+import { getPortalVariableValues } from 'shared/constants/portalVariables';
+import { useCompaniesStore } from 'dashboard/stores/companies';
 import { CMD_AI_ASSIST } from 'dashboard/helper/commandbar/events';
 import {
   getMessageVariables,
@@ -50,6 +53,7 @@ import {
   getEffectiveChannelType,
   getAgentVariables,
   getContactVariables,
+  resolveVariablesInMessage,
 } from 'dashboard/helper/editorHelper';
 import { useCopilotReply } from 'dashboard/composables/useCopilotReply';
 import { useMacroExecution } from 'dashboard/composables/useMacroExecution';
@@ -101,6 +105,7 @@ export default {
     const messageEditor = useTemplateRef('messageEditor');
     const copilot = useCopilotReply();
     const macroExecution = useMacroExecution();
+    const companiesStore = useCompaniesStore();
     const shortcutKey = useKbd(['$mod', '+', 'enter']);
 
     return {
@@ -114,6 +119,7 @@ export default {
       copilot,
       shortcutKey,
       macroExecution,
+      companiesStore,
     };
   },
   data() {
@@ -442,6 +448,11 @@ export default {
         ...variables,
         ...getContactVariables(this.currentContact),
         ...getAgentVariables(this.currentUser),
+        // PATCH LOCAL (fork) - {{ticket.*}}, {{saudacao}}
+        ...getPortalVariableValues(
+          this.currentChat,
+          this.companiesStore.getRecord(this.currentContact?.company_id)
+        ),
       };
     },
     connectedPortalSlug() {
@@ -593,6 +604,7 @@ export default {
       this.onNewConversationModalActive
     );
     emitter.on(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, this.addIntoEditor);
+    emitter.on(BUS_EVENTS.MACRO_FILL_REPLY, this.onMacroFillReply);
     emitter.on(CMD_AI_ASSIST, this.executeCopilotAction);
   },
   unmounted() {
@@ -600,6 +612,7 @@ export default {
     document.removeEventListener('keydown', this.handleKeyEvents);
     emitter.off(BUS_EVENTS.TOGGLE_REPLY_TO_MESSAGE, this.onReplyToMessage);
     emitter.off(BUS_EVENTS.INSERT_INTO_NORMAL_EDITOR, this.addIntoEditor);
+    emitter.off(BUS_EVENTS.MACRO_FILL_REPLY, this.onMacroFillReply);
     emitter.off(
       BUS_EVENTS.NEW_CONVERSATION_MODAL,
       this.onNewConversationModalActive
@@ -1035,6 +1048,29 @@ export default {
       this.updateEditorSelectionWith = content;
       this.onFocus();
     },
+    // PATCH LOCAL (fork) - macro "Texto da resposta": troca pro modo da macro
+    // (resposta ou nota interna) e põe o texto no editor pro atendente
+    // completar. O modo muda antes (o watcher de modo troca o rascunho) e o
+    // texto entra depois, somado ao que já estava digitado.
+    onMacroFillReply({ content, mode }) {
+      const replyMode =
+        mode === FILL_REPLY_MODES.NOTE
+          ? REPLY_EDITOR_MODES.NOTE
+          : REPLY_EDITOR_MODES.REPLY;
+      const fill = () => {
+        const text = resolveVariablesInMessage(content, this.messageVariables);
+        this.message = this.message.trim()
+          ? `${this.message.trimEnd()}\n\n${text}`
+          : text;
+        this.onFocus();
+      };
+      if (this.replyType === replyMode) {
+        fill();
+        return;
+      }
+      this.setReplyMode(replyMode);
+      this.$nextTick(fill);
+    },
     executeCopilotAction(action, data) {
       this.copilot.execute(action, data);
     },
@@ -1356,6 +1392,7 @@ export default {
       @toggle-editor-size="toggleEditorSize"
       @toggle-copilot="copilot.toggleEditor"
       @execute-copilot-action="executeCopilotAction"
+      @execute-macro="onExecuteMacro"
     />
     <ArticleSearchPopover
       v-if="showArticleSearchPopover && connectedPortalSlug"

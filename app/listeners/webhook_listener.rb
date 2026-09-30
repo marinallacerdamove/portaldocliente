@@ -66,6 +66,25 @@ class WebhookListener < BaseListener
     deliver_account_webhooks(payload, account)
   end
 
+  # PATCH LOCAL (fork) - empresas sincronizadas com o Portal do Cliente
+  def company_created(event)
+    company = event.data[:company]
+    payload = company.webhook_data.merge(event: __method__.to_s)
+    deliver_account_webhooks(payload, company.account)
+  end
+
+  def company_updated(event)
+    company = event.data[:company]
+    payload = company.webhook_data.merge(event: __method__.to_s, changed_attributes: extract_changed_attributes(event))
+    deliver_account_webhooks(payload, company.account)
+  end
+
+  def contact_company_updated(event)
+    contact, account = extract_contact_and_account(event)
+    payload = contact.webhook_data.merge(event: __method__.to_s, company_id: contact.company_id)
+    deliver_account_webhooks(payload, account)
+  end
+
   def inbox_created(event)
     inbox, account = extract_inbox_and_account(event)
     inbox_webhook_data = Inbox::EventDataPresenter.new(inbox).webhook_data

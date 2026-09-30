@@ -1,0 +1,2 @@
+class TicketCustomFieldPolicy < TicketCatalogPolicy
+end

@@ -34,6 +34,13 @@ class NotificationFinder
     find_all_notifications
     filter_snoozed_notifications
     filter_read_notifications
+    filter_by_notification_type
+  end
+
+  # PATCH LOCAL (fork) - usado pelo contador de Menções da barra lateral
+  # (unread_count?notification_type=conversation_mention)
+  def filter_by_notification_type
+    @notifications = @notifications.where(notification_type: params[:notification_type]) if params[:notification_type].present?
   end
 
   def find_all_notifications

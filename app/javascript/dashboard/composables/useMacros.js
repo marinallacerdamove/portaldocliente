@@ -11,6 +11,9 @@ import {
   getFileName,
 } from 'dashboard/routes/dashboard/settings/macros/macroHelper';
 
+// PATCH LOCAL (fork) - status que a macro pode aplicar (change_status).
+const MACRO_STATUSES = ['open', 'pending', 'snoozed', 'resolved'];
+
 /**
  * Composable for handling macro-related functionality
  * @returns {Object} An object containing the getMacroDropdownValues and resolveMacroActions functions
@@ -40,12 +43,19 @@ export const useMacros = () => {
       case 'assign_agent':
         return [
           ...withNoneOption(),
-          { id: 'self', name: 'Self' },
+          { id: 'self', name: t('MACROS.EDITOR.SELF_AGENT') }, // PATCH LOCAL (fork)
           ...agents.value,
         ];
       case 'add_label':
       case 'remove_label':
+      case 'replace_labels': // PATCH LOCAL (fork)
         return generateLabelOptions(labels.value);
+      // PATCH LOCAL (fork)
+      case 'change_status':
+        return MACRO_STATUSES.map(status => ({
+          id: status,
+          name: t(`MACROS.STATUS_TYPES.${status.toUpperCase()}`),
+        }));
       case 'change_priority':
         return PRIORITY_CONDITION_VALUES.map(item => ({
           id: item.id,
@@ -61,6 +71,15 @@ export const useMacros = () => {
     files
   ) => {
     if (!params?.length) return '';
+
+    // PATCH LOCAL (fork) - "Serviço: Ticket Cancelado".
+    if (name === 'set_custom_attribute') {
+      const [key, value] = params;
+      const attributes =
+        getters['attributes/getConversationAttributes']?.value || [];
+      const attribute = attributes.find(attr => attr.attributeKey === key);
+      return `${attribute?.attributeDisplayName || key}: ${value}`;
+    }
 
     const options = getMacroDropdownValues(name);
     if (options.length) {

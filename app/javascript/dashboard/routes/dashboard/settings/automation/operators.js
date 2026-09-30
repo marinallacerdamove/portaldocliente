@@ -89,6 +89,14 @@ export const OPERATOR_TYPES_5 = [
   },
 ];
 
+// PATCH LOCAL (fork) - "Alterado" / "Alterado para X" do Movidesk. Só o
+// evento "Conversa atualizada" sabe o que mudou; values = { from, to }, com
+// "de" sempre vazio e "para" opcional (vazio = qualquer valor).
+export const ATTRIBUTE_CHANGED_OPERATOR = {
+  value: 'attribute_changed',
+  label: 'Changed',
+};
+
 export const OPERATOR_TYPES_6 = [
   {
     value: 'equal_to',

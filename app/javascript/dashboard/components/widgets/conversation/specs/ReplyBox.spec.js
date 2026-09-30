@@ -2,6 +2,7 @@ import { shallowMount } from '@vue/test-utils';
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import { nextTick } from 'vue';
 import { createStore } from 'vuex';
+import { createPinia } from 'pinia';
 import ReplyBox from '../ReplyBox.vue';
 import WhatsappTemplates from '../WhatsappTemplates/Modal.vue';
 
@@ -106,7 +107,8 @@ const mountWith = ({
   });
   const wrapper = shallowMount(ReplyBox, {
     global: {
-      plugins: [store],
+      // ReplyBox usa useCompaniesStore (Pinia) pras variáveis do Portal.
+      plugins: [store, createPinia()],
       mocks: { $t: key => key },
       // The bottom panel sits inside a <Transition>, which shallowMount stubs
       // without rendering its children.

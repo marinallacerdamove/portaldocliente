@@ -69,13 +69,18 @@ export const TWILIO_CHANNEL_MEDIUM = {
   SMS: 'sms',
 };
 
+// PATCH LOCAL (fork) - extraído do getInboxVoiceIcon pra ser reusado pelo
+// card da lista de conversas (assunto x última mensagem).
+export const isWhatsAppChannel = (channelType, medium) =>
+  channelType === INBOX_TYPES.WHATSAPP ||
+  (channelType === INBOX_TYPES.TWILIO &&
+    medium === TWILIO_CHANNEL_MEDIUM.WHATSAPP);
+
 export const getInboxVoiceIcon = (channelType, medium) => {
-  const isWhatsapp =
-    channelType === INBOX_TYPES.WHATSAPP ||
-    (channelType === INBOX_TYPES.TWILIO &&
-      medium === TWILIO_CHANNEL_MEDIUM.WHATSAPP);
   return getVoiceCallIcon(
-    isWhatsapp ? VOICE_CALL_PROVIDERS.WHATSAPP : VOICE_CALL_PROVIDERS.TWILIO
+    isWhatsAppChannel(channelType, medium)
+      ? VOICE_CALL_PROVIDERS.WHATSAPP
+      : VOICE_CALL_PROVIDERS.TWILIO
   );
 };
 

@@ -79,7 +79,7 @@ export default {
     },
     inputType() {
       return this.actionTypes.find(action => action.key === this.action_name)
-        .inputType;
+        ?.inputType;
     },
     actionNameAsSelectModel: {
       get() {
@@ -223,6 +223,8 @@ export default {
         :placeholder="$t('AUTOMATION.ACTION.TEAM_MESSAGE_INPUT_PLACEHOLDER')"
         class="[&_.ProseMirror-menubar]:hidden px-3 py-1 bg-n-alpha-1 rounded-lg outline outline-1 outline-n-weak dark:outline-n-strong"
       />
+      <!-- PATCH LOCAL (fork) - campos próprios de quem usa (ações de ticket da automação). -->
+      <slot />
     </div>
     <span v-if="errorMessage" class="text-sm text-n-ruby-11">
       {{ errorMessage }}

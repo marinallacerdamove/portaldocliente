@@ -39,8 +39,6 @@ import {
   buildMessageSchema,
   buildEditor,
   EditorView,
-  MessageMarkdownTransformer,
-  MessageMarkdownSerializer,
   EditorState,
   Selection,
   imageResizeView,
@@ -49,6 +47,11 @@ import {
   suggestionsPlugin,
   triggerCharacters,
 } from '@chatwoot/prosemirror-schema/src/mentions/plugin';
+import {
+  withTableNodes,
+  parseEditorMarkdown,
+  serializeEditorMarkdown,
+} from 'dashboard/helper/editorTables';
 
 import {
   appendSignature,
@@ -85,6 +88,8 @@ const props = defineProps({
   overrideLineBreaks: { type: Boolean, default: false },
   updateSelectionWith: { type: String, default: '' },
   enableVariables: { type: Boolean, default: false },
+  // PATCH LOCAL (fork) - editor sem canal (ex.: texto da macro) com tabela.
+  enableTables: { type: Boolean, default: false },
   enableCannedResponses: { type: Boolean, default: true },
   enableCaptainTools: { type: Boolean, default: false },
   enableMacros: { type: Boolean, default: false },
@@ -136,8 +141,12 @@ const effectiveChannelType = computed(() =>
   getEffectiveChannelType(props.channelType, props.medium)
 );
 
+// PATCH LOCAL (fork) - tabela (helper/editorTables.js): nos canais cujo
+// FORMATTING lista 'table' e onde quem usa o editor pede (enableTables).
 const editorSchema = computed(() => {
-  if (!props.channelType) return messageSchema;
+  if (!props.channelType) {
+    return props.enableTables ? withTableNodes(messageSchema) : messageSchema;
+  }
 
   const formatType = props.isPrivate
     ? PRIVATE_NOTE_FORMATTING
@@ -146,7 +155,8 @@ const editorSchema = computed(() => {
     formatType,
     captainTasksEnabled.value
   );
-  return buildMessageSchema(formatting.marks, formatting.nodes);
+  const schema = buildMessageSchema(formatting.marks, formatting.nodes);
+  return formatting.nodes.includes('table') ? withTableNodes(schema) : schema;
 });
 
 const editorMenuOptions = computed(() => {
@@ -166,7 +176,7 @@ const createState = (content, placeholder, plugins = [], methods = {}) => {
   // Strip unsupported formatting before parsing to prevent "Token type not supported" errors
   const sanitizedContent = stripUnsupportedFormatting(content, schema);
   return EditorState.create({
-    doc: new MessageMarkdownTransformer(schema).parse(sanitizedContent),
+    doc: parseEditorMarkdown(schema, sanitizedContent),
     plugins: buildEditor({
       schema,
       placeholder,
@@ -246,7 +256,7 @@ const handleCopilotAction = actionKey => {
 };
 
 const contentFromEditor = () => {
-  return MessageMarkdownSerializer.serialize(editorView.state.doc);
+  return serializeEditorMarkdown(editorView.state.doc);
 };
 
 const shouldShowVariables = computed(() => {
@@ -744,9 +754,7 @@ function insertContentIntoEditor(content, defaultFrom = 0) {
   // Strip unsupported formatting before parsing to ensure content can be inserted
   // into channels that don't support certain markdown features (e.g., API channels)
   const sanitizedContent = stripUnsupportedFormatting(content, currentSchema);
-  let node = new MessageMarkdownTransformer(currentSchema).parse(
-    sanitizedContent
-  );
+  let node = parseEditorMarkdown(currentSchema, sanitizedContent);
 
   insertNodeIntoEditor(node, from, undefined);
 }
@@ -845,9 +853,32 @@ function createEditorView() {
         const { files } = event.clipboardData;
         if (!files.length) return;
         event.preventDefault();
+
+        // Print colado (screenshot) sempre entra embutido no corpo da
+        // mensagem, na posição exata do cursor - pedido explícito e repetido
+        // ("tudo que for edição de texto tem que aceitar isso"), pra manter a
+        // sequência do que a pessoa está mostrando. Reaproveita o mesmo
+        // upload+insert de imagem que já existia (antes só no gesto
+        // Shift+Cmd/Ctrl+V em email/site) - agora é o comportamento padrão
+        // de colar em qualquer editor de mensagem (resposta, nota interna,
+        // edição). stopPropagation impede que o listener de anexo do
+        // ReplyBox (no document, ver ReplyBox.vue#onPaste) duplique a mesma
+        // imagem como anexo separado.
+        // Canal sem imagem embutida (ex.: resposta pública no WhatsApp): não
+        // intercepta - o listener do ReplyBox anexa o print como arquivo.
+        const imageFiles = view.state.schema.nodes.image
+          ? Array.from(files).filter(file =>
+              INLINE_IMAGE_PASTE_TYPES.includes(file.type)
+            )
+          : [];
+        if (imageFiles.length) {
+          event.stopPropagation();
+          imageFiles.forEach(file => uploadImageIfWithinSizeLimit(file));
+        }
+
         // Paste text content alongside files (e.g., spreadsheet data from Numbers app)
         // Numbers app includes invalid 0-byte attachments with text, so we paste the text here
-        // while ReplyBox filters and handles valid file attachments
+        // while ReplyBox filters and handles valid non-image file attachments
         const text = event.clipboardData.getData('text/plain');
         if (text) {
           view.dispatch(view.state.tr.insertText(text));

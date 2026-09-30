@@ -31,6 +31,8 @@
 
 en:
   hello: 'Hello world'
+  portal_assistant:
+    portal_unavailable: 'The assistant is unavailable right now (Portal did not respond). Try again in a moment.'
   inbox:
     reauthorization:
       success: 'Channel reauthorized successfully'
@@ -131,6 +133,8 @@ en:
     companies:
       domain:
         invalid: must be a valid domain name
+      cnpj:
+        taken: 'CPF/CNPJ already registered for company %{name}'
       search:
         query_missing: Specify search string with parameter q
     messages:

@@ -5,6 +5,7 @@ import attributesMgmt from './attributesMgmt.json';
 import auditLogs from './auditLogs.json';
 import automation from './automation.json';
 import botFlow from './botFlow.json';
+import portalAssistant from './portalAssistant.json';
 import bulkActions from './bulkActions.json';
 import calls from './calls.json';
 import campaign from './campaign.json';
@@ -29,6 +30,7 @@ import integrations from './integrations.json';
 import labelsMgmt from './labelsMgmt.json';
 import login from './login.json';
 import macros from './macros.json';
+import ticketCatalog from './ticketCatalog.json';
 import report from './report.json';
 import resetPassword from './resetPassword.json';
 import search from './search.json';
@@ -54,6 +56,7 @@ export default {
   ...auditLogs,
   ...automation,
   ...botFlow,
+  ...portalAssistant,
   ...bulkActions,
   ...calls,
   ...campaign,
@@ -78,6 +81,7 @@ export default {
   ...labelsMgmt,
   ...login,
   ...macros,
+  ...ticketCatalog,
   ...report,
   ...resetPassword,
   ...search,

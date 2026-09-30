@@ -7,24 +7,26 @@ class MacroPolicy < ApplicationPolicy
     true
   end
 
+  # PATCH LOCAL (fork) - macro de equipe: membros das equipes veem e usam,
+  # só administrador altera (igual à global).
   def show?
-    @record.global? || author?
+    @account_user.administrator? || @record.available_to?(@account_user.user)
   end
 
   def update?
-    return @account_user.administrator? if @record.global?
+    return @account_user.administrator? if @record.global? || @record.team?
 
     author?
   end
 
   def destroy?
-    return @account_user.administrator? if @record.global?
+    return @account_user.administrator? if @record.global? || @record.team?
 
     author?
   end
 
   def execute?
-    @record.global? || author?
+    @record.available_to?(@account_user.user)
   end
 
   private

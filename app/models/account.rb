@@ -71,6 +71,13 @@ class Account < ApplicationRecord
   has_many :automation_rule_pending_executions, dependent: :delete_all
   has_many :bot_flows, dependent: :destroy_async
   has_many :macros, dependent: :destroy_async
+  # PATCH LOCAL (fork) - cadastros de atendimento (Serviços, Categorias, Status, Justificativas).
+  has_many :ticket_services, dependent: :destroy_async
+  has_many :ticket_categories, dependent: :destroy_async
+  has_many :ticket_statuses, dependent: :destroy_async
+  has_many :ticket_justifications, dependent: :destroy_async
+  has_many :ticket_custom_fields, dependent: :destroy_async
+  has_many :ticket_field_rules, dependent: :destroy_async
   has_many :campaigns, dependent: :destroy_async
   has_many :canned_responses, dependent: :destroy_async
   has_many :categories, dependent: :destroy_async, class_name: '::Category'

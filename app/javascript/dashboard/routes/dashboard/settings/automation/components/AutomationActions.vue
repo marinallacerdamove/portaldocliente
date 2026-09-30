@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import AutomationActionInput from 'dashboard/components/widgets/AutomationActionInput.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import AutomationTicketActionInput from './AutomationTicketActionInput.vue';
 import {
   getFileName,
   showActionInput,
@@ -47,6 +48,11 @@ const actions = defineModel({ type: Array, required: true });
 const hasActionErrors = computed(() =>
   Object.keys(props.errors).some(key => key.startsWith('action_'))
 );
+
+// PATCH LOCAL (fork) - ações de ticket com campos próprios (AutomationTicketActionInput).
+const TICKET_ACTION_INPUTS = ['custom_attribute', 'text', 'notify_agents'];
+const inputTypeOf = actionName =>
+  props.actionTypes.find(type => type.key === actionName)?.inputType;
 </script>
 
 <template>
@@ -77,7 +83,14 @@ const hasActionErrors = computed(() =>
         :initial-file-name="showFileName ? getFileName(action, files) : ''"
         @reset-action="resetAction(i)"
         @remove-action="removeAction(i)"
-      />
+      >
+        <AutomationTicketActionInput
+          v-if="TICKET_ACTION_INPUTS.includes(inputTypeOf(action.action_name))"
+          v-model="actions[i].action_params"
+          :input-type="inputTypeOf(action.action_name)"
+          :options="getActionDropdownValues(action.action_name)"
+        />
+      </AutomationActionInput>
       <div class="pt-2">
         <NextButton
           icon="i-lucide-plus"

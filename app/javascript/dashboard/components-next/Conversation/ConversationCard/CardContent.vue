@@ -5,6 +5,8 @@ import VoiceCallStatus from './VoiceCallStatus.vue';
 import UnreadBadge from './UnreadBadge.vue';
 
 defineProps({
+  // PATCH LOCAL (fork) - assunto do ticket no lugar da última mensagem
+  subject: { type: String, default: '' },
   lastMessage: { type: Object, default: null },
   voiceCallStatus: { type: String, default: '' },
   voiceCallDirection: { type: String, default: '' },
@@ -18,8 +20,17 @@ defineProps({
     class="grid grid-cols-[1fr_auto] gap-1.5"
     :class="showExpandedPreview ? 'items-end' : 'items-center'"
   >
+    <span
+      v-if="subject"
+      key="subject"
+      class="min-w-0 text-sm truncate"
+      :class="unreadCount > 0 ? 'text-n-slate-12' : 'text-n-slate-11'"
+      :title="subject"
+    >
+      {{ subject }}
+    </span>
     <VoiceCallStatus
-      v-if="voiceCallStatus"
+      v-else-if="voiceCallStatus"
       key="voice-status-row"
       :status="voiceCallStatus"
       :direction="voiceCallDirection"

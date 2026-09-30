@@ -37,8 +37,19 @@ provide('macroActionTypes', macroActionTypes);
 
 const uiFlags = computed(() => getters['macros/getUIFlags'].value);
 const macroId = computed(() => route.params.macroId);
+// PATCH LOCAL (fork) - macro de equipe também só o administrador altera.
 const isPublicMacroReadOnly = computed(
-  () => macro.value?.visibility === 'global' && !isAdmin.value
+  () => ['global', 'team'].includes(macro.value?.visibility) && !isAdmin.value
+);
+const isSaving = ref(false);
+const macroGroups = computed(() =>
+  [
+    ...new Set(
+      getters['macros/getMacros'].value
+        .map(item => item.group_name)
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b))
 );
 
 const fetchDropdownData = () =>
@@ -46,6 +57,8 @@ const fetchDropdownData = () =>
     store.dispatch('agents/get'),
     store.dispatch('teams/get'),
     store.dispatch('labels/get'),
+    store.dispatch('macros/get'),
+    store.dispatch('attributes/get'),
   ]);
 
 const formatMacro = macroData => {
@@ -54,7 +67,7 @@ const formatMacro = macroData => {
     if (action.action_params.length) {
       const inputType = macroActionTypes.value.find(
         item => item.key === action.action_name
-      ).inputType;
+      )?.inputType;
       if (inputType === 'multi_select' || inputType === 'search_select') {
         actionParams = getMacroDropdownValues(action.action_name).filter(item =>
           [...action.action_params].includes(item.id)
@@ -81,6 +94,30 @@ const manifestMacro = async () => {
   macro.value = formatMacro(singleMacro);
 };
 
+// PATCH LOCAL (fork) - "Clonar": abre uma macro nova já preenchida com a
+// original. Anexo fica de fora (o arquivo é da macro original).
+const cloneMacro = async sourceId => {
+  mode.value = 'CREATE';
+  await Promise.all([
+    fetchDropdownData(),
+    store.dispatch('macros/getSingleMacro', sourceId),
+  ]);
+  const source = formatMacro(store.getters['macros/getMacro'](sourceId));
+  const actions = source.actions.filter(
+    action => action.action_name !== 'send_attachment'
+  );
+  macro.value = {
+    name: t('MACROS.CLONE.NAME', { name: source.name }),
+    group_name: source.group_name || '',
+    team_ids: source.team_ids || [],
+    user_ids: source.user_ids || [],
+    visibility: isAdmin.value ? source.visibility : 'personal',
+    actions: actions.length
+      ? actions
+      : [{ action_name: 'fill_reply', action_params: [] }],
+  };
+};
+
 const fetchMacro = () => {
   mode.value = 'EDIT';
   manifestMacro();
@@ -90,9 +127,12 @@ const initNewMacro = () => {
   mode.value = 'CREATE';
   macro.value = {
     name: '',
+    group_name: '',
+    team_ids: [],
+    user_ids: [],
     actions: [
       {
-        action_name: 'assign_team',
+        action_name: 'fill_reply',
         action_params: [],
       },
     ],
@@ -105,6 +145,8 @@ watch(
   () => {
     if (route.params.macroId) {
       fetchMacro();
+    } else if (route.query.clone) {
+      cloneMacro(route.query.clone);
     } else {
       fetchDropdownData();
       initNewMacro();
@@ -116,6 +158,7 @@ watch(
 const saveMacro = async macroData => {
   if (isPublicMacroReadOnly.value) return;
 
+  isSaving.value = true;
   try {
     const action = mode.value === 'EDIT' ? 'macros/update' : 'macros/create';
     const successMessage =
@@ -129,12 +172,16 @@ const saveMacro = async macroData => {
     router.push({ name: 'macros_wrapper' });
   } catch (error) {
     useAlert(t('MACROS.ERROR'));
+  } finally {
+    isSaving.value = false;
   }
 };
+
+const cancel = () => router.push({ name: 'macros_wrapper' });
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 mb-8 max-w-7xl mx-auto h-full w-full !px-6">
+  <div class="flex flex-col w-full h-full !px-6 overflow-y-auto">
     <woot-loading-state
       v-if="uiFlags.isFetchingItem"
       :message="t('MACROS.EDITOR.LOADING')"
@@ -144,8 +191,11 @@ const saveMacro = async macroData => {
       :macro-data="macro"
       :can-manage-public-macros="isAdmin"
       :read-only="isPublicMacroReadOnly"
-      @update:macro-data="macro = $event"
+      :is-edit="mode === 'EDIT'"
+      :groups="macroGroups"
+      :is-saving="isSaving"
       @submit="saveMacro"
+      @cancel="cancel"
     />
   </div>
 </template>

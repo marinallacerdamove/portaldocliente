@@ -129,7 +129,26 @@ const validateSingleAction = action => {
     'remove_assigned_team',
     'open_conversation',
     'pending_conversation',
+    'remove_all_labels', // PATCH LOCAL (fork)
   ];
+
+  // PATCH LOCAL (fork) - texto obrigatório (o modo do fill_reply sozinho não conta).
+  if (
+    ['fill_reply', 'set_subject'].includes(action.action_name) &&
+    !String(action.action_params?.[0] ?? '').trim()
+  ) {
+    return ACTION_PARAMETERS_REQUIRED;
+  }
+  // PATCH LOCAL (fork) - "Alterar campo do ticket" precisa de campo e valor.
+  if (
+    action.action_name === 'set_custom_attribute' &&
+    !(
+      action.action_params?.[0] &&
+      String(action.action_params?.[1] ?? '').trim()
+    )
+  ) {
+    return ACTION_PARAMETERS_REQUIRED;
+  }
 
   if (
     !noParamActions.includes(action.action_name) &&

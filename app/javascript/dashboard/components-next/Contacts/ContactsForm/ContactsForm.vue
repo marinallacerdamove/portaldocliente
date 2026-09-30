@@ -4,11 +4,9 @@ import { useI18n } from 'vue-i18n';
 import { required, email } from '@vuelidate/validators';
 import { useVuelidate } from '@vuelidate/core';
 import { splitName } from '@chatwoot/utils';
-import countries from 'shared/constants/countries.js';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useAccount } from 'dashboard/composables/useAccount';
 import Input from 'dashboard/components-next/input/Input.vue';
-import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import CompanySelector from 'dashboard/components-next/Companies/CompanySelector.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import PhoneNumberInput from 'dashboard/components-next/phonenumberinput/PhoneNumberInput.vue';
@@ -26,6 +24,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // PATCH LOCAL (fork) - 'details' | 'social' mostra só uma parte (usado
+  // dentro dos cards da ficha do contato, que já têm título próprio).
+  section: {
+    type: String,
+    default: 'all',
+  },
 });
 
 const emit = defineEmits(['update']);
@@ -38,8 +42,8 @@ const FORM_CONFIG = {
   LAST_NAME: { field: 'lastName' },
   EMAIL_ADDRESS: { field: 'email' },
   PHONE_NUMBER: { field: 'phoneNumber' },
-  CITY: { field: 'additionalAttributes.city' },
-  COUNTRY: { field: 'additionalAttributes.countryCode' },
+  // PATCH LOCAL (fork) - sem Cidade/País: endereço é da empresa, não do
+  // contato (mesma regra do Portal do Cliente).
   BIO: { field: 'additionalAttributes.description' },
   COMPANY_NAME: { field: 'additionalAttributes.companyName' },
 };
@@ -65,9 +69,6 @@ const defaultState = {
   additionalAttributes: {
     description: '',
     companyName: '',
-    countryCode: '',
-    country: '',
-    city: '',
     socialProfiles: {
       facebook: '',
       github: '',
@@ -125,9 +126,6 @@ const prepareStateBasedOnProps = () => {
   const {
     description = '',
     companyName = '',
-    countryCode = '',
-    country = '',
-    city = '',
     socialTelegramUserName = '',
     socialProfiles = {},
   } = additionalAttributes || {};
@@ -146,9 +144,6 @@ const prepareStateBasedOnProps = () => {
     additionalAttributes: {
       description,
       companyName,
-      countryCode,
-      country,
-      city,
       socialProfiles: {
         ...socialProfiles,
         telegram: telegramUsername,
@@ -156,10 +151,6 @@ const prepareStateBasedOnProps = () => {
     },
   });
 };
-
-const countryOptions = computed(() =>
-  countries.map(({ name, id }) => ({ label: name, value: id }))
-);
 
 const editDetailsForm = computed(() =>
   Object.keys(FORM_CONFIG).map(key => ({
@@ -235,12 +226,6 @@ const getMessageType = key => {
     : 'info';
 };
 
-const handleCountrySelection = value => {
-  const selectedCountry = countries.find(option => option.id === value);
-  state.additionalAttributes.country = selectedCountry?.name || '';
-  emit('update', state);
-};
-
 const handleCompanySelection = async ({ id, name }) => {
   state.companyId = id || '';
   state.additionalAttributes.companyName = name || '';
@@ -274,27 +259,17 @@ defineExpose({
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-col items-start gap-2">
-      <span class="py-1 text-sm font-medium text-n-slate-12">
+    <div v-if="section !== 'social'" class="flex flex-col items-start gap-2">
+      <span
+        v-if="section === 'all'"
+        class="py-1 text-sm font-medium text-n-slate-12"
+      >
         {{ t('CONTACTS_LAYOUT.CARD.EDIT_DETAILS_FORM.TITLE') }}
       </span>
       <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
         <template v-for="item in editDetailsForm" :key="item.key">
-          <ComboBox
-            v-if="item.key === 'COUNTRY'"
-            v-model="state.additionalAttributes.countryCode"
-            :options="countryOptions"
-            :placeholder="item.placeholder"
-            class="[&>div>button]:h-8"
-            :class="{
-              '[&>div>button]:bg-n-alpha-black2 [&>div>button:not(.focused)]:!outline-transparent':
-                !isDetailsView,
-              '[&>div>button]:!bg-n-alpha-black2': isDetailsView,
-            }"
-            @update:model-value="handleCountrySelection"
-          />
           <PhoneNumberInput
-            v-else-if="item.key === 'PHONE_NUMBER'"
+            v-if="item.key === 'PHONE_NUMBER'"
             v-model="getFormBinding(item.key).value"
             :placeholder="item.placeholder"
             :show-border="isDetailsView"
@@ -329,8 +304,11 @@ defineExpose({
         </template>
       </div>
     </div>
-    <div class="flex flex-col items-start gap-2">
-      <span class="py-1 text-sm font-medium text-n-slate-12">
+    <div v-if="section !== 'details'" class="flex flex-col items-start gap-2">
+      <span
+        v-if="section === 'all'"
+        class="py-1 text-sm font-medium text-n-slate-12"
+      >
         {{ t('CONTACTS_LAYOUT.CARD.SOCIAL_MEDIA.TITLE') }}
       </span>
       <div class="flex flex-wrap gap-2">

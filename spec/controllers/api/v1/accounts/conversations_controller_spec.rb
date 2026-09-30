@@ -68,6 +68,65 @@ RSpec.describe 'Conversations API', type: :request do
         expect(body[:data][:meta][:all_count]).to eq(2)
         expect(body[:data][:payload].count).to eq(2)
       end
+
+      # PATCH LOCAL sobre o upstream Chatwoot - ver
+      # docs/patches/conversation_index_n_plus_one.md. Estes 2 testes
+      # cobrem o ConversationPreviewPreloader: equivalencia do JSON (mesmo
+      # resultado de antes, so buscado em lote) e a ausencia de N+1.
+      it 'returns the last message (any type) separately from the last non-activity message, with attachments preloaded' do
+        travel_to(3.minutes.ago) { create(:message, conversation: conversation, account: account, message_type: :incoming, content: 'oldest') }
+        non_activity_message = travel_to(2.minutes.ago) do
+          create(:message, :with_attachment, conversation: conversation, account: account, message_type: :incoming, content: 'last real message')
+        end
+        activity_message = travel_to(1.minute.ago) do
+          create(:message, conversation: conversation, account: account, message_type: :activity, content: 'joined the conversation')
+        end
+
+        get "/api/v1/accounts/#{account.id}/conversations",
+            headers: agent.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        body = JSON.parse(response.body, symbolize_names: true)
+        payload = body[:data][:payload].first
+
+        # "messages" (a ultima, de qualquer tipo) precisa ser a activity,
+        # que e a mais recente das 3 - prova que o DISTINCT ON respeita a
+        # mesma ordenacao (created_at desc) do .last original.
+        expect(payload[:messages].first[:id]).to eq(activity_message.id)
+        # last_non_activity_message continua pulando a activity e pegando
+        # a mensagem real mais recente.
+        expect(payload[:last_non_activity_message][:id]).to eq(non_activity_message.id)
+        # anexo precisa continuar vindo preloadado no JSON da non_activity_message.
+        expect(payload[:last_non_activity_message][:attachments].first[:id]).to eq(non_activity_message.attachments.first.id)
+      end
+
+      it 'does not scale the number of SQL queries with the number of conversations returned (no N+1)' do
+        create(:message, conversation: conversation, account: account)
+
+        other_conversations = create_list(:conversation, 5, account: account, inbox: conversation.inbox)
+        other_conversations.each do |other_conversation|
+          create(:message, :with_attachment, conversation: other_conversation, account: account, message_type: :incoming)
+          create(:message, conversation: other_conversation, account: account, message_type: :activity)
+        end
+
+        queries = []
+        subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _started, _finished, _unique_id, event|
+          queries << event[:sql] unless event[:cached] || event[:sql].match?(/\A(BEGIN|COMMIT|SAVEPOINT|RELEASE)/)
+        end
+
+        get "/api/v1/accounts/#{account.id}/conversations",
+            headers: agent.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        # 6 conversas x ~86 queries/conversa (medido em producao antes do
+        # patch) passaria de 500 facil. O preloader em lote fica bem
+        # abaixo disso independente de quantas conversas existirem.
+        expect(queries.size).to be < 60
+      ensure
+        ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
+      end
     end
   end
 

@@ -74,5 +74,10 @@
     "ERROR": "That doesn't look like a supported video link",
     "ADD": "Embed",
     "CANCEL": "Cancel"
+  },
+  "INFO_CARD": {
+    "EDIT": "Edit",
+    "CANCEL": "Cancel",
+    "SAVE": "Save"
   }
 }

@@ -164,12 +164,12 @@ describe('stripUnsupportedMarkdown', () => {
     expect(result).toContain('[link](http://example.com)');
     expect(result).toContain('![](http://localhost:3000/image.png)');
   });
-  it('keeps images and bold/italic, but strips link syntax, for Api channel', () => {
+  // PATCH LOCAL (fork) - caixas do Portal (Api) aceitam link.
+  it('keeps images, bold/italic and links for Api channel', () => {
     const result = stripUnsupportedMarkdown(richSignature, 'Channel::Api');
     expect(result).toContain('**Bold**');
     expect(result).toContain('_italic_');
-    expect(result).toContain('link'); // link text kept
-    expect(result).not.toContain('[link]('); // link syntax removed
+    expect(result).toContain('[link](http://example.com)');
     expect(result).toContain('![](http://localhost:3000/image.png)'); // image kept
   });
   // Regression: the link-strip pattern used to match the `[]()` half of

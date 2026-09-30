@@ -135,8 +135,8 @@ const createCompany = async company => {
     createCompanyDialogRef.value?.onSuccess();
     useAlert(t('COMPANIES.CREATE.MESSAGES.SUCCESS'));
     showCompany(newCompany.id);
-  } catch {
-    useAlert(t('COMPANIES.CREATE.MESSAGES.ERROR'));
+  } catch (error) {
+    useAlert(error?.message || t('COMPANIES.CREATE.MESSAGES.ERROR'));
   }
 };
 

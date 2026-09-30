@@ -1,0 +1,103 @@
+{
+  "PORTAL_ASSISTANT": {
+    "TITLE": "Assistente",
+    "SUBTITLE": "Tire dúvidas sobre o sistema e os processos com base na wiki e nas respostas da equipe.",
+    "DISABLED": "O Assistente não está habilitado para esta conta.",
+    "TABS": {
+      "ASK": "Perguntar",
+      "SOURCES": "Base de conhecimento",
+      "ANSWERS": "Respostas da equipe",
+      "QUESTIONS": "Perguntas feitas"
+    },
+    "ASK": {
+      "PLACEHOLDER": "Ex.: Como eu emito uma nota fiscal de devolução?",
+      "SUBMIT": "Perguntar",
+      "HINT": "Enter envia, Shift+Enter quebra a linha.",
+      "THINKING": "Consultando a base de conhecimento...",
+      "EMPTY_TITLE": "Pergunte o que precisar",
+      "EMPTY_TEXT": "As respostas vêm só da wiki e das respostas cadastradas pela equipe. Confira sempre a fonte antes de passar para o cliente.",
+      "NOT_FOUND": "Não encontrei isso na base de conhecimento. A pergunta ficou registrada para a equipe completar a base.",
+      "SOURCES": "Fontes",
+      "TEAM_ANSWER": "Resposta da equipe: {title}",
+      "COPY": "Copiar resposta",
+      "COPIED": "Resposta copiada",
+      "HELPFUL": "Resposta útil",
+      "NOT_HELPFUL": "Resposta ruim",
+      "RATE_ERROR": "Não foi possível registrar a avaliação.",
+      "ERROR": "Não foi possível consultar o Assistente."
+    },
+    "SOURCES": {
+      "STATUS_TITLE": "Sincronização da wiki",
+      "SYNC_NOW": "Sincronizar agora",
+      "SYNC_STARTED": "Sincronização iniciada. Pode levar alguns minutos.",
+      "SYNC_ERROR": "Não foi possível iniciar a sincronização.",
+      "RUNNING": "Sincronizando...",
+      "NEVER": "A wiki ainda não foi sincronizada.",
+      "LAST_RUN": "Última sincronização: {date}",
+      "STATUS": {
+        "running": "Em andamento",
+        "succeeded": "Concluída",
+        "partial": "Concluída com pendências",
+        "failed": "Falhou"
+      },
+      "PAGES": "Páginas na wiki",
+      "UPDATED": "Atualizadas na última vez",
+      "SEARCHABLE": "Documentos usados nas respostas",
+      "PENDING": "Aguardando indexação",
+      "AI_NOT_CONFIGURED": "A chave da IA ainda não foi configurada no Portal. As páginas são importadas, mas o Assistente só responde depois da chave.",
+      "WIKI_NOT_CONFIGURED": "O usuário da wiki ainda não foi configurado no Portal.",
+      "AREAS_TITLE": "Áreas da wiki",
+      "AREAS_HINT": "Desligue as áreas que não devem entrar nas respostas. A mudança vale na hora.",
+      "AREA_PAGES": "{count} página(s)",
+      "AREAS_EMPTY": "Nenhuma área ainda. Sincronize a wiki para listar.",
+      "AREA_ERROR": "Não foi possível alterar a área.",
+      "LOAD_ERROR": "Não foi possível carregar a base de conhecimento.",
+      "AREA_ON": "Entra nas respostas",
+      "AREA_OFF": "Fora das respostas"
+    },
+    "ANSWERS": {
+      "NEW": "Nova resposta",
+      "HINT": "Cadastre respostas para o que a wiki não cobre. Elas entram na busca do Assistente junto com a wiki.",
+      "TITLE_LABEL": "Pergunta",
+      "TITLE_PLACEHOLDER": "Ex.: Como libero o acesso de um usuário novo?",
+      "CONTENT_LABEL": "Resposta",
+      "CONTENT_PLACEHOLDER": "Escreva o passo a passo como a equipe explicaria.",
+      "SAVE": "Salvar",
+      "CANCEL": "Cancelar",
+      "EDIT": "Editar",
+      "ACTIVE": "Ativa",
+      "INACTIVE": "Inativa",
+      "ACTIVATE": "Ativar",
+      "DEACTIVATE": "Inativar",
+      "INDEXED": "Em uso",
+      "NOT_INDEXED": "Aguardando indexação",
+      "SAVED": "Resposta salva",
+      "SAVE_ERROR": "Não foi possível salvar a resposta.",
+      "EMPTY": "Nenhuma resposta cadastrada ainda.",
+      "LOAD_ERROR": "Não foi possível carregar as respostas."
+    },
+    "QUESTIONS": {
+      "FILTERS": {
+        "unanswered": "Sem resposta",
+        "rated_down": "Avaliadas como ruins",
+        "all": "Todas"
+      },
+      "ANSWERED": "Respondida",
+      "UNANSWERED": "Sem resposta",
+      "FAILED": "Falhou",
+      "RATED_UP": "Útil",
+      "RATED_DOWN": "Ruim",
+      "BY": "{name} · {date}",
+      "CREATE_ANSWER": "Cadastrar resposta",
+      "EMPTY": "Nenhuma pergunta neste filtro.",
+      "LOAD_ERROR": "Não foi possível carregar as perguntas."
+    },
+    "COMPOSER": {
+      "TOOLTIP": "Assistente (wiki)",
+      "TITLE": "Assistente",
+      "HINT": "A pergunta já vem com a última mensagem do cliente. Ajuste se precisar.",
+      "INSERT": "Inserir na resposta",
+      "NEW_QUESTION": "Nova pergunta"
+    }
+  }
+}

@@ -31,8 +31,13 @@
     },
     "CREATE": {
       "TITLE": "Adicionar detalhes da empresa",
+      "CNPJ_PLACEHOLDER": "CPF/CNPJ (obrigatório)",
+      "CNPJ_INVALID": "Informe um CPF (11 dígitos) ou CNPJ (14 caracteres) válido",
+      "DUPLICATE_CNPJ": "Já existe a empresa {name} com esse CPF/CNPJ.",
+      "DUPLICATE_NAME": "Já existe a empresa {name} (CPF/CNPJ {cnpj}). Cadastrar mesmo assim?",
       "ACTIONS": {
-        "SAVE": "Adicionar empresa"
+        "SAVE": "Adicionar empresa",
+        "SAVE_ANYWAY": "Cadastrar mesmo assim"
       },
       "MESSAGES": {
         "SUCCESS": "Empresa criada.",
@@ -41,6 +46,67 @@
     },
     "DETAIL": {
       "LOADING": "Carregando detalhes da empresa...",
+      "PORTAL_FIELDS": {
+        "GROUPS": {
+          "DADOS_EMPRESA": "Dados da empresa",
+          "ENDERECO": "Endereço",
+          "CONTATO": "Contato",
+          "CONTRATO": "Contrato",
+          "ACESSO_TECNICO": "Acesso técnico",
+          "RESPONSAVEIS": "Responsáveis",
+          "FISCAL": "Fiscal",
+          "OBSERVACOES": "Observações",
+          "CONTABILIDADE": "Contabilidade"
+        },
+        "LABELS": {
+          "razao_social": "Razão social",
+          "nome_fantasia": "Nome fantasia",
+          "cnpj": "CPF/CNPJ",
+          "classificacao": "Classificação",
+          "segmento": "Segmento",
+          "tipo_empresa": "Empresa",
+          "cep": "CEP",
+          "rua": "Logradouro",
+          "numero": "Número",
+          "complemento": "Complemento",
+          "bairro": "Bairro",
+          "cidade": "Cidade",
+          "estado": "Estado",
+          "empresa_email": "E-mail",
+          "empresa_telefone": "Telefone",
+          "site": "Site",
+          "dominios_vinculados": "Domínios vinculados",
+          "urls_acesso": "URL de acesso Albatross",
+          "contrato_status": "Status do contrato",
+          "contrato_inicio": "Início do contrato",
+          "contrato_fim": "Fim do contrato",
+          "contrato_valor": "Valor do contrato",
+          "modulos_contratados": "Módulos contratados",
+          "servidor_tipo": "Servidor",
+          "url_painel": "URL do painel",
+          "ultima_versao": "Última versão",
+          "ip_host": "IP / Host",
+          "usuario_acesso": "Usuário",
+          "senha_acesso": "Senha",
+          "tipo_acesso": "Tipo de acesso",
+          "responsaveis_empresa": "Responsável pela empresa",
+          "responsaveis_alteracoes": "Responsável por alterações",
+          "inscricao_estadual": "Inscrição estadual",
+          "inscricao_estadual_isenta": "Isento",
+          "contador_responsavel": "Contador responsável",
+          "contabilidade": "Contabilidade",
+          "contabilidade_telefone": "Telefone",
+          "contabilidade_email": "E-mail",
+          "regime_tributario": "Regime tributário",
+          "contabilidade_observacoes": "Observações"
+        },
+        "CNPJ_PLACEHOLDER": "00.000.000/0000-00",
+        "CNPJ_LOOKUP_TITLE": "Buscar dados do CNPJ na Receita",
+        "CNPJ_NOT_FOUND": "CNPJ não encontrado na Receita - preencha os dados manualmente.",
+        "CEP_PLACEHOLDER": "00000-000",
+        "CEP_LOOKUP_TITLE": "Buscar endereço pelo CEP",
+        "CEP_NOT_FOUND": "CEP não encontrado."
+      },
       "EMPTY_STATE": {
         "TITLE": "Empresa não encontrada",
         "SUBTITLE": "Esta empresa pode ter sido removida ou não está mais disponível nesta conta."
@@ -109,6 +175,12 @@
         "UPLOAD_ERROR": "Não foi possível atualizar o avatar da empresa.",
         "DELETE_SUCCESS": "Avatar da empresa removido.",
         "DELETE_ERROR": "Não foi possível remover o avatar da empresa."
+      },
+      "INFO_CARD": {
+        "ISENTA": "Isenta",
+        "DESCRIPTION": "Descrição",
+        "URLS_ACESSO": "URLs, domínios e acesso",
+        "PASSWORD_SET": "Senha cadastrada"
       },
       "PROFILE": {
         "TITLE": "Editar detalhes da empresa",

@@ -62,6 +62,16 @@ class ConversationApi extends ApiClient {
     });
   }
 
+  // PATCH LOCAL (fork) - ver Conversations::CopyMessagesService. Copia cada
+  // mensagem selecionada individualmente (tipo/remetente/anexo preservados)
+  // de sourceConversationId pra conversationId, na ordem dada.
+  copyMessages({ conversationId, sourceConversationId, messageIds }) {
+    return axios.post(`${this.url}/${conversationId}/copy_messages`, {
+      source_conversation_id: sourceConversationId,
+      message_ids: messageIds,
+    });
+  }
+
   assignAgent({ conversationId, agentId, assigneeType }) {
     return axios.post(`${this.url}/${conversationId}/assignments`, {
       assignee_id: agentId,

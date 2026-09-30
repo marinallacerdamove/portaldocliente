@@ -1,6 +1,6 @@
 require 'json'
 
-class AutomationRules::ConditionsFilterService < FilterService
+class AutomationRules::ConditionsFilterService < FilterService # rubocop:disable Metrics/ClassLength
   ATTRIBUTE_MODEL = 'contact_attribute'.freeze
 
   def initialize(rule, conversation = nil, options = {})
@@ -90,13 +90,32 @@ class AutomationRules::ConditionsFilterService < FilterService
   def filter_based_on_attribute_change(records, current_attribute_changed_record)
     @attribute_changed_query_filter.each do |filter|
       @changed_attributes = @changed_attributes.with_indifferent_access
-      changed_attribute = @changed_attributes[filter['attribute_key']].presence
+      changed_attribute = changed_attribute_values(filter['attribute_key'])
 
-      if changed_attribute[0].in?(filter['values']['from']) && changed_attribute[1].in?(filter['values']['to'])
+      if changed_attribute && value_matches?(changed_attribute[0], filter['values']['from']) &&
+         value_matches?(changed_attribute[1], filter['values']['to'])
         @attribute_changed_records = attribute_changed_filter_query(filter, records, current_attribute_changed_record)
       end
       current_attribute_changed_record = @attribute_changed_records
     end
+  end
+
+  # PATCH LOCAL (fork) - atributo de conversa (status do atendimento, campos
+  # adicionais) chega dentro de custom_attributes; e "de"/"para" vazio vale
+  # qualquer valor ("Alterado" / "Alterado para X" do Movidesk).
+  def changed_attribute_values(key)
+    return @changed_attributes[key] if @changed_attributes.key?(key)
+
+    before, after = @changed_attributes[:custom_attributes]
+    return unless after
+
+    old_value = before.to_h.with_indifferent_access[key]
+    new_value = after.to_h.with_indifferent_access[key]
+    [old_value, new_value] if old_value != new_value
+  end
+
+  def value_matches?(value, expected)
+    Array(expected).blank? || value.in?(Array(expected))
   end
 
   # We intersect with the record if query_operator-AND is present and union if query_operator-OR is present

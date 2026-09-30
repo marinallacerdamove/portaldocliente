@@ -3,11 +3,24 @@ module AssignmentHandler
   include Events::Types
 
   included do
-    before_save :ensure_assignee_is_from_team
+    before_save :ensure_team_from_assignee, :ensure_assignee_is_from_team
     after_commit :notify_assignment_change, :process_assignment_changes
   end
 
   private
+
+  # Fork: ao atribuir um agente, a conversa vai junto pro time dele. Só
+  # quando dá pra saber qual time é: se o agente já é do time atual, nada
+  # muda; se está em mais de um time da conta, não chuta (a escolha fica
+  # com quem atende). Troca de time explícita no mesmo save tem prioridade.
+  def ensure_team_from_assignee # rubocop:disable Metrics/CyclomaticComplexity
+    return unless assignee_id_changed? && assignee_id.present?
+    return if team_id_changed?
+    return if team&.members&.include?(assignee)
+
+    agent_teams = account.teams.joins(:team_members).where(team_members: { user_id: assignee_id }).to_a
+    self.team = agent_teams.first if agent_teams.one?
+  end
 
   def ensure_assignee_is_from_team
     return unless team_id_changed?

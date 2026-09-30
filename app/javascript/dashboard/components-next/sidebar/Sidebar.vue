@@ -3,6 +3,7 @@ import { h, ref, computed, onMounted, watch } from 'vue';
 import { provideSidebarContext, useSidebarResize } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useConfig } from 'dashboard/composables/useConfig';
+import { usePortalAssistant } from 'dashboard/composables/usePortalAssistant';
 import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
@@ -54,6 +55,7 @@ const isCallsAvailable = computed(
   () => isOnChatwootCloud.value || isEnterprise
 );
 const searchShortcut = useKbd([`$mod`, 'k']);
+const { isEnabled: isPortalAssistantEnabled } = usePortalAssistant();
 const { t } = useI18n();
 
 const isACustomBrandedInstance = useMapGetter(
@@ -225,9 +227,6 @@ const getLabelUnreadCount = useMapGetter(
 const getTeamUnreadCount = useMapGetter(
   'conversationUnreadCounts/getTeamUnreadCount'
 );
-const mentionsUnreadCount = useMapGetter(
-  'conversationUnreadCounts/getMentionsUnreadCount'
-);
 const participatingUnreadCount = useMapGetter(
   'conversationUnreadCounts/getParticipatingUnreadCount'
 );
@@ -263,6 +262,21 @@ watch([accountId, hasConversationUnreadCounts], fetchConversationUnreadCounts, {
 watch([accountId, currentUserId], fetchSidebarSortPreferences, {
   immediate: true,
 });
+
+// PATCH LOCAL (fork) - badge de Menções = menções não lidas (notificação
+// conversation_mention), não o "conversas mencionadas com mensagem do
+// cliente não lida" nativo. Toda menção nova/lida mexe no contador geral da
+// Caixa de Entrada (chega via ActionCable), então basta recontar quando ele
+// muda.
+const notificationsUnreadCount = useMapGetter('notifications/getUnreadCount');
+const mentionNotificationsUnreadCount = useMapGetter(
+  'notifications/getMentionUnreadCount'
+);
+watch(
+  [accountId, notificationsUnreadCount],
+  () => store.dispatch('notifications/fetchMentionUnreadCount'),
+  { immediate: true }
+);
 
 const hasUnreadCountsForSection = section => {
   if (section === SIDEBAR_SORT_SECTIONS.FOLDERS) {
@@ -372,6 +386,18 @@ const menuItems = computed(() => {
         count: 'notifications/getUnreadCount',
       },
     },
+    // PATCH LOCAL (fork) - Assistente (IA com base na wiki).
+    ...(isPortalAssistantEnabled.value
+      ? [
+          {
+            name: 'Portal Assistant',
+            label: t('SIDEBAR.PORTAL_ASSISTANT'),
+            icon: 'i-lucide-sparkles',
+            to: accountScopedRoute('portal_assistant_index'),
+            activeOn: ['portal_assistant_index'],
+          },
+        ]
+      : []),
     {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
@@ -389,9 +415,7 @@ const menuItems = computed(() => {
           name: 'Mentions',
           label: t('SIDEBAR.MENTIONED_CONVERSATIONS'),
           icon: 'i-lucide-at-sign',
-          badgeCount: hasFilteredUnreadCounts.value
-            ? mentionsUnreadCount.value
-            : 0,
+          badgeCount: mentionNotificationsUnreadCount.value,
           activeOn: ['conversation_through_mentions'],
           to: accountScopedRoute('conversation_mentions'),
         },
@@ -885,6 +909,68 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.MACROS'),
           icon: 'i-lucide-toy-brick',
           to: accountScopedRoute('macros_wrapper'),
+        },
+        // PATCH LOCAL (fork) - cadastros de atendimento (paridade com o
+        // Movidesk), logo depois de Macros.
+        {
+          name: 'Settings Ticket Services',
+          label: t('TICKET_CATALOG.SIDEBAR.SERVICES'),
+          icon: 'i-lucide-folder-tree',
+          activeOn: [
+            'ticket_catalog_services_new',
+            'ticket_catalog_services_edit',
+          ],
+          to: accountScopedRoute('ticket_catalog_services_list'),
+        },
+        {
+          name: 'Settings Ticket Categories',
+          label: t('TICKET_CATALOG.SIDEBAR.CATEGORIES'),
+          icon: 'i-lucide-tags',
+          activeOn: [
+            'ticket_catalog_categories_new',
+            'ticket_catalog_categories_edit',
+          ],
+          to: accountScopedRoute('ticket_catalog_categories_list'),
+        },
+        {
+          name: 'Settings Ticket Statuses',
+          label: t('TICKET_CATALOG.SIDEBAR.STATUSES'),
+          icon: 'i-lucide-flag',
+          activeOn: [
+            'ticket_catalog_statuses_new',
+            'ticket_catalog_statuses_edit',
+          ],
+          to: accountScopedRoute('ticket_catalog_statuses_list'),
+        },
+        {
+          name: 'Settings Ticket Justifications',
+          label: t('TICKET_CATALOG.SIDEBAR.JUSTIFICATIONS'),
+          icon: 'i-lucide-message-square-quote',
+          activeOn: [
+            'ticket_catalog_justifications_new',
+            'ticket_catalog_justifications_edit',
+          ],
+          to: accountScopedRoute('ticket_catalog_justifications_list'),
+        },
+        {
+          name: 'Settings Ticket Custom Fields',
+          label: t('TICKET_CATALOG.SIDEBAR.CUSTOM_FIELDS'),
+          icon: 'i-lucide-text-cursor-input',
+          activeOn: [
+            'ticket_catalog_custom_fields_new',
+            'ticket_catalog_custom_fields_edit',
+          ],
+          to: accountScopedRoute('ticket_catalog_custom_fields_list'),
+        },
+        {
+          name: 'Settings Ticket Field Rules',
+          label: t('TICKET_CATALOG.SIDEBAR.FIELD_RULES'),
+          icon: 'i-lucide-list-checks',
+          activeOn: [
+            'ticket_catalog_field_rules_new',
+            'ticket_catalog_field_rules_edit',
+          ],
+          to: accountScopedRoute('ticket_catalog_field_rules_list'),
         },
         {
           name: 'Settings Canned Responses',

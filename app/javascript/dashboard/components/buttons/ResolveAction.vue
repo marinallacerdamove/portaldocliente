@@ -3,10 +3,16 @@ import { ref, computed } from 'vue';
 import { useAlert } from 'dashboard/composables';
 import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import { useStore, useStoreGetters } from 'dashboard/composables/store';
+import {
+  useStore,
+  useStoreGetters,
+  useMapGetter,
+} from 'dashboard/composables/store';
 import { useEmitter } from 'dashboard/composables/emitter';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
+import { MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
+import { useConversationCustomFields } from 'dashboard/composables/useConversationCustomFields';
 
 import WootDropdownItem from 'shared/components/ui/dropdown/DropdownItem.vue';
 import WootDropdownMenu from 'shared/components/ui/dropdown/DropdownMenu.vue';
@@ -25,6 +31,26 @@ const getters = useStoreGetters();
 const { t } = useI18n();
 const { checkMissingAttributes } = useConversationRequiredAttributes();
 
+// PATCH LOCAL (fork) - o motivo de encerramento é pedido sempre ao resolver
+// (o Portal depende dele nos relatórios), sem depender do recurso pago de
+// atributos obrigatórios do Chatwoot, que fica desligado sem plano.
+const conversationAttributes = useMapGetter(
+  'attributes/getConversationAttributes'
+);
+const closeReasonAttribute = computed(() => {
+  const attribute = (conversationAttributes.value || []).find(
+    item => item.attributeKey === MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY
+  );
+  if (!attribute) return null;
+  return {
+    ...attribute,
+    value: attribute.attributeKey,
+    label: attribute.attributeDisplayName,
+    type: attribute.attributeDisplayType,
+    attributeValues: attribute.attributeValues,
+  };
+});
+
 const arrowDownButtonRef = ref(null);
 const isLoading = ref(false);
 const resolveAttributesModalRef = ref(null);
@@ -34,6 +60,10 @@ const closeDropdown = () => toggleDropdown(false);
 const openDropdown = () => toggleDropdown(true);
 
 const currentChat = computed(() => getters.getSelectedChat.value);
+// PATCH LOCAL (fork) - campo adicional obrigatório "na conclusão" (regras de
+// exibição) trava o Resolver até ser preenchido na lateral da conversa.
+const { missingOnResolve, load: loadCustomFields } =
+  useConversationCustomFields(currentChat);
 
 const isOpen = computed(
   () => currentChat.value.status === wootConstants.STATUS_TYPE.OPEN
@@ -117,13 +147,29 @@ const onCmdOpenConversation = () => {
   toggleStatus(wootConstants.STATUS_TYPE.OPEN);
 };
 
-const onCmdResolveConversation = () => {
+const onCmdResolveConversation = async () => {
+  await loadCustomFields();
+  if (missingOnResolve.value.length) {
+    useAlert(
+      t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.MISSING_ON_RESOLVE', {
+        fields: missingOnResolve.value.map(item => item.field.name).join(', '),
+      })
+    );
+    return;
+  }
   const currentCustomAttributes = currentChat.value.custom_attributes || {};
-  const { hasMissing, missing } = checkMissingAttributes(
-    currentCustomAttributes
-  );
+  const { missing } = checkMissingAttributes(currentCustomAttributes);
+  const closeReason = closeReasonAttribute.value;
+  const closeReasonValue = currentCustomAttributes[closeReason?.value];
+  if (
+    closeReason &&
+    (closeReasonValue == null || String(closeReasonValue).trim() === '') &&
+    !missing.some(attribute => attribute.value === closeReason.value)
+  ) {
+    missing.push(closeReason);
+  }
 
-  if (hasMissing) {
+  if (missing.length) {
     const conversationContext = {
       id: currentChat.value.id,
       snoozedUntil: null,

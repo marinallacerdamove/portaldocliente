@@ -4,6 +4,7 @@ import { useTimeoutFn } from '@vueuse/core';
 import { provideMessageContext } from './provider.js';
 import { useTrack } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
+import { useMessageEditing } from 'dashboard/composables/useMessageEditing';
 import { emitter } from 'shared/helpers/mitt';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -11,6 +12,7 @@ import { LocalStorage } from 'shared/helpers/localStorage';
 import { ACCOUNT_EVENTS } from 'dashboard/helper/AnalyticsHelper/events';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { getInboxIconByType } from 'dashboard/helper/inbox';
+import Icon from 'dashboard/components-next/icon/Icon.vue';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import {
   MESSAGE_TYPES,
@@ -45,6 +47,7 @@ import WhatsappFlowResponseBubble from './bubbles/WhatsappFlowResponse.vue';
 import WhatsappReferral from './bubbles/Text/WhatsappReferral.vue';
 
 import MessageError from './MessageError.vue';
+import ImportedHistoryCard from './ImportedHistoryCard.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
 import { useBranding } from 'shared/composables/useBranding';
 import Checkbox from 'next/checkbox/Checkbox.vue';
@@ -148,7 +151,20 @@ const emit = defineEmits(['retry', 'toggleSelect']);
 const contextMenuPosition = ref({});
 const showBackgroundHighlight = ref(false);
 const showContextMenu = ref(false);
-const isEditing = ref(false);
+const { editingMessage, startEditing } = useMessageEditing();
+// Editar não abre mais caixa inline na própria bolha - move o rascunho pra
+// caixa principal (ReplyBox), igual Movidesk. `isEditing` aqui só marca
+// visualmente qual mensagem está sendo editada (ver Text/Index.vue).
+const isEditing = computed(() => editingMessage.value?.id === props.id);
+const startEdit = () => {
+  startEditing({
+    id: props.id,
+    conversationId: props.conversationId,
+    content: props.content,
+    attachments: props.attachments,
+    senderName: props.sender?.name,
+  });
+};
 const { t } = useI18n();
 const route = useRoute();
 const inboxGetter = useMapGetter('inboxes/getInbox');
@@ -173,11 +189,28 @@ const isOwnMessage = computed(() => {
   );
 });
 
+// Tickets Internos e Portal do Cliente são sempre inboxes Channel::Api
+// (não existe outro uso desse channel_type nessa instalação - ver
+// Inbox.where(...).channel_type nas 3 contas reais). Todo mensagem "de
+// pessoa" (não-activity) nesses dois, nova ou copiada, usa o card de
+// timeline estilo Movidesk, nunca bolha de chat - pedido explícito:
+// "quando responder o ticket tem que manter o mesmo padrão".
+const isTicketTimelineInbox = computed(
+  () => inbox.value?.channel_type === 'Channel::Api'
+);
+
 /**
  * Computes the message variant based on props
  * @type {import('vue').ComputedRef<'user'|'agent'|'activity'|'private'|'bot'|'template'>}
  */
 const variant = computed(() => {
+  if (
+    isTicketTimelineInbox.value &&
+    props.messageType !== MESSAGE_TYPES.ACTIVITY
+  ) {
+    return MESSAGE_VARIANTS.IMPORTED_TICKET_HISTORY;
+  }
+
   if (props.private) return MESSAGE_VARIANTS.PRIVATE;
 
   if (props.isEmailInbox) {
@@ -610,6 +643,12 @@ provideMessageContext({
         <ActivityBubble :content="content" />
       </div>
       <div
+        v-else-if="variant === MESSAGE_VARIANTS.IMPORTED_TICKET_HISTORY"
+        class="w-full"
+      >
+        <ImportedHistoryCard />
+      </div>
+      <div
         v-else
         :class="[
           gridClass,
@@ -631,7 +670,7 @@ provideMessageContext({
           <Avatar v-bind="avatarInfo" :size="24" />
         </div>
         <div
-          class="[grid-area:bubble] flex min-w-0"
+          class="[grid-area:bubble] flex min-w-0 group/bubble"
           :class="{
             'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
             'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
@@ -639,6 +678,18 @@ provideMessageContext({
           }"
           @contextmenu="openContextMenu($event)"
         >
+          <!-- PATCH LOCAL (fork) - no balão (WhatsApp etc.) editar ficava
+          escondido no menu do botão direito; mesmo lápis do card de ticket
+          (ImportedHistoryCard), visível ao passar o mouse. -->
+          <button
+            v-if="contextMenuEnabledOptions.edit && !isEditing"
+            type="button"
+            class="self-center px-1 text-n-slate-10 hover:text-n-slate-12 opacity-0 group-hover/bubble:opacity-100 focus:opacity-100"
+            :title="$t('CONVERSATION.CONTEXT_MENU.EDIT')"
+            @click.stop="startEdit"
+          >
+            <Icon icon="i-lucide-pencil" class="size-3.5" />
+          </button>
           <WhatsappReferral
             v-if="shouldShowWhatsappReferral"
             :referral="contentAttributes.referral"
@@ -664,7 +715,7 @@ provideMessageContext({
           @open="openContextMenu"
           @close="closeContextMenu"
           @reply-to="handleReplyTo"
-          @edit="isEditing = true"
+          @edit="startEdit"
         />
       </div>
     </div>

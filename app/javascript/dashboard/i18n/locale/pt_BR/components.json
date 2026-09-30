@@ -74,5 +74,10 @@
     "ERROR": "Este link de vídeo não parece ser compatível",
     "ADD": "Incorporar",
     "CANCEL": "Cancelar"
+  },
+  "INFO_CARD": {
+    "EDIT": "Editar",
+    "CANCEL": "Cancelar",
+    "SAVE": "Salvar"
   }
 }

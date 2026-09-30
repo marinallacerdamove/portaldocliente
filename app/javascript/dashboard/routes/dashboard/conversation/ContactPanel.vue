@@ -14,20 +14,15 @@ import ContactConversations from './ContactConversations.vue';
 import ConversationAction from './ConversationAction.vue';
 import ConversationParticipant from './ConversationParticipant.vue';
 import ContactInfo from './contact/ContactInfo.vue';
-import ContactNotes from './contact/ContactNotes.vue';
 import ConversationInfo from './ConversationInfo.vue';
-import CustomAttributes from './customAttributes/CustomAttributes.vue';
+import TicketCustomFields from './TicketCustomFields.vue';
 import SharedFiles from './SharedFiles.vue';
 import Draggable from 'vuedraggable';
-import MacrosList from './Macros/List.vue';
 import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
 import SidebarActionsHeader from 'dashboard/components-next/SidebarActionsHeader.vue';
 import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/IssuesList.vue';
 import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
-import {
-  TICKET_DETAIL_ATTRIBUTE_KEYS,
-  ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS,
-} from 'dashboard/constants/ticketDetailAttributes';
+import { ALL_CURATED_CONVERSATION_ATTRIBUTE_KEYS } from 'dashboard/constants/ticketDetailAttributes';
 
 const props = defineProps({
   conversationId: {
@@ -240,32 +235,8 @@ onMounted(() => {
                 value => toggleSidebarUIState('is_ticket_details_open', value)
               "
             >
-              <CustomAttributes
-                attribute-type="conversation_attribute"
-                attribute-from="conversation_ticket_details_panel"
-                :include-keys="TICKET_DETAIL_ATTRIBUTE_KEYS"
-              />
-            </AccordionItem>
-          </div>
-          <div v-else-if="element.name === 'contact_attributes'">
-            <AccordionItem
-              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_ATTRIBUTES')"
-              :is-open="isContactSidebarItemOpen('is_contact_attributes_open')"
-              compact
-              @toggle="
-                value =>
-                  toggleSidebarUIState('is_contact_attributes_open', value)
-              "
-            >
-              <CustomAttributes
-                attribute-type="contact_attribute"
-                attribute-from="conversation_contact_panel"
-                :contact-id="contact.id"
-                :exclude-keys="['classificacao_cliente']"
-                :empty-state-message="
-                  $t('CONVERSATION_CUSTOM_ATTRIBUTES.NO_RECORDS_FOUND')
-                "
-              />
+              <!-- PATCH LOCAL (fork) - campos adicionais das regras de exibição -->
+              <TicketCustomFields />
             </AccordionItem>
           </div>
           <div v-else-if="element.name === 'previous_conversation'">
@@ -286,19 +257,6 @@ onMounted(() => {
               />
             </AccordionItem>
           </div>
-          <woot-feature-toggle
-            v-else-if="element.name === 'macros'"
-            feature-key="macros"
-          >
-            <AccordionItem
-              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.MACROS')"
-              :is-open="isContactSidebarItemOpen('is_macro_open')"
-              compact
-              @toggle="value => toggleSidebarUIState('is_macro_open', value)"
-            >
-              <MacrosList :conversation-id="conversationId" />
-            </AccordionItem>
-          </woot-feature-toggle>
           <div
             v-else-if="
               element.name === 'linear_issues' &&
@@ -332,18 +290,6 @@ onMounted(() => {
               "
             >
               <ShopifyOrdersList :contact-id="contactId" />
-            </AccordionItem>
-          </div>
-          <div v-else-if="element.name === 'contact_notes'">
-            <AccordionItem
-              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_NOTES')"
-              :is-open="isContactSidebarItemOpen('is_contact_notes_open')"
-              compact
-              @toggle="
-                value => toggleSidebarUIState('is_contact_notes_open', value)
-              "
-            >
-              <ContactNotes :contact-id="contactId" />
             </AccordionItem>
           </div>
           <div v-else-if="element.name === 'shared_files'">

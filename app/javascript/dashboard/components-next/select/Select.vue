@@ -1,7 +1,15 @@
 <script setup>
+import { computed, getCurrentInstance } from 'vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 
-defineProps({
+const props = defineProps({
+  // PATCH LOCAL (fork) - Select não tinha rótulo próprio, só :placeholder
+  // (texto dentro da caixa). Ficava sem a label em cima que o Input.vue tem
+  // - lado a lado num grid, o Select ficava mais alto que o Input vizinho
+  // (nada empurrando ele pra baixo), desalinhando a linha inteira. Mesmo
+  // padrão visual do Input.vue (label.mb-0.5.text-heading-3) de propósito.
+  label: { type: String, default: '' },
+  id: { type: String, default: '' },
   options: {
     type: Array,
     default: () => [],
@@ -43,60 +51,73 @@ const modelValue = defineModel({
   type: [String, Number, Boolean],
   default: '',
 });
+
+const { uid } = getCurrentInstance();
+const uniqueId = computed(() => props.id || `select-${uid}`);
 </script>
 
 <template>
-  <div class="w-fit relative">
-    <select
-      v-model="modelValue"
-      :disabled="disabled"
-      :aria-label="ariaLabel || undefined"
-      class="appearance-none bg-none rounded-lg border-0 outline-1 outline -outline-offset-1 transition-all duration-200 bg-n-surface-1 !mb-0 py-2 px-3 pr-10 text-sm"
-      :class="{
-        'outline-n-weak hover:outline-n-slate-6 focus:outline-n-blue-9':
-          !error && !disabled,
-        'outline-n-red-9 focus:outline-n-red-9': error && !disabled,
-        'outline-n-weak bg-n-slate-2 cursor-not-allowed opacity-60': disabled,
-      }"
+  <div class="flex flex-col min-w-0 gap-1">
+    <label
+      v-if="label"
+      :for="uniqueId"
+      class="mb-0.5 text-heading-3 text-n-slate-12"
     >
-      <option v-if="placeholder" value="" disabled>
-        {{ placeholder }}
-      </option>
-      <template v-if="groups.length">
-        <optgroup
-          v-for="group in groups"
-          :key="group.label"
-          :label="group.label"
-        >
+      {{ label }}
+    </label>
+    <div class="relative">
+      <select
+        :id="uniqueId"
+        v-model="modelValue"
+        :disabled="disabled"
+        :aria-label="ariaLabel || undefined"
+        class="appearance-none bg-none rounded-lg border-0 outline-1 outline -outline-offset-1 transition-all duration-200 bg-n-surface-1 !mb-0 py-2 px-3 pr-10 text-sm"
+        :class="{
+          'outline-n-weak hover:outline-n-slate-6 focus:outline-n-blue-9':
+            !error && !disabled,
+          'outline-n-red-9 focus:outline-n-red-9': error && !disabled,
+          'outline-n-weak bg-n-slate-2 cursor-not-allowed opacity-60': disabled,
+        }"
+      >
+        <option v-if="placeholder" value="" disabled>
+          {{ placeholder }}
+        </option>
+        <template v-if="groups.length">
+          <optgroup
+            v-for="group in groups"
+            :key="group.label"
+            :label="group.label"
+          >
+            <option
+              v-for="option in group.options"
+              :key="option.value"
+              :value="option.value"
+              :disabled="option.disabled"
+            >
+              {{ option.label }}
+            </option>
+          </optgroup>
+        </template>
+        <template v-else>
           <option
-            v-for="option in group.options"
+            v-for="option in options"
             :key="option.value"
             :value="option.value"
             :disabled="option.disabled"
           >
             {{ option.label }}
           </option>
-        </optgroup>
-      </template>
-      <template v-else>
-        <option
-          v-for="option in options"
-          :key="option.value"
-          :value="option.value"
-          :disabled="option.disabled"
-        >
-          {{ option.label }}
-        </option>
-      </template>
-    </select>
-    <div
-      class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
-    >
-      <Icon
-        icon="i-lucide-chevron-down"
-        class="size-4 text-n-slate-11"
-        :class="{ 'opacity-50': disabled }"
-      />
+        </template>
+      </select>
+      <div
+        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"
+      >
+        <Icon
+          icon="i-lucide-chevron-down"
+          class="size-4 text-n-slate-11"
+          :class="{ 'opacity-50': disabled }"
+        />
+      </div>
     </div>
   </div>
 </template>

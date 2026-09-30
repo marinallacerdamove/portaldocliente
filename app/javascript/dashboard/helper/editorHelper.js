@@ -9,6 +9,7 @@ import {
 import * as Sentry from '@sentry/vue';
 import camelcaseKeys from 'camelcase-keys';
 import { FORMATTING, MARKDOWN_PATTERNS } from 'dashboard/constants/editor';
+import { parseEditorMarkdown } from 'dashboard/helper/editorTables';
 import { INBOX_TYPES, TWILIO_CHANNEL_MEDIUM } from 'dashboard/helper/inbox';
 
 /**
@@ -514,9 +515,7 @@ const createNode = (editorView, nodeType, content) => {
         content,
         state.schema
       );
-      return new MessageMarkdownTransformer(state.schema).parse(
-        sanitizedContent
-      );
+      return parseEditorMarkdown(state.schema, sanitizedContent);
     }
     case 'variable':
       return state.schema.text(content);

@@ -4,11 +4,28 @@ import { useAlert, useTrack } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
 import { CONVERSATION_EVENTS } from 'dashboard/helper/AnalyticsHelper/events';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 // change_status is not offered by the macro builder, but the API accepts it and
 // it resolves the conversation just like resolve_conversation does. Its param is
 // stored as raw JSON, so the status can be the enum name or its integer value.
 const RESOLVED_STATUSES = ['resolved', 1];
+
+// PATCH LOCAL (fork) - ações que rodam só no navegador (o servidor ignora).
+const CLIENT_ACTIONS = ['fill_reply'];
+
+const hasServerActions = macro =>
+  macro.actions.some(({ action_name: name }) => !CLIENT_ACTIONS.includes(name));
+
+// "Texto da resposta": vai pro editor de resposta (ReplyBox) pro atendente
+// completar antes de enviar.
+const fillReplyEditor = macro =>
+  macro.actions
+    .filter(({ action_name: name }) => name === 'fill_reply')
+    .forEach(({ action_params: [content, mode] }) =>
+      emitter.emit(BUS_EVENTS.MACRO_FILL_REPLY, { content, mode })
+    );
 
 const resolvesConversation = macro =>
   macro.actions.some(
@@ -38,7 +55,7 @@ export function useMacroExecution() {
     conversationById.value(conversationId)?.custom_attributes || {};
 
   const runMacro = async (
-    { macro, conversationId },
+    { macro, conversationId, silent },
     skippedResolve = false
   ) => {
     try {
@@ -48,6 +65,7 @@ export function useMacroExecution() {
         conversationIds: [conversationId],
       });
       useTrack(CONVERSATION_EVENTS.EXECUTED_A_MACRO);
+      if (silent) return;
       useAlert(
         skippedResolve
           ? t('MACROS.EXECUTE.EXECUTED_WITHOUT_RESOLVING')
@@ -60,8 +78,13 @@ export function useMacroExecution() {
     }
   };
 
-  const execute = (macro, conversationId) => {
-    const execution = { macro, conversationId };
+  // PATCH LOCAL (fork) - `silent`: quem chama mostra o próprio aviso (macro
+  // disparada pelo serviço). Erro continua avisando.
+  const execute = (macro, conversationId, { silent = false } = {}) => {
+    const execution = { macro, conversationId, silent };
+
+    fillReplyEditor(macro);
+    if (!hasServerActions(macro)) return null;
 
     if (!resolvesConversation(macro)) {
       runMacro(execution);

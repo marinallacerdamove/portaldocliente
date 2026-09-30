@@ -13,13 +13,32 @@ module Enterprise::Concerns::Conversation
 
     before_validation :validate_sla_policy, if: -> { sla_policy_id_changed? }
     around_save :ensure_applied_sla_is_created, if: -> { sla_policy_id_changed? }
+    # PATCH LOCAL (fork) - "Empresa" (Ações da conversa) já nasce com a empresa
+    # do contato, em qualquer canal.
+    before_create :fill_empresa_from_contact_company
   end
 
   def sla_applicable?
     !contact&.blocked?
   end
 
+  # PATCH LOCAL (fork) - só preenche vazio; `replaceable` são valores que
+  # podem ser trocados (ex.: empresa anterior do contato, preenchida sozinha).
+  def assign_empresa(name, replaceable: [])
+    name = name.to_s.strip
+    current = (custom_attributes || {})['empresa'].presence
+    return false if name.blank? || current == name
+    return false if current && replaceable.exclude?(current)
+
+    self.custom_attributes = (custom_attributes || {}).merge('empresa' => name)
+    true
+  end
+
   private
+
+  def fill_empresa_from_contact_company
+    assign_empresa(contact&.company&.name)
+  end
 
   def validate_sla_policy
     # TODO: remove these validations once we figure out how to deal with these cases

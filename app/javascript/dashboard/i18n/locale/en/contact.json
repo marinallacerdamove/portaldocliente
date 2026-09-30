@@ -6,6 +6,13 @@
     "IDENTIFIER": "Identifier",
     "COPY_SUCCESSFUL": "Copied to clipboard successfully",
     "COMPANY": "Company",
+    "COMPANY_LABEL": "Company",
+    "OTHER_COMPANIES": "Also linked to",
+    "REQUESTER_NAME": "Name",
+    "COMPANY_DOCUMENT": "CNPJ/CPF",
+    "COMPANY_WEBSITE": "Website",
+    "VIEW_COMPANY": "View company details",
+    "REQUESTER_LABEL": "Requester",
     "LOCATION": "Location",
     "BROWSER_LANGUAGE": "Browser Language",
     "CONVERSATION_TITLE": "Conversation Details",
@@ -60,7 +67,8 @@
       "CONTACT_LABELS": "Contact Labels",
       "PREVIOUS_CONVERSATIONS": "Previous Conversations",
       "NO_RECORDS_FOUND": "No attributes found"
-    }
+    },
+    "CLASSIFICATION": "Classification"
   },
   "EDIT_CONTACT": {
     "BUTTON_LABEL": "Edit Contact",
@@ -291,7 +299,6 @@
       "ID": "(ID: {identifier})"
     }
   },
-
   "CONTACTS_LAYOUT": {
     "HEADER": {
       "TITLE": "Contacts",
@@ -505,6 +512,17 @@
           "SUCCESS_MESSAGE": "Avatar deleted successfully",
           "ERROR_MESSAGE": "Could not delete avatar. Please try again later."
         }
+      },
+      "INFO_CARD": {
+        "DETAILS_TITLE": "Contact details",
+        "SOCIAL_TITLE": "Social profiles",
+        "NAME": "Name",
+        "EMAIL": "Email",
+        "PHONE": "Phone",
+        "COMPANY": "Company",
+        "LINKED_COMPANIES": "Linked companies",
+        "BIO": "Bio",
+        "NO_SOCIAL": "No social profiles yet"
       }
     },
     "SIDEBAR": {
@@ -610,7 +628,6 @@
       "CONFIRM_SINGLE": "Delete contact"
     }
   },
-
   "COMPOSE_NEW_CONVERSATION": {
     "CONTACT_SEARCH": {
       "ERROR_MESSAGE": "We couldn’t complete the search. Please try again."

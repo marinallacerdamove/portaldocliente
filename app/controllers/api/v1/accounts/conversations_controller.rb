@@ -1,4 +1,4 @@
-class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseController
+class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseController # rubocop:disable Metrics/ClassLength
   include Events::Types
   include DateRangeHelper
   include HmacConcern
@@ -101,6 +101,23 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   def toggle_priority
     @conversation.toggle_priority(params[:priority])
     head :ok
+  end
+
+  # PATCH LOCAL (fork) - ver Conversations::CopyMessagesService. source_conversation_id
+  # é display_id (mesmo padrão de :id nesta controller) - autoriza :show? nela
+  # também, não só na conversa alvo, pra um agente não conseguir copiar
+  # mensagens de uma conversa que ele não teria acesso pra ver.
+  def copy_messages
+    source_conversation = Current.account.conversations.find_by!(display_id: params[:source_conversation_id])
+    authorize source_conversation, :show?
+
+    result = ::Conversations::CopyMessagesService.new(
+      target_conversation: @conversation,
+      source_conversation: source_conversation,
+      message_ids: Array(params[:message_ids])
+    ).perform
+
+    render json: { copied_count: result.messages.size }
   end
 
   def toggle_typing_status

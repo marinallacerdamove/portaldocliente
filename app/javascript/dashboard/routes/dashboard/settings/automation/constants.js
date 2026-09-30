@@ -805,6 +805,37 @@ export const AUTOMATION_ACTION_TYPES = [
     label: 'ADD_SLA',
     inputType: 'search_select',
   },
+  // PATCH LOCAL (fork) - ações dos gatilhos do Movidesk. Os campos de
+  // custom_attribute, text e notify_agents ficam no AutomationTicketActionInput.
+  {
+    key: 'set_custom_attribute',
+    label: 'SET_CUSTOM_ATTRIBUTE',
+    inputType: 'custom_attribute',
+  },
+  {
+    key: 'set_subject',
+    label: 'SET_SUBJECT',
+    inputType: 'text',
+  },
+  {
+    key: 'notify_agents',
+    label: 'NOTIFY_AGENTS',
+    inputType: 'notify_agents',
+  },
+  {
+    key: 'create_child_ticket',
+    label: 'CREATE_CHILD_TICKET',
+    inputType: 'search_select',
+  },
+];
+
+// PATCH LOCAL (fork) - ações cujo action_params já sai do editor no formato
+// final ([chave, valor], [assunto], [ids, texto]): o actionQueryGenerator
+// trocaria os ids por val.id e quebraria o formato.
+export const RAW_PARAM_ACTIONS = [
+  'set_custom_attribute',
+  'set_subject',
+  'notify_agents',
 ];
 
 export const DEFAULT_DELAY_MINUTES = 240; // 4 hours

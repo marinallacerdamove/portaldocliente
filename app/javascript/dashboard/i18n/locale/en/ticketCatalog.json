@@ -1,0 +1,270 @@
+{
+  "TICKET_CATALOG": {
+    "SIDEBAR": {
+      "SERVICES": "Services",
+      "CATEGORIES": "Request types",
+      "STATUSES": "Statuses",
+      "JUSTIFICATIONS": "Justifications",
+      "CUSTOM_FIELDS": "Additional fields",
+      "FIELD_RULES": "Display rules"
+    },
+    "TICKET_SCOPES": {
+      "publico": "Public tickets",
+      "interno": "Internal tickets",
+      "ambos": "Both"
+    },
+    "PRIORITIES": {
+      "NONE": "None",
+      "low": "1 - Low",
+      "medium": "2 - Medium",
+      "high": "3 - High",
+      "urgent": "4 - Critical"
+    },
+    "STATUS_BASES": {
+      "novo": "New",
+      "em_atendimento": "In progress",
+      "parado": "On hold",
+      "resolvido": "Resolved",
+      "fechado": "Closed",
+      "cancelado": "Cancelled"
+    },
+    "LIST": {
+      "SEARCH_PLACEHOLDER": "Search by name",
+      "LOADING": "Loading...",
+      "NO_RESULTS": "No records found for this filter",
+      "COUNT": "{n} record | {n} records",
+      "FILTERS": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "all": "All"
+      },
+      "TABLE_HEADER": {
+        "NAME": "Name",
+        "TICKET_SCOPE": "Ticket type",
+        "ACTIVE": "Status",
+        "ACTIONS": "Actions"
+      },
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "YES": "Yes",
+      "EMPTY_VALUE": "--",
+      "EDIT_TOOLTIP": "Edit",
+      "VIEW_TOOLTIP": "View",
+      "LOAD_ERROR": "Could not load the list, please try again"
+    },
+    "FORM": {
+      "CANCEL": "Cancel",
+      "SUBMIT": "Save",
+      "READ_ONLY": "Only administrators can change this record. You can view the data, but not save.",
+      "MAIN_TITLE": "Main",
+      "NAME_LABEL": "Name",
+      "NAME_PLACEHOLDER": "Enter the name",
+      "NAME_REQUIRED": "Name is required",
+      "TICKET_SCOPE_LABEL": "Ticket type",
+      "TICKET_SCOPE_HINT": "Which tickets offer this item as an option",
+      "ACTIVE_LABEL": "Active",
+      "ACTIVE_HINT": "Inactive items leave the option lists, but stay on tickets that already use them",
+      "INACTIVE_OPTION": "{name} (inactive)",
+      "LOAD_ERROR": "Could not load the record, please try again",
+      "CREATE_SUCCESS": "Record created",
+      "UPDATE_SUCCESS": "Record updated",
+      "SAVE_ERROR": "Could not save, please try again"
+    },
+    "SERVICES": {
+      "HEADER": "Services",
+      "DESCRIPTION": "Support services in a tree. Agents pick the service in the conversation and customers in the Portal.",
+      "NEW": "New service",
+      "EMPTY": "No services yet",
+      "NEW_TITLE": "New service",
+      "EDIT_TITLE": "Edit service",
+      "SUBTITLE": "Set where the service sits in the tree, who sees it and what it fills in the conversation.",
+      "INTERNAL_BADGE": "Internal",
+      "FORM": {
+        "DETAILS_TITLE": "Details",
+        "DESCRIPTION_LABEL": "Description",
+        "DESCRIPTION_PLACEHOLDER": "Explain when to use this service",
+        "PARENT_LABEL": "Parent service",
+        "PARENT_NONE": "None (root service)",
+        "VISIBLE_LABEL": "Visible to customers",
+        "VISIBLE_HINT": "Customers see this service when opening a ticket in the Portal",
+        "INTERNAL_HINT": "Internal service: only agents see it, customers do not see it in the Portal",
+        "ALLOW_FINISH_LABEL": "Allows finishing the ticket",
+        "ALLOW_FINISH_HINT": "The ticket can be resolved with this service",
+        "RULES_TITLE": "Request types and defaults",
+        "ALL_CATEGORIES_LABEL": "All request types",
+        "ALL_CATEGORIES_HINT": "Turn off to pick only some request types",
+        "CATEGORIES_LABEL": "Allowed request types",
+        "NO_CATEGORIES": "No active request types yet",
+        "DEFAULT_CATEGORY_LABEL": "Default request type",
+        "DEFAULT_CATEGORY_NONE": "None",
+        "DEFAULT_PRIORITY_LABEL": "Default priority",
+        "MACRO_LABEL": "Macro applied when the service is picked",
+        "MACRO_NONE": "None",
+        "MACRO_HINT": "When the agent picks this service in the conversation, the macro runs right away"
+      }
+    },
+    "CATEGORIES": {
+      "HEADER": "Request types",
+      "DESCRIPTION": "Request types (Movidesk categories) and the priorities each one accepts.",
+      "NEW": "New request type",
+      "EMPTY": "No request types yet",
+      "NEW_TITLE": "New request type",
+      "EDIT_TITLE": "Edit request type",
+      "SUBTITLE": "Set the name, the ticket type and the allowed priorities.",
+      "TABLE_HEADER": {
+        "PRIORITIES": "Allowed priorities"
+      },
+      "ALL_PRIORITIES": "All priorities",
+      "FORM": {
+        "PRIORITIES_TITLE": "Allowed priorities",
+        "PRIORITIES_HINT": "With none checked, every priority is allowed"
+      }
+    },
+    "STATUSES": {
+      "HEADER": "Statuses",
+      "DESCRIPTION": "Support statuses. Each one points to a type, which sets the conversation status in Chatwoot.",
+      "NEW": "New status",
+      "EMPTY": "No statuses yet",
+      "NEW_TITLE": "New status",
+      "EDIT_TITLE": "Edit status",
+      "SUBTITLE": "Set the name, the status type and whether it asks for a justification.",
+      "TABLE_HEADER": {
+        "BASE": "Status type",
+        "REQUIRES_JUSTIFICATION": "Requires justification"
+      },
+      "FORM": {
+        "BEHAVIOR_TITLE": "Behavior",
+        "BASE_LABEL": "Status type",
+        "BASE_HINT": "Sets the conversation status in Chatwoot: New and In progress = open, On hold = pending, Resolved/Closed/Cancelled = resolved",
+        "REQUIRES_JUSTIFICATION_LABEL": "Requires justification",
+        "REQUIRES_JUSTIFICATION_HINT": "The agent must pick a justification when using this status"
+      }
+    },
+    "JUSTIFICATIONS": {
+      "HEADER": "Justifications",
+      "DESCRIPTION": "Justifications the agent picks when using a status that requires one.",
+      "NEW": "New justification",
+      "EMPTY": "No justifications yet",
+      "NEW_TITLE": "New justification",
+      "EDIT_TITLE": "Edit justification",
+      "SUBTITLE": "Set the name, the ticket type and the statuses where it can be used.",
+      "TABLE_HEADER": {
+        "STATUSES": "Statuses"
+      },
+      "FORM": {
+        "STATUSES_TITLE": "Statuses where it can be used",
+        "STATUSES_HINT": "The justification only shows up for the checked statuses",
+        "NO_STATUSES": "No active statuses yet"
+      }
+    },
+    "CUSTOM_FIELDS": {
+      "HEADER": "Additional fields",
+      "DESCRIPTION": "Extra ticket fields (checklists, classifications). They only show up when a display rule includes them.",
+      "NEW": "New field",
+      "EMPTY": "No additional fields yet",
+      "NEW_TITLE": "New additional field",
+      "EDIT_TITLE": "Edit additional field",
+      "SUBTITLE": "Set the name, type and options. Where and when it shows up is set in the display rule.",
+      "TABLE_HEADER": {
+        "TYPE": "Type"
+      },
+      "TYPES": {
+        "text": "Single-line text",
+        "textarea": "Multi-line text",
+        "list": "List of values",
+        "single_select": "Single choice",
+        "multi_select": "Multiple choice",
+        "date": "Date",
+        "datetime": "Date and time"
+      },
+      "FORM": {
+        "DETAILS_TITLE": "Type and options",
+        "TYPE_LABEL": "Type",
+        "KEY_LABEL": "Key",
+        "KEY_HINT": "Generated from the name on creation and never changes. The value syncs with the Portal through it.",
+        "HINT_LABEL": "Help text (optional)",
+        "HINT_PLACEHOLDER": "Shown next to the field on the ticket",
+        "OPTIONS_LABEL": "Options",
+        "OPTIONS_PLACEHOLDER": "One option per line",
+        "OPTIONS_HINT": "One option per line, in display order"
+      },
+      "CONVERSATION": {
+        "EMPTY": "No additional fields for this ticket service and request type",
+        "REQUIRED": "Required to resolve",
+        "SELECT_PLACEHOLDER": "Select",
+        "SAVE_ERROR": "Could not save the field, try again",
+        "MISSING_ON_RESOLVE": "Fill in the required additional fields before resolving: {fields}"
+      }
+    },
+    "FIELD_RULES": {
+      "HEADER": "Display rules",
+      "DESCRIPTION": "When each additional field shows up on the ticket: by service, request type, another field value and more.",
+      "NEW": "New rule",
+      "EMPTY": "No display rules yet",
+      "NEW_TITLE": "New display rule",
+      "EDIT_TITLE": "Edit display rule",
+      "SUBTITLE": "Set the conditions and the fields shown when they match.",
+      "TABLE_HEADER": {
+        "FIELDS": "Fields shown"
+      },
+      "GROUPS": {
+        "all": {
+          "TITLE": "Combined conditions",
+          "HINT": "The rule must match all of these conditions"
+        },
+        "any": {
+          "TITLE": "Independent conditions",
+          "HINT": "The rule must match at least one of these conditions"
+        }
+      },
+      "ATTRIBUTES": {
+        "servico": "Service",
+        "tipo_de_solicitacao": "Request type",
+        "status": "Status",
+        "campo": "Additional field",
+        "origem": "Opened via",
+        "empresa": "Company",
+        "equipe": "Team",
+        "responsavel": "Assignee"
+      },
+      "OPERATORS": {
+        "equal_to": "Equal to",
+        "not_equal_to": "Not equal to",
+        "is_present": "Is filled"
+      },
+      "ORIGINS": {
+        "cliente": "Customer (Portal)",
+        "agente": "Agent",
+        "chat": "Chat",
+        "whatsapp": "WhatsApp",
+        "email": "Email"
+      },
+      "STATUS_NOT_CONCLUDED": "Not concluded",
+      "REQUIRED_ON": {
+        "nao_exigir": "Not required",
+        "abertura_agente": "On opening, for agents",
+        "abertura_cliente": "On opening, for customers",
+        "abertura": "On opening, for agents and customers",
+        "conclusao": "On ticket conclusion"
+      },
+      "FLAGS": {
+        "visible_to_clients": "Partner sees and fills on opening",
+        "editable_by_clients": "Partner edits after opening",
+        "editable_by_agents": "Agent edits"
+      },
+      "FORM": {
+        "CONDITIONS_TITLE": "Conditions",
+        "CONDITIONS_HINT": "Using both kinds, the ticket must match all combined conditions and at least one independent condition. With no conditions, the rule applies to every ticket.",
+        "ADD_CONDITION": "Add condition",
+        "FIELD_PLACEHOLDER": "Pick the field",
+        "VALUE_PLACEHOLDER": "Value",
+        "REMOVE": "Remove",
+        "FIELDS_TITLE": "Fields shown",
+        "FIELDS_HINT": "In the order they show on the ticket. Columns: field width in a 12-column row.",
+        "ADD_FIELD": "Add field",
+        "COLUMNS_LABEL": "Columns",
+        "REQUIRED_ON_LABEL": "Required"
+      }
+    }
+  }
+}

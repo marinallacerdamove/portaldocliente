@@ -74,4 +74,49 @@ shared_examples_for 'assignment_handler' do
       end
     end
   end
+
+  describe '#ensure_team_from_assignee' do
+    let(:conversation) { create(:conversation) }
+    let(:agent) { create(:user, account: conversation.account, role: :agent) }
+    let(:team) { create(:team, account: conversation.account, allow_auto_assign: false) }
+    let(:other_team) { create(:team, account: conversation.account, allow_auto_assign: false) }
+
+    it 'moves the conversation to the agent team when the agent has a single team' do
+      create(:team_member, team: team, user: agent)
+
+      conversation.update!(assignee: agent)
+
+      expect(conversation.reload.team).to eq(team)
+      expect(conversation.assignee).to eq(agent)
+    end
+
+    it 'keeps the current team when the agent already belongs to it' do
+      create(:team_member, team: team, user: agent)
+      create(:team_member, team: other_team, user: agent)
+      conversation.update!(team: team)
+
+      conversation.update!(assignee: agent)
+
+      expect(conversation.reload.team).to eq(team)
+    end
+
+    it 'does not guess when the agent belongs to more than one team' do
+      create(:team_member, team: team, user: agent)
+      create(:team_member, team: other_team, user: agent)
+
+      conversation.update!(assignee: agent)
+
+      expect(conversation.reload.team).to be_nil
+      expect(conversation.assignee).to eq(agent)
+    end
+
+    it 'keeps the team when the assignee is removed' do
+      create(:team_member, team: team, user: agent)
+      conversation.update!(assignee: agent)
+
+      conversation.update!(assignee: nil)
+
+      expect(conversation.reload.team).to eq(team)
+    end
+  end
 end

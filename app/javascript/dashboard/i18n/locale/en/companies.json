@@ -31,8 +31,13 @@
     },
     "CREATE": {
       "TITLE": "Add company details",
+      "CNPJ_PLACEHOLDER": "CPF/CNPJ (required)",
+      "CNPJ_INVALID": "Enter a valid CPF (11 digits) or CNPJ (14 characters)",
+      "DUPLICATE_CNPJ": "Company {name} already has this CPF/CNPJ.",
+      "DUPLICATE_NAME": "Company {name} (CPF/CNPJ {cnpj}) already exists. Create anyway?",
       "ACTIONS": {
-        "SAVE": "Add company"
+        "SAVE": "Add company",
+        "SAVE_ANYWAY": "Create anyway"
       },
       "MESSAGES": {
         "SUCCESS": "Company created.",
@@ -109,6 +114,12 @@
         "UPLOAD_ERROR": "Could not update the company avatar.",
         "DELETE_SUCCESS": "Company avatar removed.",
         "DELETE_ERROR": "Could not remove the company avatar."
+      },
+      "INFO_CARD": {
+        "ISENTA": "Exempt",
+        "DESCRIPTION": "Description",
+        "URLS_ACESSO": "URLs, domains and access",
+        "PASSWORD_SET": "Password saved"
       },
       "PROFILE": {
         "TITLE": "Edit company details",

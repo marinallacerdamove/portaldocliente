@@ -1,6 +1,9 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { getLastMessage } from 'dashboard/helper/conversationHelper';
+import {
+  getLastMessage,
+  getConversationListSubject,
+} from 'dashboard/helper/conversationHelper';
 import Avatar from 'next/avatar/Avatar.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import MessagePreview from './MessagePreview.vue';
@@ -36,8 +39,14 @@ const emit = defineEmits([
 const hovered = ref(false);
 
 const unreadCount = computed(() => props.chat.unread_count);
+const contactCompany = computed(
+  () => props.currentContact?.additional_attributes?.company_name
+);
 const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
+const listSubject = computed(() =>
+  getConversationListSubject(props.chat, props.inbox)
+);
 
 const voiceCallData = computed(() => {
   const last = lastMessageInChat.value;
@@ -186,8 +195,24 @@ watch(
       >
         {{ currentContact.name }}
       </h4>
+      <!-- PATCH LOCAL (fork) - mesma informação que o card expandido já mostra -->
+      <span
+        v-if="contactCompany"
+        class="block mx-2 text-xs leading-tight truncate text-n-slate-10"
+      >
+        {{ contactCompany }}
+      </span>
+      <p
+        v-if="listSubject"
+        key="list-subject"
+        class="text-sm my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+        :class="messagePreviewClass"
+        :title="listSubject"
+      >
+        {{ listSubject }}
+      </p>
       <VoiceCallStatus
-        v-if="voiceCallData.status"
+        v-else-if="voiceCallData.status"
         key="voice-status-row"
         :status="voiceCallData.status"
         :direction="voiceCallData.direction"

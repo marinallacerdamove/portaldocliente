@@ -47,13 +47,13 @@ services:
     command: ["redis-server", "--save", "60", "1"]
 
   rails:
-    image: chatwoot-custom:v4.17.1-ticketmodal23
+    image: chatwoot-custom:v4.17.1-agentsignature
     container_name: chatwoot-rails-1
     restart: always
     logging: *default-logging
     env_file: .env.production
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     volumes:
       - chatwoot_storage_data:/app/storage
     command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
@@ -62,7 +62,7 @@ services:
       - redis
 
   sidekiq:
-    image: chatwoot-custom:v4.17.1-ticketmodal23
+    image: chatwoot-custom:v4.17.1-agentsignature
     container_name: chatwoot-sidekiq-1
     restart: always
     logging: *default-logging
@@ -81,7 +81,7 @@ services:
     logging: *default-logging
     env_file: .env.glitchtip
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     depends_on:
       - postgres
       - redis

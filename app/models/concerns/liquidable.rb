@@ -16,7 +16,7 @@ module Liquidable
       'conversation' => ConversationDrop.new(conversation),
       'inbox' => InboxDrop.new(inbox),
       'account' => AccountDrop.new(conversation.account)
-    }
+    }.merge(PortalVariables.assigns(conversation)) # PATCH LOCAL (fork): {{ticket.*}}, {{saudacao}}
   end
 
   def liquid_processable_message?

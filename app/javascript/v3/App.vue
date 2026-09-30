@@ -1,10 +1,18 @@
 <script>
 import SnackbarContainer from './components/SnackBar/Container.vue';
 
+// PATCH LOCAL (fork) - pedido explícito: a tela de login (e o SSO dela)
+// permanece sempre clara, "estática", mesmo com o SO em modo escuro - o
+// resto do v3 (cadastro etc.) continua acompanhando o tema normalmente.
+const LOGIN_ROUTE_NAMES = ['login', 'sso_login'];
+
 export default {
   components: { SnackbarContainer },
   data() {
     return { theme: 'light' };
+  },
+  watch: {
+    '$route.name': 'setColorTheme',
   },
   mounted() {
     this.setColorTheme();
@@ -12,27 +20,22 @@ export default {
     this.setLocale(window.chatwootConfig.selectedLocale);
   },
   methods: {
+    isLoginRoute() {
+      return LOGIN_ROUTE_NAMES.includes(this.$route?.name);
+    },
+    applyTheme(prefersDark) {
+      const shouldBeDark = prefersDark && !this.isLoginRoute();
+      this.theme = shouldBeDark ? 'dark' : 'light';
+      document.documentElement.classList.toggle('dark', shouldBeDark);
+    },
     setColorTheme() {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        this.theme = 'dark';
-        document.documentElement.classList.add('dark');
-      } else {
-        this.theme = 'light';
-        document.documentElement.classList.remove('dark');
-      }
+      this.applyTheme(
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      );
     },
     listenToThemeChanges() {
       const mql = window.matchMedia('(prefers-color-scheme: dark)');
-
-      mql.onchange = e => {
-        if (e.matches) {
-          this.theme = 'dark';
-          document.documentElement.classList.add('dark');
-        } else {
-          this.theme = 'light';
-          document.documentElement.classList.remove('dark');
-        }
-      };
+      mql.onchange = e => this.applyTheme(e.matches);
     },
     setLocale(locale) {
       if (locale) {

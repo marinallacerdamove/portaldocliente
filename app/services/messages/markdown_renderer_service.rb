@@ -43,7 +43,8 @@ class Messages::MarkdownRendererService
 
   def render_html
     markdown_renderer = BaseMarkdownRenderer.new
-    doc = CommonMarker.render_doc(@content, :DEFAULT, [:strikethrough])
+    # PATCH LOCAL (fork) - :table: tabela das macros chega como tabela no e-mail/Portal.
+    doc = CommonMarker.render_doc(@content, :DEFAULT, %i[strikethrough table])
     markdown_renderer.render(doc)
   end
 

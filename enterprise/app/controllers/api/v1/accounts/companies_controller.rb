@@ -8,10 +8,15 @@ class Api::V1::Accounts::CompaniesController < Api::V1::Accounts::EnterpriseAcco
 
   RESULTS_PER_PAGE = 25
 
+  # PATCH LOCAL (fork) - ver CompanyPolicy#financeiro_manage? e
+  # _company.json.jbuilder (lê @can_view_financeiro pra filtrar a resposta).
+  FINANCEIRO_KEYS = %w[contrato_status contrato_inicio contrato_fim contrato_valor modulos_contratados].freeze
+
   before_action :ensure_companies_enabled!
   before_action :check_authorization
   before_action :set_current_page, only: [:index, :search]
   before_action :fetch_company, only: [:show, :update, :destroy, :avatar, :destroy_custom_attributes]
+  before_action :set_can_view_financeiro
 
   def index
     @companies = fetch_companies(resolved_companies)
@@ -96,9 +101,18 @@ class Api::V1::Accounts::CompaniesController < Api::V1::Accounts::EnterpriseAcco
 
   def company_custom_attributes
     custom_attributes = company_params[:custom_attributes]
-    return @company.custom_attributes.merge(custom_attributes.to_h) if custom_attributes.present?
+    return @company.custom_attributes if custom_attributes.blank?
 
-    @company.custom_attributes
+    incoming = custom_attributes.to_h
+    incoming = incoming.except(*FINANCEIRO_KEYS) unless @can_view_financeiro
+    @company.custom_attributes.merge(incoming)
+  end
+
+  # Exposto pro jbuilder (_company.json.jbuilder) filtrar os campos de
+  # Contrato/Financeiro na resposta - sem isso, esconder a aba no frontend
+  # não impede ler o dado direto da API.
+  def set_can_view_financeiro
+    @can_view_financeiro = policy(Company).financeiro_manage?
   end
 
   def company_update_params

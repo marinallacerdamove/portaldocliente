@@ -1,6 +1,10 @@
 json.id macro.id
 json.name macro.name
 json.visibility macro.visibility
+# PATCH LOCAL (fork)
+json.group_name macro.group_name
+json.team_ids macro.team_ids
+json.user_ids macro.user_ids
 
 if macro.created_by.present?
   json.created_by do

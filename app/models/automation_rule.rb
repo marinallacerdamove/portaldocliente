@@ -25,7 +25,10 @@ class AutomationRule < ApplicationRecord
   EXECUTION_DELAY_RANGE = (10..43_200) # minutes: 10 min to 30 days
   # Conversation-level delayed rules key their episode on status; only status and attributes
   # that never change after the delay (inbox) are safe to also filter on.
-  DELAYED_CONVERSATION_ATTRIBUTES = %w[status inbox_id].freeze
+  # PATCH LOCAL (fork) - equipe, responsável e atributos de conversa (status do
+  # atendimento, justificativa) também: os gatilhos do Movidesk "ficou parado 2h
+  # na equipe X" dependem disso. A reconferência na hora de rodar usa o valor atual.
+  DELAYED_CONVERSATION_ATTRIBUTES = %w[status inbox_id team_id assignee_id].freeze
 
   belongs_to :account
   has_many :pending_executions, class_name: 'AutomationRulePendingExecution', dependent: :delete_all
@@ -55,7 +58,8 @@ class AutomationRule < ApplicationRecord
     %w[send_message add_label remove_label send_email_to_team assign_team assign_agent remove_assigned_agent
        remove_assigned_team send_webhook_event mute_conversation send_attachment change_status resolve_conversation
        open_conversation pending_conversation snooze_conversation change_priority send_email_transcript
-       add_private_note].freeze
+       add_private_note
+       set_custom_attribute set_subject notify_agents create_child_ticket].freeze # PATCH LOCAL (fork) - gatilhos do Movidesk
   end
 
   def file_base_data
@@ -120,7 +124,9 @@ class AutomationRule < ApplicationRecord
   # distinct periods into one episode, so only status and immutable filters (inbox) are allowed.
   def execution_delay_supported_event
     return if execution_delay.blank? || conditions.blank? || event_name == 'message_created'
-    return if conditions.all? { |obj| DELAYED_CONVERSATION_ATTRIBUTES.include?(obj['attribute_key']) }
+
+    delayed_keys = DELAYED_CONVERSATION_ATTRIBUTES + account.custom_attribute_definitions.conversation_attribute.pluck(:attribute_key)
+    return if conditions.all? { |obj| delayed_keys.include?(obj['attribute_key']) }
 
     errors.add(:execution_delay, 'only supports status and inbox conditions for conversation-level events.')
   end

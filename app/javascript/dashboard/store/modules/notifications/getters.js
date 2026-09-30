@@ -38,4 +38,7 @@ export const getters = {
   getUnreadCount: $state => {
     return $state.meta.unreadCount;
   },
+  getMentionUnreadCount: $state => {
+    return $state.meta.mentionUnreadCount;
+  },
 };

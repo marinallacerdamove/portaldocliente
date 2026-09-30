@@ -105,6 +105,22 @@ export const useCompaniesStore = createStore({
       else this.records[index] = record;
     },
 
+    // PATCH LOCAL (fork) - carrega várias empresas de uma vez (lista de
+    // empresas vinculadas do contato) sem mexer na empresa ativa nem no
+    // token de corrida do show(). Empresa excluída no meio do caminho (404)
+    // só fica de fora da lista.
+    async fetchMissing(ids) {
+      const missing = ids.filter(id => !this.getRecord(id)?.id);
+      await Promise.allSettled(
+        missing.map(async id => {
+          const {
+            data: { payload },
+          } = await CompanyAPI.show(id);
+          this.upsertCompanyRecord(camelizeCompany(payload));
+        })
+      );
+    },
+
     updateCompanyContactsCount(companyId, contactsCount) {
       const company = this.getRecord(companyId);
       if (!company.id) return;

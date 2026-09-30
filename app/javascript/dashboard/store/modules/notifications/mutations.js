@@ -23,6 +23,9 @@ export const mutations = {
   [types.SET_NOTIFICATIONS_UNREAD_COUNT]: ($state, count) => {
     $state.meta.unreadCount = count < 0 ? 0 : count;
   },
+  [types.SET_MENTION_NOTIFICATIONS_UNREAD_COUNT]: ($state, count) => {
+    $state.meta.mentionUnreadCount = count < 0 ? 0 : count;
+  },
   [types.SET_NOTIFICATIONS]: ($state, data) => {
     data.forEach(notification => {
       // Find existing notification with same primary_actor_id (primary_actor_id is unique)

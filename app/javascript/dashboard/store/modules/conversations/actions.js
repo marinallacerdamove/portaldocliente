@@ -368,13 +368,22 @@ const actions = {
     }
   },
 
-  editMessage: async ({ commit }, { conversationId, messageId, content }) => {
+  editMessage: async (
+    { commit },
+    {
+      conversationId,
+      messageId,
+      content,
+      attachments = [],
+      removeAttachmentIds = [],
+    }
+  ) => {
     try {
-      const { data } = await MessageApi.update(
-        conversationId,
-        messageId,
-        content
-      );
+      const { data } = await MessageApi.update(conversationId, messageId, {
+        content,
+        attachments,
+        removeAttachmentIds,
+      });
       commit(types.ADD_MESSAGE, data);
     } catch (error) {
       throw new Error(error);
@@ -543,6 +552,21 @@ const actions = {
     } catch (error) {
       // Handle error
     }
+  },
+
+  // PATCH LOCAL (fork) - ver Conversations::CopyMessagesService. Não
+  // precisa commitar nada no store: quem chama navega pro ticket novo logo
+  // em seguida (ver NewInternalTicket.vue), que busca as mensagens do zero
+  // ao montar a tela.
+  copyMessages: async (
+    _store,
+    { conversationId, sourceConversationId, messageIds }
+  ) => {
+    await ConversationApi.copyMessages({
+      conversationId,
+      sourceConversationId,
+      messageIds,
+    });
   },
 
   setCurrentChatPriority({ commit }, { priority, conversationId }) {

@@ -5,10 +5,12 @@ import {
   DEFAULT_OTHER_CONDITION,
 } from 'dashboard/constants/automation';
 import {
+  ATTRIBUTE_CHANGED_OPERATOR,
   OPERATOR_TYPES_1,
   OPERATOR_TYPES_3,
   OPERATOR_TYPES_4,
 } from 'dashboard/routes/dashboard/settings/automation/operators';
+import { RAW_PARAM_ACTIONS } from 'dashboard/routes/dashboard/settings/automation/constants';
 import actionQueryGenerator from './actionQueryGenerator';
 import filterQueryGenerator from './filterQueryGenerator';
 
@@ -106,6 +108,11 @@ const ACTION_ICONS = {
   resolve_conversation: 'i-lucide-circle-check',
   change_priority: 'i-lucide-signal-high',
   add_sla: 'i-lucide-gauge',
+  // PATCH LOCAL (fork)
+  set_custom_attribute: 'i-lucide-pencil-line',
+  set_subject: 'i-lucide-heading',
+  notify_agents: 'i-lucide-at-sign',
+  create_child_ticket: 'i-lucide-git-branch-plus',
 };
 
 const DEFAULT_ACTION_ICON = 'i-lucide-zap';
@@ -152,6 +159,7 @@ export const getActionOptions = ({
   type,
   addNoneToListFn,
   priorityOptions,
+  macros,
 }) => {
   const actionsMap = {
     assign_agent: addNoneToListFn ? addNoneToListFn(agents) : agents,
@@ -163,6 +171,12 @@ export const getActionOptions = ({
     remove_label: generateLabelOptions(labels),
     change_priority: priorityOptions,
     add_sla: slaPolicies,
+    // PATCH LOCAL (fork) - o ticket filho usa só macro compartilhada (a pessoal
+    // é de um agente e some se ele sair).
+    notify_agents: agents,
+    create_child_ticket: (macros || [])
+      .filter(macro => macro.visibility !== 'personal')
+      .map(macro => ({ id: macro.id, name: macro.name })),
   };
   return actionsMap[type];
 };
@@ -252,11 +266,44 @@ export const getStandardAttributeInputType = (automationTypes, event, key) => {
     .inputType;
 };
 
+// PATCH LOCAL (fork) - "Alterado" vale só pra atributo de conversa no evento
+// "Conversa atualizada" (é o único que sabe o que mudou).
+export const withAttributeChangedOperator = attributes =>
+  attributes.map(attr =>
+    attr.customAttributeType === 'conversation_attribute'
+      ? {
+          ...attr,
+          filterOperators: [
+            ...attr.filterOperators,
+            ATTRIBUTE_CHANGED_OPERATOR,
+          ],
+        }
+      : attr
+  );
+
+// PATCH LOCAL (fork) - o backend espera values = { from, to } no "Alterado";
+// o editor só tem o "para" (opcional), "de" vai vazio (= qualquer valor).
+const toAttributeChangedValues = values => ({
+  from: [],
+  to: values.filter(value => value !== null && value !== undefined),
+});
+
 export const generateAutomationPayload = payload => {
   const automation = JSON.parse(JSON.stringify(payload));
   automation.conditions[automation.conditions.length - 1].query_operator = null;
   automation.conditions = filterQueryGenerator(automation.conditions).payload;
-  automation.actions = actionQueryGenerator(automation.actions);
+  automation.conditions = automation.conditions.map(condition =>
+    condition.filter_operator === ATTRIBUTE_CHANGED_OPERATOR.value
+      ? { ...condition, values: toAttributeChangedValues(condition.values) }
+      : condition
+  );
+  // PATCH LOCAL (fork) - ações de ticket já vêm no formato final.
+  const generatedActions = actionQueryGenerator(automation.actions);
+  automation.actions = generatedActions.map((action, index) =>
+    RAW_PARAM_ACTIONS.includes(action.action_name)
+      ? automation.actions[index]
+      : action
+  );
   return automation;
 };
 

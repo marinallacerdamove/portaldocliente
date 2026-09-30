@@ -63,27 +63,64 @@
       "START_FLOW": "Inicio do Fluxo",
       "END_FLOW": "Fim do Fluxo",
       "LOADING": "Obtendo macro",
-      "ADD_BTN_TOOLTIP": "Adicionar nova ação",
-      "DELETE_BTN_TOOLTIP": "Excluir Ação",
+      "ADD_BTN_TOOLTIP": "Adicionar ação",
+      "DELETE_BTN_TOOLTIP": "Excluir ação",
       "VISIBILITY": {
-        "LABEL": "Visibilidade da Macro",
+        "LABEL": "Compartilhamento",
         "GLOBAL": {
-          "LABEL": "Publico",
-          "DESCRIPTION": "Esta macro está disponível publicamente para todos os agentes desta conta.",
+          "LABEL": "Todos",
+          "DESCRIPTION": "Todos os atendentes da conta.",
           "CREATE_DISABLED_DESCRIPTION": "Somente administradores podem criar macros públicos.",
           "EDIT_DISABLED_DESCRIPTION": "Somente administradores podem editar macros públicos."
         },
         "PERSONAL": {
-          "LABEL": "Privada",
-          "DESCRIPTION": "Esta macro será privada para você e não estará disponível para outras pessoas."
+          "LABEL": "Pessoal",
+          "DESCRIPTION": "Só você vê e usa."
+        },
+        "AGENT_HINT": "Macros de equipe e para todos são criadas por administradores.",
+        "TEAM": {
+          "LABEL": "Equipes ou agentes",
+          "DESCRIPTION": "Só quem é das equipes ou os agentes escolhidos."
         }
-      }
+      },
+      "NEW_TITLE": "Nova macro",
+      "EDIT_TITLE": "Editar macro",
+      "SUBTITLE": "Um clique na conversa preenche a resposta e aplica as ações abaixo, na ordem.",
+      "CANCEL": "Cancelar",
+      "SUBMIT": "Salvar macro",
+      "READ_ONLY": "Macro compartilhada: só administrador altera.",
+      "MAIN_TITLE": "Principal",
+      "ACTIONS_TITLE": "Ações",
+      "NAME_LABEL": "Nome",
+      "NAME_PLACEHOLDER": "Ex.: Fiscal: Carta de Correção",
+      "NAME_REQUIRED": "Informe o nome da macro.",
+      "GROUP_LABEL": "Grupo",
+      "GROUP_PLACEHOLDER": "Ex.: Fiscal, Comercial, Suprimentos",
+      "TEAMS_LABEL": "Equipes que podem usar",
+      "TEAMS_REQUIRED": "Escolha pelo menos uma equipe ou um agente.",
+      "ACTIONS_HINT": "Arraste pelo ícone à esquerda para mudar a ordem. \"Texto da resposta\" só preenche o editor: o atendente completa e envia.",
+      "DRAG_TOOLTIP": "Arrastar para reordenar",
+      "SUBJECT_PLACEHOLDER": "Novo assunto da conversa",
+      "FILL_REPLY": {
+        "REPLY": "Resposta ao cliente",
+        "NOTE": "Nota interna",
+        "PLACEHOLDER": "Texto que vai para o editor. Digite {'{{'} para inserir variáveis, como o nome do contato.",
+        "HINT": "O texto entra no editor para o atendente completar antes de enviar. Nada é enviado sozinho."
+      },
+      "SELF_AGENT": "Agente logado (quem aplicar a macro)",
+      "CUSTOM_ATTRIBUTE": {
+        "FIELD": "Campo",
+        "VALUE": "Valor",
+        "VALUE_PLACEHOLDER": "Novo valor do campo"
+      },
+      "AGENTS_LABEL": "Agentes que podem usar"
     },
     "EXECUTE": {
       "BUTTON_TOOLTIP": "Executar",
       "PREVIEW": "Pré-visualizar Macro",
       "EXECUTED_SUCCESSFULLY": "Macro executada com sucesso",
-      "EXECUTED_WITHOUT_RESOLVING": "Macro executada. A conversa não foi resolvida porque faltam atributos obrigatórios."
+      "EXECUTED_WITHOUT_RESOLVING": "Macro executada. A conversa não foi resolvida porque faltam atributos obrigatórios.",
+      "APPLIED_BY_SERVICE": "Macro \"{name}\" aplicada pelo serviço"
     },
     "ERRORS": {
       "ATTRIBUTE_KEY_REQUIRED": "A chave do atributo é necessária",
@@ -97,19 +134,25 @@
     "ACTIONS": {
       "ASSIGN_TEAM": "Atribuir um Time",
       "ASSIGN_AGENT": "Atribuir um Agente",
-      "ADD_LABEL": "Adicionar uma Etiqueta",
-      "REMOVE_LABEL": "Remover uma Etiqueta",
-      "REMOVE_ASSIGNED_AGENT": "Remove Assigned Agent",
+      "ADD_LABEL": "Adicionar etiquetas",
+      "REMOVE_LABEL": "Remover estas etiquetas",
+      "REMOVE_ASSIGNED_AGENT": "Remover agente atribuído",
       "REMOVE_ASSIGNED_TEAM": "Remover Time Atribuído",
       "SEND_EMAIL_TRANSCRIPT": "Enviar uma transcrição por e-mail",
       "MUTE_CONVERSATION": "Silenciar Conversa",
       "SNOOZE_CONVERSATION": "Adiar Conversa",
       "RESOLVE_CONVERSATION": "Resolver Conversa",
       "SEND_ATTACHMENT": "Enviar Anexo",
-      "SEND_MESSAGE": "Enviar uma Mensagem",
+      "SEND_MESSAGE": "Enviar mensagem (direto)",
       "CHANGE_PRIORITY": "Alterar Prioridade",
-      "ADD_PRIVATE_NOTE": "Adicionar uma Nota Privada",
-      "SEND_WEBHOOK_EVENT": "Enviar evento de Webhook"
+      "ADD_PRIVATE_NOTE": "Enviar nota interna",
+      "SEND_WEBHOOK_EVENT": "Enviar evento de Webhook",
+      "FILL_REPLY": "Texto da resposta",
+      "SET_SUBJECT": "Definir assunto",
+      "REPLACE_LABELS": "Substituir todas as etiquetas",
+      "REMOVE_ALL_LABELS": "Remover todas as etiquetas",
+      "CHANGE_STATUS": "Alterar status",
+      "SET_CUSTOM_ATTRIBUTE": "Alterar campo do ticket"
     },
     "PRIORITY_TYPES": {
       "NONE": "Nenhuma",
@@ -117,6 +160,56 @@
       "MEDIUM": "Média",
       "HIGH": "Alta",
       "URGENT": "Urgente"
+    },
+    "STATUS_TYPES": {
+      "OPEN": "Aberta",
+      "PENDING": "Pendente",
+      "SNOOZED": "Adiada",
+      "RESOLVED": "Resolvida"
+    },
+    "LIST_EXTRA": {
+      "GROUP": "Grupo",
+      "NO_GROUP": "Sem grupo",
+      "TEAMS": "Equipes/agentes: {teams}"
+    },
+    "PICKER": {
+      "TOOLTIP": "Macros",
+      "SEARCH": "Buscar macro",
+      "EMPTY": "Nenhuma macro encontrada.",
+      "NO_GROUP": "Sem grupo",
+      "MANAGE": "Gerenciar macros"
+    },
+    "VARIABLES": {
+      "TITLE": "Variáveis",
+      "HINT": "Trocadas pelo valor da conversa na hora de usar.",
+      "GROUPS": {
+        "TICKET": "Ticket",
+        "CONTACT": "Cliente",
+        "AGENT": "Atendente",
+        "OTHER": "Outras"
+      },
+      "TICKET_NUMBER": "Número do ticket (protocolo)",
+      "TICKET_SUBJECT": "Assunto do ticket",
+      "TICKET_SERVICE": "Serviço",
+      "TICKET_REQUEST_TYPE": "Tipo de solicitação",
+      "TICKET_PRODUCT": "Produto",
+      "TICKET_COMPANY": "Empresa do ticket",
+      "TICKET_CPF_CNPJ": "CPF/CNPJ da empresa do cliente",
+      "CONTACT_FIRST_NAME": "Primeiro nome do cliente",
+      "CONTACT_NAME": "Nome completo do cliente",
+      "CONTACT_EMAIL": "E-mail do cliente",
+      "CONTACT_PHONE": "Telefone do cliente",
+      "AGENT_FIRST_NAME": "Primeiro nome do atendente",
+      "AGENT_NAME": "Nome completo do atendente",
+      "AGENT_EMAIL": "E-mail do atendente",
+      "GREETING": "Saudação (Bom dia / Boa tarde / Boa noite)",
+      "ACCOUNT_NAME": "Nome da nossa empresa",
+      "INBOX_NAME": "Canal de atendimento",
+      "CONVERSATION_ID": "Número da conversa no Chatwoot"
+    },
+    "CLONE": {
+      "TOOLTIP": "Clonar",
+      "NAME": "Cópia de {name}"
     }
   }
 }

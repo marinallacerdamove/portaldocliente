@@ -1,5 +1,9 @@
 {
   "CONVERSATION": {
+    "ACTIVITIES_TOGGLE": {
+      "SHOW": "Mostrar atividades ({count})",
+      "HIDE": "Ocultar atividades"
+    },
     "SELECT_A_CONVERSATION": "Por favor, selecione uma conversa no painel da esquerda",
     "CSAT_REPLY_MESSAGE": "Por favor, classifique a conversa",
     "404": "Desculpe, não conseguimos encontrar a conversa. Por favor, tente novamente",
@@ -30,7 +34,8 @@
     "MESSAGE_SELECTION": {
       "COUNT": "{count} mensagem selecionada | {count} mensagens selecionadas",
       "CANCEL": "Cancelar",
-      "CREATE_TICKET": "Criar ticket interno"
+      "CREATE_TICKET": "Criar ticket interno",
+      "ADD_TO_TICKET": "Incluir em ticket existente"
     },
     "CLICK_HERE": "Clique aqui",
     "LOADING_INBOXES": "Carregando caixas de entrada",
@@ -58,6 +63,25 @@
     "UNKNOWN_FILE_TYPE": "Arquivo desconhecido",
     "SAVE_CONTACT": "Salvar contato",
     "NO_CONTENT": "Nenhum conteúdo a ser exibido",
+    "EDITING_IN_PROGRESS": "Editando…",
+    "MESSAGE_EDIT_BAR": {
+      "TITLE": "Editando mensagem",
+      "TITLE_WITH_SENDER": "Editando mensagem de {name}",
+      "CANCEL": "Cancelar",
+      "SAVE": "Salvar edição",
+      "PLACEHOLDER": "Digite sua mensagem…",
+      "ADD_ATTACHMENT": "Anexar arquivo",
+      "EMPTY_ERROR": "A mensagem não pode ficar em branco",
+      "SUCCESS": "Mensagem atualizada",
+      "ERROR": "Não foi possível atualizar a mensagem, tente novamente"
+    },
+    "IMPORTED_TICKET_HISTORY": {
+      "ROLE_CUSTOMER": "Mensagem do cliente",
+      "ROLE_AGENT": "Resposta",
+      "ROLE_INTERNAL": "Mensagem interna",
+      "ORIGIN": "Origem: {inbox}",
+      "NO_CONTENT": "Sem conteúdo de texto"
+    },
     "SHARED_ATTACHMENT": {
       "CONTACT": "{sender} compartilhou um contato",
       "LOCATION": "{sender} compartilhou uma localização",
@@ -423,6 +447,10 @@
     "SELF_ASSIGN": "Atribuir a mim",
     "TEAM_LABEL": "Time atribuído",
     "SERVICO_LABEL": "Serviço",
+    "TIPO_DE_SOLICITACAO_LABEL": "Tipo de solicitação",
+    "STATUS_ATENDIMENTO_LABEL": "Status",
+    "JUSTIFICATIVA_LABEL": "Justificativa",
+    "JUSTIFICATION_REQUIRED": "Este status exige justificativa",
     "LINKED_TICKETS": {
       "SECTION_TITLE": "Relacionamentos",
       "PARENT_LABEL": "Ticket pai",
@@ -437,7 +465,7 @@
       "CONVERSATION_ACTIONS": "Ações da conversa",
       "CONVERSATION_LABELS": "Etiquetas da conversa",
       "CONVERSATION_INFO": "Informação da conversa",
-      "TICKET_DETAILS": "Controle de Desenvolvimento e Entrega",
+      "TICKET_DETAILS": "Campos adicionais",
       "PORTAL_INFO": "Informações do Portal do Cliente",
       "CONTACT_NOTES": "Notas do contato",
       "CONTACT_ATTRIBUTES": "Atributos do contato",
@@ -618,5 +646,20 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Não foi possível baixar o anexo. Por favor, tente novamente"
+  },
+  "ADD_TO_TICKET_DIALOG": {
+    "TITLE": "Incluir em ticket existente",
+    "DESCRIPTION": "A mensagem selecionada será copiada para o ticket escolhido, como histórico. | As {count} mensagens selecionadas serão copiadas para o ticket escolhido, como histórico.",
+    "CONTACT_TICKETS": "Tickets em aberto deste contato",
+    "LOADING": "Carregando tickets...",
+    "EMPTY": "Nenhum ticket em aberto para este contato.",
+    "NO_SUBJECT": "(sem assunto)",
+    "NUMBER_LABEL": "Ou informe o número do ticket",
+    "NUMBER_PLACEHOLDER": "Ex.: 235",
+    "CONFIRM": "Incluir",
+    "SUCCESS": "Mensagens incluídas no ticket #{id}",
+    "INVALID_TICKET": "Ticket não encontrado. Informe o número de um ticket (Portal do Cliente ou Tickets Internos).",
+    "ERROR": "Não foi possível incluir as mensagens no ticket.",
+    "TICKET_NUMBER": "#{id}"
   }
 }

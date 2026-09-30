@@ -9,6 +9,9 @@ import { CAPTAIN_EVENTS } from 'dashboard/helper/AnalyticsHelper/events';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import EditorModeToggle from './EditorModeToggle.vue';
 import CopilotMenuBar from './CopilotMenuBar.vue';
+import ComposerAssistant from 'dashboard/components-next/PortalAssistant/ComposerAssistant.vue';
+import ComposerMacros from './ComposerMacros.vue';
+import { usePortalAssistant } from 'dashboard/composables/usePortalAssistant';
 
 export default {
   name: 'ReplyTopPanel',
@@ -16,6 +19,8 @@ export default {
     NextButton,
     EditorModeToggle,
     CopilotMenuBar,
+    ComposerAssistant,
+    ComposerMacros,
   },
   directives: {
     OnClickOutside: vOnClickOutside,
@@ -58,7 +63,12 @@ export default {
       default: false,
     },
   },
-  emits: ['setReplyMode', 'toggleEditorSize', 'executeCopilotAction'],
+  emits: [
+    'setReplyMode',
+    'toggleEditorSize',
+    'executeCopilotAction',
+    'executeMacro',
+  ],
   setup(props, { emit }) {
     const setReplyMode = mode => {
       emit('setReplyMode', mode);
@@ -79,6 +89,8 @@ export default {
     };
 
     const { captainTasksEnabled } = useCaptain();
+    // PATCH LOCAL (fork) - Assistente (IA com base na wiki) no editor.
+    const { isEnabled: isPortalAssistantEnabled } = usePortalAssistant();
     const showCopilotMenu = ref(false);
     const copilotToggleRef = ref(null);
 
@@ -120,6 +132,7 @@ export default {
       handleNoteClick,
       REPLY_EDITOR_MODES,
       captainTasksEnabled,
+      isPortalAssistantEnabled,
       handleCopilotAction,
       showCopilotMenu,
       copilotToggleRef,
@@ -167,8 +180,16 @@ export default {
         </span>
       </div>
     </div>
-    <div v-if="captainTasksEnabled" class="flex items-center gap-2">
-      <div class="relative">
+    <div class="flex items-center gap-2">
+      <ComposerMacros
+        :disabled="disabled || isEditorDisabled"
+        @execute="$emit('executeMacro', $event)"
+      />
+      <ComposerAssistant
+        v-if="isPortalAssistantEnabled"
+        :disabled="disabled || isEditorDisabled"
+      />
+      <div v-if="captainTasksEnabled" class="relative">
         <NextButton
           ref="copilotToggleRef"
           ghost
@@ -195,6 +216,7 @@ export default {
         />
       </div>
       <NextButton
+        v-if="captainTasksEnabled"
         ghost
         class="text-n-slate-11"
         sm

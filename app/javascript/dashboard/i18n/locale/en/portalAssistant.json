@@ -1,0 +1,103 @@
+{
+  "PORTAL_ASSISTANT": {
+    "TITLE": "Assistant",
+    "SUBTITLE": "Ask about the system and processes, answered from the wiki and the team's answers.",
+    "DISABLED": "The Assistant is not enabled for this account.",
+    "TABS": {
+      "ASK": "Ask",
+      "SOURCES": "Knowledge base",
+      "ANSWERS": "Team answers",
+      "QUESTIONS": "Questions asked"
+    },
+    "ASK": {
+      "PLACEHOLDER": "E.g.: How do I issue a return invoice?",
+      "SUBMIT": "Ask",
+      "HINT": "Enter sends, Shift+Enter adds a line.",
+      "THINKING": "Searching the knowledge base...",
+      "EMPTY_TITLE": "Ask anything you need",
+      "EMPTY_TEXT": "Answers come only from the wiki and the answers written by the team. Always check the source before passing it on to the customer.",
+      "NOT_FOUND": "I couldn't find this in the knowledge base. The question was logged so the team can fill the gap.",
+      "SOURCES": "Sources",
+      "TEAM_ANSWER": "Team answer: {title}",
+      "COPY": "Copy answer",
+      "COPIED": "Answer copied",
+      "HELPFUL": "Helpful answer",
+      "NOT_HELPFUL": "Bad answer",
+      "RATE_ERROR": "Could not save the rating.",
+      "ERROR": "Could not reach the Assistant."
+    },
+    "SOURCES": {
+      "STATUS_TITLE": "Wiki sync",
+      "SYNC_NOW": "Sync now",
+      "SYNC_STARTED": "Sync started. It can take a few minutes.",
+      "SYNC_ERROR": "Could not start the sync.",
+      "RUNNING": "Syncing...",
+      "NEVER": "The wiki has not been synced yet.",
+      "LAST_RUN": "Last sync: {date}",
+      "STATUS": {
+        "running": "Running",
+        "succeeded": "Done",
+        "partial": "Done with pending items",
+        "failed": "Failed"
+      },
+      "PAGES": "Pages in the wiki",
+      "UPDATED": "Updated last time",
+      "SEARCHABLE": "Documents used in answers",
+      "PENDING": "Waiting for indexing",
+      "AI_NOT_CONFIGURED": "The AI key is not configured in the Portal yet. Pages are imported, but the Assistant only answers once the key is set.",
+      "WIKI_NOT_CONFIGURED": "The wiki user is not configured in the Portal yet.",
+      "AREAS_TITLE": "Wiki areas",
+      "AREAS_HINT": "Turn off areas that should not be used in answers. The change applies immediately.",
+      "AREA_PAGES": "{count} page(s)",
+      "AREAS_EMPTY": "No areas yet. Sync the wiki to list them.",
+      "AREA_ERROR": "Could not change the area.",
+      "LOAD_ERROR": "Could not load the knowledge base.",
+      "AREA_ON": "Used in answers",
+      "AREA_OFF": "Not used"
+    },
+    "ANSWERS": {
+      "NEW": "New answer",
+      "HINT": "Add answers for what the wiki doesn't cover. They are searched together with the wiki.",
+      "TITLE_LABEL": "Question",
+      "TITLE_PLACEHOLDER": "E.g.: How do I grant access to a new user?",
+      "CONTENT_LABEL": "Answer",
+      "CONTENT_PLACEHOLDER": "Write the steps the way the team would explain them.",
+      "SAVE": "Save",
+      "CANCEL": "Cancel",
+      "EDIT": "Edit",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "ACTIVATE": "Activate",
+      "DEACTIVATE": "Deactivate",
+      "INDEXED": "In use",
+      "NOT_INDEXED": "Waiting for indexing",
+      "SAVED": "Answer saved",
+      "SAVE_ERROR": "Could not save the answer.",
+      "EMPTY": "No answers yet.",
+      "LOAD_ERROR": "Could not load the answers."
+    },
+    "QUESTIONS": {
+      "FILTERS": {
+        "unanswered": "Unanswered",
+        "rated_down": "Rated bad",
+        "all": "All"
+      },
+      "ANSWERED": "Answered",
+      "UNANSWERED": "Unanswered",
+      "FAILED": "Failed",
+      "RATED_UP": "Helpful",
+      "RATED_DOWN": "Bad",
+      "BY": "{name} · {date}",
+      "CREATE_ANSWER": "Add answer",
+      "EMPTY": "No questions in this filter.",
+      "LOAD_ERROR": "Could not load the questions."
+    },
+    "COMPOSER": {
+      "TOOLTIP": "Assistant (wiki)",
+      "TITLE": "Assistant",
+      "HINT": "The question starts with the customer's last message. Edit it if needed.",
+      "INSERT": "Insert in reply",
+      "NEW_QUESTION": "New question"
+    }
+  }
+}

@@ -48,6 +48,12 @@ module Events::Types
   CONTACT_MERGED = 'contact.merged'
   CONTACT_DELETED = 'contact.deleted'
 
+  # company events - PATCH LOCAL (fork): consumidos pelo Portal do Cliente
+  # (webhook de conta) pra manter as empresas sincronizadas nos dois sentidos
+  COMPANY_CREATED = 'company.created'
+  COMPANY_UPDATED = 'company.updated'
+  CONTACT_COMPANY_UPDATED = 'contact.company_updated'
+
   # contact events
   INBOX_CREATED = 'inbox.created'
   INBOX_UPDATED = 'inbox.updated'

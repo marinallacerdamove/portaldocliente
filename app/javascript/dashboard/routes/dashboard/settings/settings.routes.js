@@ -19,6 +19,9 @@ import templates from './templates/templates.routes';
 import integrations from './integrations/integrations.routes';
 import labels from './labels/labels.routes';
 import macros from './macros/macros.routes';
+// PATCH LOCAL (fork) - cadastros de atendimento (Serviços, Categorias, Status,
+// Justificativas).
+import ticketCatalog from './ticketCatalog/ticketCatalog.routes';
 import reports from './reports/reports.routes';
 import store from '../../../store';
 import sla from './sla/sla.routes';
@@ -65,6 +68,7 @@ export default {
     ...data.routes,
     ...labels.routes,
     ...macros.routes,
+    ...ticketCatalog.routes,
     ...reports.routes,
     ...sla.routes,
     ...teams.routes,

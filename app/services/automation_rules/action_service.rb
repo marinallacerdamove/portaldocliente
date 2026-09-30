@@ -1,8 +1,13 @@
 class AutomationRules::ActionService < ActionService
-  def initialize(rule, account, conversation)
+  include TicketFieldActions # PATCH LOCAL (fork)
+
+  # PATCH LOCAL (fork) - performed_by: quem fez a mudança que disparou a regra
+  # ("Agente logado" dos gatilhos do Movidesk).
+  def initialize(rule, account, conversation, performed_by: nil)
     super(conversation)
     @rule = rule
     @account = account
+    @user = performed_by if performed_by.is_a?(User)
     Current.executed_by = rule
   end
 
@@ -52,6 +57,65 @@ class AutomationRules::ActionService < ActionService
 
     params = { content: message[0], private: true, content_attributes: { automation_rule_id: @rule.id } }
     Messages::MessageBuilder.new(nil, @conversation.reload, params).perform
+  end
+
+  # PATCH LOCAL (fork) - "self" = quem fez a mudança que disparou a regra.
+  def assign_agent(agent_ids = [])
+    agent_ids = agent_ids.filter_map { |id| id == 'self' ? @user&.id : id }
+    return if agent_ids.empty?
+
+    super(agent_ids)
+  end
+
+  # PATCH LOCAL (fork) - "Enviar mensagem" do Movidesk (mensagem interna pra
+  # agentes): nota privada mencionando quem precisa saber, o que dispara a
+  # notificação do Chatwoot. params: [user_ids, texto]; "creator" = agente
+  # que abriu o ticket (primeira mensagem de agente da conversa), "assignee" =
+  # responsável atual.
+  def notify_agents(params)
+    ids, text = params
+    ids = Array(ids).filter_map { |id| { 'creator' => ticket_creator_id, 'assignee' => @conversation.assignee_id }.fetch(id, id) }.uniq
+    agents = @account.users.where(id: ids)
+    return if agents.empty? || text.blank?
+
+    mentions = agents.map { |agent| "[@#{agent.available_name}](mention://user/#{agent.id}/#{ERB::Util.url_encode(agent.available_name)})" }
+    params = { content: "#{mentions.join(' ')}\n\n#{render_variables(text)}", private: true,
+               content_attributes: { automation_rule_id: @rule.id } }
+    Messages::MessageBuilder.new(nil, @conversation.reload, params).perform
+  end
+
+  # PATCH LOCAL (fork) - "Criar novo ticket filho" do Movidesk: conversa nova
+  # na caixa Tickets Internos, mesmo contato, vinculada como filha (mesmos
+  # custom_attributes que o TicketLinkDialog grava) e com a macro aplicada.
+  # O "texto da resposta" da macro vira a primeira nota do ticket filho.
+  def create_child_ticket(params)
+    macro = @account.macros.find_by(id: params[0])
+    inbox = @account.inboxes.find_by!(name: 'Tickets Internos')
+    contact_inbox = ContactInboxBuilder.new(contact: @conversation.contact, inbox: inbox).perform
+    child = ConversationBuilder.new(params: ActionController::Parameters.new({}), contact_inbox: contact_inbox).perform
+    link_child_ticket(child)
+    return unless macro
+
+    user = @conversation.assignee || @account.administrators.first
+    fill_child_description(child, macro, user)
+    Macros::ExecutionService.new(macro, child, user).perform
+  end
+
+  def link_child_ticket(child)
+    child.update!(custom_attributes: child.custom_attributes.merge('ticket_pai_id' => @conversation.display_id.to_s))
+    children = @conversation.custom_attributes['ticket_filhos_ids'].to_s.split(',') << child.display_id.to_s
+    @conversation.update!(custom_attributes: @conversation.custom_attributes.merge('ticket_filhos_ids' => children.uniq.join(',')))
+  end
+
+  def fill_child_description(child, macro, user)
+    macro.actions.select { |action| action['action_name'] == 'fill_reply' }.each do |action|
+      content = action['action_params'][0]
+      Messages::MessageBuilder.new(user, child, { content: content, private: true }).perform if content.present?
+    end
+  end
+
+  def ticket_creator_id
+    @conversation.messages.where(sender_type: 'User').order(:id).pick(:sender_id)
   end
 
   def send_email_to_team(params)

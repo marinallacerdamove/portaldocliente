@@ -4,10 +4,7 @@ import { useStore, useStoreGetters } from 'dashboard/composables/store';
 export const DEFAULT_CONVERSATION_SIDEBAR_ITEMS_ORDER = Object.freeze([
   { name: 'conversation_actions' },
   { name: 'ticket_details' },
-  { name: 'macros' },
   { name: 'conversation_info' },
-  { name: 'contact_attributes' },
-  { name: 'contact_notes' },
   { name: 'shared_files' },
   { name: 'previous_conversation' },
   { name: 'conversation_participants' },
@@ -42,8 +39,11 @@ const useConversationSidebarItemsOrder = uiSettings => {
     if (!itemsOrder) {
       return [...DEFAULT_CONVERSATION_SIDEBAR_ITEMS_ORDER];
     }
-    // Create a copy of itemsOrder to avoid mutating the original store object.
-    const itemsOrderCopy = [...itemsOrder];
+    // PATCH LOCAL (fork) - some itens removidos da lateral (Macros, Atributos
+    // e Notas do contato) mesmo em quem já tem uma ordem salva.
+    const itemsOrderCopy = itemsOrder.filter(item =>
+      DEFAULT_CONVERSATION_SIDEBAR_ITEMS_ORDER.some(i => i.name === item.name)
+    );
     // If the sidebar order doesn't have the new elements, then add them to the list.
     DEFAULT_CONVERSATION_SIDEBAR_ITEMS_ORDER.forEach(item => {
       if (!itemsOrderCopy.find(i => i.name === item.name)) {

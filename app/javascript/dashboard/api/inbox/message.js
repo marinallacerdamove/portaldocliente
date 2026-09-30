@@ -98,7 +98,23 @@ class MessageApi extends ApiClient {
     );
   }
 
-  update(conversationId, messageId, content) {
+  update(
+    conversationId,
+    messageId,
+    { content, attachments = [], removeAttachmentIds = [] } = {}
+  ) {
+    if (attachments.length || removeAttachmentIds.length) {
+      const payload = new FormData();
+      payload.append('content', content);
+      attachments.forEach(file => payload.append('attachments[]', file));
+      removeAttachmentIds.forEach(id =>
+        payload.append('remove_attachment_ids[]', id)
+      );
+      return axios.patch(
+        `${this.url}/${conversationId}/messages/${messageId}`,
+        payload
+      );
+    }
     return axios.patch(`${this.url}/${conversationId}/messages/${messageId}`, {
       content,
     });

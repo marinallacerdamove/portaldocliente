@@ -43,13 +43,14 @@ describe('MacrosTableRow.vue', () => {
   it('shows actions for public macros when public macros can be managed', () => {
     const wrapper = mountComponent();
 
-    expect(wrapper.findAllComponents({ name: 'Button' })).toHaveLength(2);
+    // PATCH LOCAL (fork) - editar, clonar e excluir.
+    expect(wrapper.findAllComponents({ name: 'Button' })).toHaveLength(3);
   });
 
   it('keeps public macros viewable without delete actions when public macros cannot be managed', () => {
     const wrapper = mountComponent({ canManagePublicMacros: false });
 
-    expect(wrapper.findAllComponents({ name: 'Button' })).toHaveLength(1);
+    expect(wrapper.findAllComponents({ name: 'Button' })).toHaveLength(2);
   });
 
   it('keeps actions available for personal macros when public macros cannot be managed', () => {
@@ -58,6 +59,6 @@ describe('MacrosTableRow.vue', () => {
       canManagePublicMacros: false,
     });
 
-    expect(wrapper.findAllComponents({ name: 'Button' })).toHaveLength(2);
+    expect(wrapper.findAllComponents({ name: 'Button' })).toHaveLength(3);
   });
 });

@@ -6,6 +6,7 @@ import { useElementSize } from '@vueuse/core';
 import BackButton from '../BackButton.vue';
 import InboxName from '../InboxName.vue';
 import MoreActions from './MoreActions.vue';
+import ConversationStatusFields from './ConversationStatusFields.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
 import ConversationCallButton from './ConversationCallButton.vue';
@@ -176,11 +177,9 @@ const ticketPortalId = computed(
             class="truncate text-label-small text-n-slate-11 hover:text-n-slate-12 !p-0 cucursor-pointer"
             @click="copyConversationId"
           >
-            <template v-if="ticketSubject"
-              >{{ $t('CONVERSATION.HEADER.CHATWOOT_ID_PREFIX') }} #{{
-                chat.id
-              }}</template
-            >
+            <template v-if="ticketSubject">
+              {{ $t('CONVERSATION.HEADER.CHATWOOT_ID_PREFIX') }} #{{ chat.id }}
+            </template>
             <template v-else>{{ `#${chat.id}` }}</template>
           </button>
           <span v-if="hasMultipleInboxes">•</span>
@@ -203,6 +202,7 @@ const ticketPortalId = computed(
         class="hidden md:flex"
       />
       <ConversationCallButton :inbox="inbox" :chat="currentChat" />
+      <ConversationStatusFields />
       <MoreActions :conversation-id="currentChat.id" />
     </div>
   </div>

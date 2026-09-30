@@ -35,6 +35,14 @@ export const actions = {
       commit(types.SET_NOTIFICATIONS_UI_FLAG, { isUpdatingUnreadCount: false });
     }
   },
+  fetchMentionUnreadCount: async ({ commit }) => {
+    try {
+      const { data } = await NotificationsAPI.getMentionUnreadCount();
+      commit(types.SET_MENTION_NOTIFICATIONS_UNREAD_COUNT, data);
+    } catch (error) {
+      // mantém o último valor; recalcula na próxima mudança do contador geral
+    }
+  },
   read: async (
     { commit },
     { id, primaryActorType, primaryActorId, unreadCount }

@@ -7,6 +7,7 @@ const state = {
     count: 0,
     currentPage: 1,
     unreadCount: 0,
+    mentionUnreadCount: 0,
   },
   records: {},
   uiFlags: {

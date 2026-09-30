@@ -1,15 +1,18 @@
 <script>
-import { ref, computed, provide, useTemplateRef } from 'vue';
+import { ref, computed, provide, useTemplateRef, watch } from 'vue';
 import { useElementSize } from '@vueuse/core';
 // composable
 import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useMessageSelection } from 'dashboard/composables/useMessageSelection';
-import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { useMessageEditing } from 'dashboard/composables/useMessageEditing';
+import { useUISettings } from 'dashboard/composables/useUISettings';
+import { MESSAGE_TYPE } from 'shared/constants/messages';
 
 // components
 import ReplyBox from './ReplyBox.vue';
+import MessageEditBar from './MessageEditBar.vue';
 import MessageList from 'next/message/MessageList.vue';
 import ConversationLabelSuggestion from './conversation/LabelSuggestion.vue';
 import Banner from 'dashboard/components/ui/Banner.vue';
@@ -17,6 +20,7 @@ import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import ResizableEditorWrapper from './ResizableEditorWrapper.vue';
 import ReferralBubble from 'dashboard/components-next/Conversation/ReferralBubble.vue';
 import NewInternalTicket from 'dashboard/components-next/NewConversation/NewInternalTicket.vue';
+import AddToExistingTicket from 'dashboard/components-next/NewConversation/AddToExistingTicket.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 
 // stores and apis
@@ -49,12 +53,14 @@ export default {
   components: {
     MessageList,
     ReplyBox,
+    MessageEditBar,
     Banner,
     ConversationLabelSuggestion,
     Spinner,
     ResizableEditorWrapper,
     ReferralBubble,
     NewInternalTicket,
+    AddToExistingTicket,
     NextButton,
   },
   mixins: [inboxMixin],
@@ -65,6 +71,18 @@ export default {
     const topBannerRef = useTemplateRef('topBannerRef');
     const { height: containerHeight } = useElementSize(messagesViewRef);
     const { height: topBannerHeight } = useElementSize(topBannerRef);
+
+    // PATCH LOCAL (fork) - mensagens de atividade (etiqueta, atribuição,
+    // status...) ficam ocultas por padrão pra não poluir o histórico; o
+    // agente mostra/oculta pelo botão no topo da conversa (salvo por usuário).
+    const { uiSettings, updateUISettings } = useUISettings();
+    const showActivities = computed(
+      () => !!uiSettings.value?.show_conversation_activities
+    );
+    const toggleActivities = () =>
+      updateUISettings({
+        show_conversation_activities: !showActivities.value,
+      });
 
     const {
       captainTasksEnabled,
@@ -83,13 +101,22 @@ export default {
       clearSelection,
     } = useMessageSelection(conversationId);
 
-    const { getPlainText } = useMessageFormatter();
-
     const newInternalTicketRef = useTemplateRef('newInternalTicketRef');
+    const { editingMessage, stopEditing } = useMessageEditing();
+
+    // Troca de conversa cancela edição pendente - editingMessage é um
+    // singleton compartilhado (ver useMessageEditing.js), não escopado por
+    // conversa, então sem isso a caixa de edição sobreviveria apontando pra
+    // uma mensagem de outra conversa.
+    watch(conversationId, (newId, oldId) => {
+      if (newId !== oldId) stopEditing();
+    });
 
     provide('contextMenuElementTarget', conversationPanelRef);
 
     return {
+      showActivities,
+      toggleActivities,
       captainTasksEnabled,
       getLabelSuggestions,
       isLabelSuggestionFeatureEnabled,
@@ -105,8 +132,8 @@ export default {
       toggleSelectionMode,
       toggleMessageSelection,
       clearSelection,
-      getPlainText,
       newInternalTicketRef,
+      editingMessage,
     };
   },
   data() {
@@ -165,12 +192,23 @@ export default {
 
       return '';
     },
-    getMessages() {
+    allMessages() {
       const messages = this.currentChat.messages || [];
       if (this.isAWhatsAppChannel) {
         return filterDuplicateSourceMessages(messages);
       }
       return messages;
+    },
+    activityMessageCount() {
+      return this.allMessages.filter(
+        message => message.message_type === MESSAGE_TYPE.ACTIVITY
+      ).length;
+    },
+    getMessages() {
+      if (this.showActivities) return this.allMessages;
+      return this.allMessages.filter(
+        message => message.message_type !== MESSAGE_TYPE.ACTIVITY
+      );
     },
     referralData() {
       return this.currentChat?.additional_attributes?.referral || null;
@@ -500,39 +538,19 @@ export default {
     resetReplyEditorHeight() {
       this.resizableEditorWrapperRef?.resetEditorHeight?.();
     },
-    escapeHtml(text) {
-      const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-      };
-      return text.replace(/[&<>"']/g, char => map[char]);
-    },
-    buildSelectionQuoteHtml(messages) {
-      return messages
-        .map(message => {
-          const senderName =
-            message.sender?.name || this.$t('CONVERSATION.BOT');
-          const text = message.content
-            ? this.getPlainText(message.content)
-            : this.$t(
-                'NEW_INTERNAL_TICKET_DIALOG.SELECTION_ATTACHMENT_PLACEHOLDER'
-              );
-          return `<p><strong>${this.escapeHtml(senderName)}:</strong> ${this.escapeHtml(text)}</p>`;
-        })
-        .join('');
-    },
     // A ficha do cliente sempre é o contato da conversa nativa de origem -
     // resolve via store (não busca) pra garantir que é exatamente o mesmo
     // registro, no formato camelCase que formState.contact espera.
+    //
+    // Não concatena mais as mensagens selecionadas num texto só (ver
+    // NewInternalTicket.vue) - passa a lista crua, na ordem cronológica já
+    // calculada por selectedMessagesSorted, e quem cria as mensagens de
+    // verdade (uma por uma, preservando tipo/remetente/anexo) é o backend
+    // (Conversations::CopyMessagesService), depois que o ticket já existe.
     async handleCreateInternalTicketFromSelection() {
       if (!this.selectedCount) return;
 
-      const messageHtml = this.buildSelectionQuoteHtml(
-        this.selectedMessagesSorted
-      );
+      const messages = this.selectedMessagesSorted;
 
       const contactId = this.currentChat.meta?.sender?.id;
       let contact = null;
@@ -542,7 +560,24 @@ export default {
       }
 
       this.toggleSelectionMode();
-      this.newInternalTicketRef?.open({ message: messageHtml, contact });
+      this.newInternalTicketRef?.open({
+        selectedMessages: messages,
+        sourceConversationId: this.currentChat.id,
+        contact,
+      });
+    },
+    handleAddSelectionToExistingTicket() {
+      if (!this.selectedCount) return;
+
+      const selectedIds = this.selectedMessagesSorted.map(
+        message => message.id
+      );
+      this.toggleSelectionMode();
+      this.$refs.addToExistingTicketRef?.open({
+        sourceConversationId: this.currentChat.id,
+        selectedIds,
+        contactId: this.currentChat.meta?.sender?.id,
+      });
     },
   },
 };
@@ -553,7 +588,23 @@ export default {
     ref="messagesViewRef"
     class="flex flex-col justify-between flex-grow h-full min-w-0 m-0"
   >
-    <div ref="topBannerRef">
+    <div ref="topBannerRef" class="relative">
+      <NextButton
+        v-if="activityMessageCount"
+        xs
+        slate
+        faded
+        class="absolute top-full end-4 mt-2 z-10 shadow-sm"
+        :icon="showActivities ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+        :label="
+          showActivities
+            ? $t('CONVERSATION.ACTIVITIES_TOGGLE.HIDE')
+            : $t('CONVERSATION.ACTIVITIES_TOGGLE.SHOW', {
+                count: activityMessageCount,
+              })
+        "
+        @click="toggleActivities"
+      />
       <Banner
         v-if="isInstagramRestrictionBannerVisible"
         color-scheme="warning"
@@ -642,12 +693,21 @@ export default {
             @click="toggleSelectionMode"
           />
         </div>
-        <NextButton
-          :label="$t('CONVERSATION.MESSAGE_SELECTION.CREATE_TICKET')"
-          sm
-          :disabled="!selectedCount"
-          @click="handleCreateInternalTicketFromSelection"
-        />
+        <div class="flex items-center gap-2 shrink-0">
+          <NextButton
+            :label="$t('CONVERSATION.MESSAGE_SELECTION.ADD_TO_TICKET')"
+            faded
+            sm
+            :disabled="!selectedCount"
+            @click="handleAddSelectionToExistingTicket"
+          />
+          <NextButton
+            :label="$t('CONVERSATION.MESSAGE_SELECTION.CREATE_TICKET')"
+            sm
+            :disabled="!selectedCount"
+            @click="handleCreateInternalTicketFromSelection"
+          />
+        </div>
       </div>
       <div
         v-if="isAnyoneTyping"
@@ -668,9 +728,11 @@ export default {
         ref="resizableEditorWrapperRef"
         :container-height="Math.max(0, containerHeight - topBannerHeight)"
       >
-        <ReplyBox @toggle-editor-size="toggleReplyEditorSize" />
+        <MessageEditBar v-if="editingMessage" />
+        <ReplyBox v-else @toggle-editor-size="toggleReplyEditorSize" />
       </ResizableEditorWrapper>
     </div>
     <NewInternalTicket ref="newInternalTicketRef" />
+    <AddToExistingTicket ref="addToExistingTicketRef" />
   </div>
 </template>
