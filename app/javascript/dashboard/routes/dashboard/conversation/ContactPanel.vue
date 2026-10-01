@@ -13,6 +13,7 @@ import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
 import ContactConversations from './ContactConversations.vue';
 import ConversationAction from './ConversationAction.vue';
 import ConversationParticipant from './ConversationParticipant.vue';
+import { FIELD_GROUPS } from 'dashboard/helper/ticketFieldGroups';
 import ContactInfo from './contact/ContactInfo.vue';
 import ConversationInfo from './ConversationInfo.vue';
 import TicketCustomFields from './TicketCustomFields.vue';
@@ -188,29 +189,8 @@ onMounted(() => {
               />
             </AccordionItem>
           </div>
-          <div
-            v-else-if="element.name === 'conversation_participants'"
-            class="conversation--actions"
-          >
-            <AccordionItem
-              :title="$t('CONVERSATION_PARTICIPANTS.SIDEBAR_TITLE')"
-              :is-open="isContactSidebarItemOpen('is_conv_participants_open')"
-              @toggle="
-                value =>
-                  toggleSidebarUIState('is_conv_participants_open', value)
-              "
-            >
-              <ConversationParticipant
-                :conversation-id="conversationId"
-                :inbox-id="inboxId"
-              />
-            </AccordionItem>
-          </div>
-          <div
-            v-else-if="
-              element.name === 'conversation_info' && hasConversationInfoContent
-            "
-          >
+          <!-- PATCH LOCAL (fork) - Participantes ficam dentro de "Informação da conversa" -->
+          <div v-else-if="element.name === 'conversation_info'">
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_INFO')"
               :is-open="isContactSidebarItemOpen('is_conv_details_open')"
@@ -220,9 +200,33 @@ onMounted(() => {
               "
             >
               <ConversationInfo
+                v-if="hasConversationInfoContent"
                 :conversation-attributes="conversationAdditionalAttributes"
                 :contact-attributes="contactAdditionalAttributes"
               />
+              <div class="flex flex-col gap-2 px-2 pt-2 pb-3">
+                <span class="text-sm font-medium text-n-slate-12">
+                  {{ $t('CONVERSATION_PARTICIPANTS.SIDEBAR_TITLE') }}
+                </span>
+                <ConversationParticipant
+                  :conversation-id="conversationId"
+                  :inbox-id="inboxId"
+                />
+              </div>
+            </AccordionItem>
+          </div>
+          <!-- PATCH LOCAL (fork) - campos do fluxo PO (ver helper/ticketFieldGroups.js) -->
+          <div v-else-if="element.name === 'qa_dev_actions'">
+            <AccordionItem
+              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.QA_DEV_ACTIONS')"
+              icon="code-outline"
+              :is-open="isContactSidebarItemOpen('is_qa_dev_actions_open')"
+              compact
+              @toggle="
+                value => toggleSidebarUIState('is_qa_dev_actions_open', value)
+              "
+            >
+              <TicketCustomFields :group="FIELD_GROUPS.QA_DEV" />
             </AccordionItem>
           </div>
           <div v-else-if="element.name === 'ticket_details'">

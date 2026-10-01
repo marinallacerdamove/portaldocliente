@@ -953,6 +953,16 @@ const menuItems = computed(() => {
           to: accountScopedRoute('ticket_catalog_justifications_list'),
         },
         {
+          name: 'Settings Ticket Close Reasons',
+          label: t('TICKET_CATALOG.SIDEBAR.CLOSE_REASONS'),
+          icon: 'i-lucide-circle-check-big',
+          activeOn: [
+            'ticket_catalog_close_reasons_new',
+            'ticket_catalog_close_reasons_edit',
+          ],
+          to: accountScopedRoute('ticket_catalog_close_reasons_list'),
+        },
+        {
           name: 'Settings Ticket Custom Fields',
           label: t('TICKET_CATALOG.SIDEBAR.CUSTOM_FIELDS'),
           icon: 'i-lucide-text-cursor-input',

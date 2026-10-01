@@ -5,6 +5,7 @@
       "CATEGORIES": "Tipos de solicitação",
       "STATUSES": "Status",
       "JUSTIFICATIONS": "Justificativas",
+      "CLOSE_REASONS": "Motivos de encerramento",
       "CUSTOM_FIELDS": "Campos adicionais",
       "FIELD_RULES": "Regras de exibição"
     },
@@ -156,6 +157,15 @@
         "STATUSES_HINT": "A justificativa só aparece para os status marcados",
         "NO_STATUSES": "Nenhum status ativo cadastrado"
       }
+    },
+    "CLOSE_REASONS": {
+      "HEADER": "Motivos de encerramento",
+      "DESCRIPTION": "Motivos escolhidos pelo atendente ao resolver uma conversa. Também usados pelo Portal e pelos relatórios.",
+      "NEW": "Novo motivo",
+      "EMPTY": "Nenhum motivo de encerramento cadastrado ainda",
+      "NEW_TITLE": "Novo motivo de encerramento",
+      "EDIT_TITLE": "Editar motivo de encerramento",
+      "SUBTITLE": "Defina o nome que aparece ao resolver a conversa."
     },
     "CUSTOM_FIELDS": {
       "HEADER": "Campos adicionais",

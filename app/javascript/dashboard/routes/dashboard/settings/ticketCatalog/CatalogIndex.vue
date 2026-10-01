@@ -137,6 +137,7 @@ const EXTRA_COLUMNS = {
           .join(', ') || t('TICKET_CATALOG.LIST.EMPTY_VALUE'),
     },
   ],
+  closeReasons: [],
   customFields: [
     {
       header: 'TICKET_CATALOG.CUSTOM_FIELDS.TABLE_HEADER.TYPE',

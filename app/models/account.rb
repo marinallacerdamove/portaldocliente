@@ -76,6 +76,7 @@ class Account < ApplicationRecord
   has_many :ticket_categories, dependent: :destroy_async
   has_many :ticket_statuses, dependent: :destroy_async
   has_many :ticket_justifications, dependent: :destroy_async
+  has_many :ticket_close_reasons, dependent: :destroy_async
   has_many :ticket_custom_fields, dependent: :destroy_async
   has_many :ticket_field_rules, dependent: :destroy_async
   has_many :campaigns, dependent: :destroy_async

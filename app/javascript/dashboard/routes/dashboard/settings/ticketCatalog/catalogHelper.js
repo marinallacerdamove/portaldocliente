@@ -59,6 +59,7 @@ const KIND_DEFAULTS = {
   categories: { allowed_priorities: [] },
   statuses: { base: 'novo', requires_justification: false },
   justifications: { status_ids: [] },
+  closeReasons: {},
   customFields: { field_type: 'text', hint: '', options: [] },
   fieldRules: { conditions: [], fields: [] },
 };

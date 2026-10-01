@@ -1,13 +1,16 @@
 import { computed } from 'vue';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 
+// PATCH LOCAL (fork) - ordem pedida pela operação: Ações da conversa, Ações do
+// QA/DEV, Campos adicionais, Informação da conversa (com Participantes),
+// Anexos, Conversas anteriores.
 export const DEFAULT_CONVERSATION_SIDEBAR_ITEMS_ORDER = Object.freeze([
   { name: 'conversation_actions' },
+  { name: 'qa_dev_actions' },
   { name: 'ticket_details' },
   { name: 'conversation_info' },
   { name: 'shared_files' },
   { name: 'previous_conversation' },
-  { name: 'conversation_participants' },
   { name: 'linear_issues' },
   { name: 'shopify_orders' },
 ]);
@@ -36,7 +39,12 @@ const useConversationSidebarItemsOrder = uiSettings => {
   return computed(() => {
     const { conversation_sidebar_items_order: itemsOrder } = uiSettings.value;
     // If the sidebar order is not set, use the default order.
-    if (!itemsOrder) {
+    // PATCH LOCAL (fork) - ordem salva antes da seção Ações do QA/DEV existir
+    // volta pro padrão uma vez (a nova ordem foi pedida pra todo mundo).
+    if (
+      !itemsOrder ||
+      !itemsOrder.some(item => item.name === 'qa_dev_actions')
+    ) {
       return [...DEFAULT_CONVERSATION_SIDEBAR_ITEMS_ORDER];
     }
     // PATCH LOCAL (fork) - some itens removidos da lateral (Macros, Atributos

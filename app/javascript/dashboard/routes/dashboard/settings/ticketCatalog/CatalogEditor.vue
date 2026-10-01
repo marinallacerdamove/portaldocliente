@@ -52,6 +52,7 @@ const RELATED_LISTS = {
   categories: [],
   statuses: [],
   justifications: ['statuses'],
+  closeReasons: [],
   customFields: [],
   fieldRules: ['customFields', 'services', 'categories', 'statuses'],
 };
@@ -240,7 +241,11 @@ const submit = async () => {
           </div>
         </InfoCard>
 
-        <component :is="KIND_FIELDS[kind]" v-model:record="record" />
+        <component
+          :is="KIND_FIELDS[kind]"
+          v-if="KIND_FIELDS[kind]"
+          v-model:record="record"
+        />
       </div>
     </div>
   </div>

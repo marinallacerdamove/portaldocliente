@@ -156,6 +156,7 @@ Rails.application.routes.draw do
           resources :ticket_categories, only: [:index, :create, :show, :update]
           resources :ticket_statuses, only: [:index, :create, :show, :update]
           resources :ticket_justifications, only: [:index, :create, :show, :update]
+          resources :ticket_close_reasons, only: [:index, :create, :show, :update]
           resources :ticket_custom_fields, only: [:index, :create, :show, :update]
           resources :ticket_field_rules, only: [:index, :create, :show, :update]
           resources :sla_policies, only: [:index, :create, :show, :update, :destroy]

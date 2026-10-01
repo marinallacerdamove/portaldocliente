@@ -13,6 +13,7 @@ import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
 import { MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
 import { useConversationCustomFields } from 'dashboard/composables/useConversationCustomFields';
+import { missingConversationActions } from 'dashboard/helper/conversationRequiredActions';
 
 import WootDropdownItem from 'shared/components/ui/dropdown/DropdownItem.vue';
 import WootDropdownMenu from 'shared/components/ui/dropdown/DropdownMenu.vue';
@@ -50,6 +51,10 @@ const closeReasonAttribute = computed(() => {
     attributeValues: attribute.attributeValues,
   };
 });
+
+// PATCH LOCAL (fork) - Empresa, Tipo de solicitação, Serviço, Prioridade,
+// Agente e Time ("Ações da conversa") precisam estar preenchidos pra resolver.
+const teams = useMapGetter('teams/getTeams');
 
 const arrowDownButtonRef = ref(null);
 const isLoading = ref(false);
@@ -156,6 +161,23 @@ const onCmdOpenConversation = () => {
 
 const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
   pendingExtraAttributes.value = attributes;
+  const missingActions = missingConversationActions(currentChat.value, {
+    attributes: conversationAttributes.value || [],
+    hasTeams: (teams.value || []).length > 0,
+    nativeLabels: {
+      priority: t('CONVERSATION.PRIORITY.TITLE'),
+      assignee: t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL'),
+      team: t('CONVERSATION_SIDEBAR.TEAM_LABEL'),
+    },
+  });
+  if (missingActions.length) {
+    useAlert(
+      t('CONVERSATION.RESOLVE_REQUIRED_ACTIONS', {
+        fields: missingActions.map(item => item.label).join(', '),
+      })
+    );
+    return;
+  }
   await loadCustomFields();
   if (missingOnResolve.value.length) {
     useAlert(

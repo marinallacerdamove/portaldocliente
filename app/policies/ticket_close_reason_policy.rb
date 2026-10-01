@@ -1,0 +1,2 @@
+class TicketCloseReasonPolicy < TicketCatalogPolicy
+end

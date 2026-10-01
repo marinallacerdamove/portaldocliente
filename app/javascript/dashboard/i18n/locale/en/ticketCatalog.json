@@ -5,6 +5,7 @@
       "CATEGORIES": "Request types",
       "STATUSES": "Statuses",
       "JUSTIFICATIONS": "Justifications",
+      "CLOSE_REASONS": "Close reasons",
       "CUSTOM_FIELDS": "Additional fields",
       "FIELD_RULES": "Display rules"
     },
@@ -156,6 +157,15 @@
         "STATUSES_HINT": "The justification only shows up for the checked statuses",
         "NO_STATUSES": "No active statuses yet"
       }
+    },
+    "CLOSE_REASONS": {
+      "HEADER": "Close reasons",
+      "DESCRIPTION": "Reasons the agent picks when resolving a conversation. Also used by the Portal and reports.",
+      "NEW": "New close reason",
+      "EMPTY": "No close reasons yet",
+      "NEW_TITLE": "New close reason",
+      "EDIT_TITLE": "Edit close reason",
+      "SUBTITLE": "Set the name shown when resolving a conversation."
     },
     "CUSTOM_FIELDS": {
       "HEADER": "Additional fields",

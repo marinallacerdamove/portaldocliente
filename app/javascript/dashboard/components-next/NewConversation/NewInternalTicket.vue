@@ -18,7 +18,17 @@ import {
   useTicketCatalog,
   conversationTicketScope,
 } from 'dashboard/composables/useTicketCatalog';
-import { activeInScope } from 'dashboard/helper/ticketCatalogRules';
+import {
+  activeInScope,
+  allowedCategories,
+} from 'dashboard/helper/ticketCatalogRules';
+import { conversationOrigin } from 'dashboard/composables/useConversationCustomFields';
+import {
+  CUSTOM_FIELDS_ATTRIBUTE_KEY,
+  visibleCustomFields,
+} from 'dashboard/helper/ticketFieldRules';
+import { FIELD_GROUPS, itemsInGroup } from 'dashboard/helper/ticketFieldGroups';
+import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
@@ -40,7 +50,6 @@ const searchContacts = createContactSearcher();
 const agentsList = useMapGetter('agents/getAgents');
 const teams = useMapGetter('teams/getTeams');
 const inboxes = useMapGetter('inboxes/getInboxes');
-const getAttributesByModel = useMapGetter('attributes/getAttributesByModel');
 const { state: catalog, fetchList } = useTicketCatalog();
 
 // Caixa é escolhida explicitamente no formulário agora (formState.inbox) -
@@ -53,20 +62,22 @@ const defaultInbox = computed(() =>
   inboxes.value.find(inbox => inbox.name === 'Tickets Internos')
 );
 
-const attrOptions = key => {
-  const def = getAttributesByModel
-    .value('conversation_attribute')
-    .find(attr => attr.attribute_key === key);
-  const values = def ? def.attribute_values : [];
+// PATCH LOCAL (fork) - Liberações, Decisão PO e Status da Cobrança são campos
+// adicionais (Configurações > Campos adicionais): opções vêm de lá e o valor
+// vai pra custom_attributes.campos_adicionais, igual a lateral da conversa.
+const fieldOptions = key => {
+  const field = catalog.customFields.find(item => item.key === key);
   return [
     NONE_OPTION.value,
-    ...(values || []).map(value => ({ id: value, name: value })),
+    ...(field?.options || []).map(value => ({ id: value, name: value })),
   ];
 };
 
-const liberacoesOptions = computed(() => attrOptions('liberacoes'));
-const decisaoPoOptions = computed(() => attrOptions('decisao_po'));
-const statusCobrancaOptions = computed(() => attrOptions('status_cobranca'));
+const liberacoesOptions = computed(() => fieldOptions('liberacoes'));
+const decisaoPoOptions = computed(() => fieldOptions('decisao_po'));
+const statusCobrancaOptions = computed(() =>
+  fieldOptions('status_da_cobranca')
+);
 
 const urgenciaOptions = computed(() => [
   { id: '', name: t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_OPTIONS.NONE') },
@@ -122,7 +133,10 @@ const { onFileUpload } = useFileUpload({
 const emptyForm = () => ({
   contact: null,
   inbox: defaultInbox.value || null,
+  tipo: NONE_OPTION.value,
   servico: NONE_OPTION.value,
+  // Classificação/Tipo do serviço (campos adicionais), por chave do campo.
+  classification: {},
   urgencia: urgenciaOptions.value[0],
   prazoResolucao: '',
   agent: null,
@@ -156,6 +170,32 @@ const servicoOptions = computed(() => [
   ).map(service => ({ id: service.full_name, name: service.full_name })),
 ]);
 
+const selectedService = computed(() =>
+  catalog.services.find(service => service.full_name === formState.servico.id)
+);
+
+// Tipo de solicitação (= Categoria do Movidesk): limitado pelo serviço, igual
+// "Ações da conversa".
+const tipoOptions = computed(() => [
+  NONE_OPTION.value,
+  ...allowedCategories(
+    catalog.categories,
+    selectedService.value,
+    conversationTicketScope(formState.inbox)
+  ).map(category => ({ id: category.name, name: category.name })),
+]);
+
+// Tipo que o serviço não permite cai pro padrão do serviço (ou Nenhum).
+const keepValidTipo = () => {
+  if (tipoOptions.value.some(option => option.id === formState.tipo.id)) return;
+  const defaultCategory = catalog.categories.find(
+    category => category.id === selectedService.value?.default_category_id
+  );
+  formState.tipo =
+    tipoOptions.value.find(option => option.id === defaultCategory?.name) ||
+    NONE_OPTION.value;
+};
+
 // Trocar a caixa pode mudar o tipo de ticket: serviço que não vale mais sai.
 const onSelectInbox = inbox => {
   formState.inbox = inbox;
@@ -163,6 +203,44 @@ const onSelectInbox = inbox => {
     option => option.id === formState.servico.id
   );
   if (!stillValid) formState.servico = NONE_OPTION.value;
+  keepValidTipo();
+};
+
+const onSelectServico = option => {
+  formState.servico = option;
+  keepValidTipo();
+};
+
+// Classificação/Tipo do serviço: os campos que as regras de exibição abrem pro
+// que já foi escolhido no formulário (serviço, tipo, canal, time...).
+const classificationItems = computed(() =>
+  itemsInGroup(
+    visibleCustomFields({
+      rules: catalog.fieldRules,
+      fields: catalog.customFields,
+      context: {
+        servico: formState.servico.id,
+        tipo_de_solicitacao: formState.tipo.id,
+        concluded: false,
+        origem: conversationOrigin(formState.inbox),
+        empresa: formState.contact?.additionalAttributes?.companyName,
+        equipe: formState.team?.name,
+        responsavel: formState.agent?.name,
+        values: formState.classification,
+      },
+    }),
+    FIELD_GROUPS.CLASSIFICATION
+  ).filter(item => item.editable_by_agents)
+);
+
+const fieldComboOptions = field =>
+  field.options.map(option => ({ value: option, label: option }));
+
+const setClassification = (key, value) => {
+  const next = { ...formState.classification };
+  if (value) next[key] = value;
+  else delete next[key];
+  formState.classification = next;
 };
 
 const messageEditorRef = ref(null);
@@ -252,8 +330,9 @@ const stripPastePreviews = html =>
 
 onMounted(() => {
   store.dispatch('agents/get');
-  store.dispatch('attributes/get');
-  fetchList('services');
+  ['services', 'categories', 'customFields', 'fieldRules'].forEach(kind =>
+    fetchList(kind)
+  );
 });
 
 const onSearch = debounce(async () => {
@@ -371,6 +450,8 @@ const buildTicketSummary = displayId => {
   if (displayId) lines.push(`**Protocolo:** #${displayId}`);
   const company = formState.contact?.additionalAttributes?.companyName;
   if (company) lines.push(`**Empresa:** ${company}`);
+  if (formState.tipo?.id)
+    lines.push(`**Tipo de solicitação:** ${formState.tipo.name}`);
   if (formState.servico?.id)
     lines.push(`**Serviço:** ${formState.servico.name}`);
   if (formState.urgencia?.id)
@@ -455,22 +536,30 @@ const onSubmit = async () => {
     if (formState.subject.trim())
       customAttributes.assunto = formState.subject.trim();
     if (formState.servico?.id) customAttributes.servico = formState.servico.id;
+    if (formState.tipo?.id)
+      customAttributes.tipo_de_solicitao = formState.tipo.id;
     if (formState.prazoResolucao)
       customAttributes.prazo_resolucao = formState.prazoResolucao;
-    if (formState.liberacoes?.id)
-      customAttributes.liberacoes = formState.liberacoes.id;
-    if (formState.issueJira.trim())
-      customAttributes.issue_jira = formState.issueJira.trim();
-    if (formState.decisaoPo?.id)
-      customAttributes.decisao_po = formState.decisaoPo.id;
-    if (formState.statusCobranca?.id)
-      customAttributes.status_cobranca = formState.statusCobranca.id;
-    if (formState.dataEntrega)
-      customAttributes.data_entrega = formState.dataEntrega;
-    if (formState.dataAtualizacaoSistema) {
-      customAttributes.data_atualizacao_sistema =
-        formState.dataAtualizacaoSistema;
-    }
+    // Só vai classificação de campo que ainda está aparecendo (trocar o
+    // serviço esconde as antigas).
+    const customFieldValues = Object.fromEntries(
+      classificationItems.value
+        .filter(({ field }) => formState.classification[field.key])
+        .map(({ field }) => [field.key, formState.classification[field.key]])
+    );
+    const qaDevValues = {
+      liberacoes: formState.liberacoes?.id,
+      issue_jira: formState.issueJira.trim(),
+      decisao_po: formState.decisaoPo?.id,
+      status_da_cobranca: formState.statusCobranca?.id,
+      data_entrega: formState.dataEntrega,
+      data_de_atualizacao_do_sistema: formState.dataAtualizacaoSistema,
+    };
+    Object.entries(qaDevValues).forEach(([key, value]) => {
+      if (value) customFieldValues[key] = value;
+    });
+    if (Object.keys(customFieldValues).length)
+      customAttributes[CUSTOM_FIELDS_ATTRIBUTE_KEY] = customFieldValues;
     // Vínculo com a conversa de origem, pra quem for ler o ticket depois
     // conseguir voltar pra conversa nativa sem precisar procurar.
     if (isFromSelection && sourceConversationId.value) {
@@ -522,6 +611,25 @@ defineExpose({ open });
       class="grid grid-cols-1 lg:grid-cols-[26rem_1fr] items-start gap-6 w-full max-h-[80vh] overflow-y-auto pr-1"
     >
       <div class="flex flex-col gap-3">
+        <div>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL') }}
+          </p>
+          <MultiselectDropdown
+            :options="inboxes"
+            :selected-item="formState.inbox"
+            :multiselector-title="t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL')"
+            :multiselector-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+            "
+            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+            :input-placeholder="
+              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+            "
+            @select="onSelectInbox"
+          />
+        </div>
+
         <div class="relative">
           <p class="text-xs text-n-slate-11 mb-1">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUESTER_LABEL') }}
@@ -564,12 +672,14 @@ defineExpose({ open });
 
         <div>
           <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL') }}
+            {{ t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL') }}
           </p>
           <MultiselectDropdown
-            :options="inboxes"
-            :selected-item="formState.inbox"
-            :multiselector-title="t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL')"
+            :options="tipoOptions"
+            :selected-item="formState.tipo"
+            :multiselector-title="
+              t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
+            "
             :multiselector-placeholder="
               t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
             "
@@ -577,7 +687,7 @@ defineExpose({ open });
             :input-placeholder="
               t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
             "
-            @select="onSelectInbox"
+            @select="formState.tipo = $event"
           />
         </div>
 
@@ -596,7 +706,18 @@ defineExpose({ open });
             :input-placeholder="
               t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
             "
-            @select="formState.servico = $event"
+            @select="onSelectServico"
+          />
+        </div>
+
+        <div v-for="{ field } in classificationItems" :key="field.id">
+          <p class="text-xs text-n-slate-11 mb-1">{{ field.name }}</p>
+          <ComboBox
+            :model-value="formState.classification[field.key] || ''"
+            :options="fieldComboOptions(field)"
+            :display-label="formState.classification[field.key] || ''"
+            :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+            @update:model-value="value => setClassification(field.key, value)"
           />
         </div>
 
@@ -618,17 +739,6 @@ defineExpose({ open });
               t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
             "
             @select="formState.urgencia = $event"
-          />
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.PREVISAO_LABEL') }}
-          </p>
-          <input
-            v-model="formState.prazoResolucao"
-            type="date"
-            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
           />
         </div>
 
@@ -670,6 +780,17 @@ defineExpose({ open });
               t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_TEAM_PLACEHOLDER')
             "
             @select="formState.team = $event"
+          />
+        </div>
+
+        <div>
+          <p class="text-xs text-n-slate-11 mb-1">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.PREVISAO_LABEL') }}
+          </p>
+          <input
+            v-model="formState.prazoResolucao"
+            type="date"
+            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
           />
         </div>
 
@@ -772,7 +893,7 @@ defineExpose({ open });
             </p>
             <input
               v-model="formState.dataAtualizacaoSistema"
-              type="date"
+              type="datetime-local"
               class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
             />
           </div>

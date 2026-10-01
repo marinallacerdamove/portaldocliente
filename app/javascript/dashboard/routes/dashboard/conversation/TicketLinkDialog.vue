@@ -168,6 +168,8 @@ const linkExistingTicket = async pickedSummary => {
   }
 };
 
+const SUBJECT_MAX_LENGTH = 150;
+
 const onCreateInternalTicket = async () => {
   const targetTeam = internalTicketTeam.value;
   if (!targetTeam || !internalTicketMessage.value.trim() || !targetInbox.value)
@@ -177,7 +179,13 @@ const onCreateInternalTicket = async () => {
   const accountId = route.params.accountId;
   const isParentMode = linkMode.value === 'newParent';
   const relationLabel = isParentMode ? 'pai' : 'filho';
-  const assunto = `Ticket ${relationLabel} · ${targetTeam.name}`;
+  // PATCH LOCAL (fork) - assunto é o que o agente escreveu em "Descreva o
+  // ticket" (1ª linha, cortada no limite), não mais "Ticket pai · Time".
+  const firstLine = internalTicketMessage.value.trim().split('\n')[0].trim();
+  const assunto =
+    firstLine.length > SUBJECT_MAX_LENGTH
+      ? `${firstLine.slice(0, SUBJECT_MAX_LENGTH - 1)}…`
+      : firstLine;
   const protocolo = (conv.custom_attributes || {}).ticket_id_externo;
   const originalUrl = `${window.location.origin}/app/accounts/${accountId}/conversations/${conv.id}`;
   const content = [

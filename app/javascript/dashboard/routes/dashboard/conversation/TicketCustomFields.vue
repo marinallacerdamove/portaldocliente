@@ -3,7 +3,8 @@
 // adicionais), no acordeão da lateral. Só aparecem os que alguma regra de
 // exibição inclui pro serviço, tipo de solicitação e valores atuais; mudar um
 // valor pode abrir ou fechar outros campos (cascata). Lista e seleção única
-// gravam na hora, texto e data ao sair do campo.
+// gravam na hora, texto e data ao sair do campo. `group` escolhe quais campos
+// esta instância mostra (ver helper/ticketFieldGroups.js).
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
@@ -13,6 +14,17 @@ import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
+import { FIELD_GROUPS, itemsInGroup } from 'dashboard/helper/ticketFieldGroups';
+
+const props = defineProps({
+  group: {
+    type: String,
+    default: FIELD_GROUPS.OTHER,
+    validator: value => Object.values(FIELD_GROUPS).includes(value),
+  },
+  // Dentro de "Ações da conversa" não tem aviso de vazio nem recuo próprio.
+  inline: { type: Boolean, default: false },
+});
 
 const TEXTAREA_MAX_LENGTH = 5000;
 const INPUT_TYPES = { text: 'text', date: 'date', datetime: 'datetime-local' };
@@ -32,11 +44,12 @@ watch(
   { immediate: true }
 );
 
+const groupItems = computed(() => itemsInGroup(items.value, props.group));
 const editableItems = computed(() =>
-  items.value.filter(item => item.editable_by_agents)
+  groupItems.value.filter(item => item.editable_by_agents)
 );
 const readOnlyItems = computed(() =>
-  items.value.filter(item => !item.editable_by_agents)
+  groupItems.value.filter(item => !item.editable_by_agents)
 );
 
 const optionsOf = field =>
@@ -69,8 +82,12 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 px-2 pb-3">
-    <p v-if="!items.length" class="mb-0 text-xs text-n-slate-10">
+  <div
+    v-if="!inline || groupItems.length"
+    class="flex flex-col gap-3"
+    :class="inline ? '' : 'px-2 pb-3'"
+  >
+    <p v-if="!groupItems.length" class="mb-0 text-xs text-n-slate-10">
       {{ t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.EMPTY') }}
     </p>
     <div

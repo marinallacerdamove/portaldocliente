@@ -56,6 +56,13 @@ export const CATALOG_KINDS = {
     path: 'ticket_justifications',
     icon: 'i-lucide-message-square-quote',
   },
+  closeReasons: {
+    i18nKey: 'CLOSE_REASONS',
+    routeBase: 'ticket_catalog_close_reasons',
+    path: 'ticket_close_reasons',
+    icon: 'i-lucide-circle-check-big',
+    hasScope: false,
+  },
   customFields: {
     i18nKey: 'CUSTOM_FIELDS',
     routeBase: 'ticket_catalog_custom_fields',

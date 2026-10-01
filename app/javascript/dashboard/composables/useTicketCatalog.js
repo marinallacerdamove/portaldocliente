@@ -11,6 +11,7 @@
 // - status: { id, name, base ('novo'|'em_atendimento'|'parado'|'resolvido'|
 //   'fechado'|'cancelado'), active, ticket_scope, requires_justification, position }
 // - justification: { id, name, active, ticket_scope, status_ids, position }
+// - closeReason: { id, name, active, position } (vai em motivo_encerramento)
 // - customField: { id, name, key, field_type ('text'|'textarea'|'list'|
 //   'single_select'|'multi_select'|'date'|'datetime'), hint, options, active, position }
 // - fieldRule: { id, name, active, position, conditions: [{ group ('all'|'any'),
@@ -27,6 +28,7 @@ import {
   ticketCategoriesAPI,
   ticketStatusesAPI,
   ticketJustificationsAPI,
+  ticketCloseReasonsAPI,
   ticketCustomFieldsAPI,
   ticketFieldRulesAPI,
 } from 'dashboard/api/ticketCatalog';
@@ -46,6 +48,7 @@ const APIS = {
   categories: ticketCategoriesAPI,
   statuses: ticketStatusesAPI,
   justifications: ticketJustificationsAPI,
+  closeReasons: ticketCloseReasonsAPI,
   customFields: ticketCustomFieldsAPI,
   fieldRules: ticketFieldRulesAPI,
 };
@@ -56,6 +59,7 @@ const PAYLOAD_KEYS = {
   categories: 'ticket_category',
   statuses: 'ticket_status',
   justifications: 'ticket_justification',
+  closeReasons: 'ticket_close_reason',
   customFields: 'ticket_custom_field',
   fieldRules: 'ticket_field_rule',
 };
@@ -65,6 +69,7 @@ const state = reactive({
   categories: [],
   statuses: [],
   justifications: [],
+  closeReasons: [],
   customFields: [],
   fieldRules: [],
   loaded: {},

@@ -10,6 +10,8 @@ import ConversationLabels from './labels/LabelBox.vue';
 import CustomAttribute from 'dashboard/components/CustomAttribute.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 import LinkedTicketCard from './LinkedTicketCard.vue';
+import TicketCustomFields from './TicketCustomFields.vue';
+import { FIELD_GROUPS } from 'dashboard/helper/ticketFieldGroups';
 import {
   PORTAL_INFO_ATTRIBUTE_KEYS,
   SERVICO_ATTRIBUTE_KEY,
@@ -39,6 +41,7 @@ export default {
     CustomAttributes,
     LinkedTicketCard,
     NextButton,
+    TicketCustomFields,
   },
   props: {
     conversationId: {
@@ -53,6 +56,7 @@ export default {
     const { state: catalog, fetchList } = useTicketCatalog();
     const saveConversationAttributes = useSaveConversationAttributes();
     return {
+      FIELD_GROUPS,
       saveConversationAttributes,
       agentsList,
       executeMacro,
@@ -452,28 +456,19 @@ export default {
 
 <template>
   <div>
-    <div v-if="ticketPaiId || ticketFilhosIds.length">
-      <ContactDetailsItem
-        compact
-        :title="$t('CONVERSATION_SIDEBAR.LINKED_TICKETS.SECTION_TITLE')"
+    <div v-if="empresaDefinition">
+      <CustomAttribute
+        class="!px-0 !py-0"
+        attribute-key="empresa"
+        :attribute-type="empresaDefinition.attribute_display_type"
+        :label="empresaDefinition.attribute_display_name"
+        :description="empresaDefinition.attribute_description"
+        :attribute-regex="empresaDefinition.regex_pattern"
+        :regex-cue="empresaDefinition.regex_cue"
+        :values="empresaDefinition.attribute_values"
+        :value="empresaValue"
+        @update="onUpdatePortalAttribute"
       />
-      <div class="flex flex-col gap-1.5 px-2 pb-2">
-        <LinkedTicketCard
-          v-if="ticketPaiId"
-          :conversation-id="ticketPaiId"
-          :relation-label="
-            $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.PARENT_LABEL')
-          "
-        />
-        <LinkedTicketCard
-          v-for="childId in ticketFilhosIds"
-          :key="childId"
-          :conversation-id="childId"
-          :relation-label="
-            $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.CHILD_LABEL')
-          "
-        />
-      </div>
     </div>
     <!-- PATCH LOCAL (fork) - Tipo de solicitação (= Categoria do Movidesk) vem do cadastro, limitado pelo serviço -->
     <div>
@@ -497,20 +492,6 @@ export default {
         @select="onClickAssignTipoDeSolicitacao"
       />
     </div>
-    <div v-if="empresaDefinition">
-      <CustomAttribute
-        class="!px-0 !py-0"
-        attribute-key="empresa"
-        :attribute-type="empresaDefinition.attribute_display_type"
-        :label="empresaDefinition.attribute_display_name"
-        :description="empresaDefinition.attribute_description"
-        :attribute-regex="empresaDefinition.regex_pattern"
-        :regex-cue="empresaDefinition.regex_cue"
-        :values="empresaDefinition.attribute_values"
-        :value="empresaValue"
-        @update="onUpdatePortalAttribute"
-      />
-    </div>
     <div>
       <ContactDetailsItem
         compact
@@ -528,6 +509,26 @@ export default {
           $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
         "
         @select="onClickAssignServico"
+      />
+    </div>
+    <!-- PATCH LOCAL (fork) - Classificação/Tipo do serviço (campos adicionais) logo depois de Serviço -->
+    <TicketCustomFields inline :group="FIELD_GROUPS.CLASSIFICATION" />
+    <div>
+      <ContactDetailsItem compact :title="$t('CONVERSATION.PRIORITY.TITLE')" />
+      <MultiselectDropdown
+        :options="availablePriorityOptions"
+        :selected-item="assignedPriority"
+        :multiselector-title="$t('CONVERSATION.PRIORITY.TITLE')"
+        :multiselector-placeholder="
+          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.SELECT_PLACEHOLDER')
+        "
+        :no-search-result="
+          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.NO_RESULTS')
+        "
+        :input-placeholder="
+          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.INPUT_PLACEHOLDER')
+        "
+        @select="onClickAssignPriority"
       />
     </div>
     <div>
@@ -581,23 +582,28 @@ export default {
         @select="onClickAssignTeam"
       />
     </div>
-    <div>
-      <ContactDetailsItem compact :title="$t('CONVERSATION.PRIORITY.TITLE')" />
-      <MultiselectDropdown
-        :options="availablePriorityOptions"
-        :selected-item="assignedPriority"
-        :multiselector-title="$t('CONVERSATION.PRIORITY.TITLE')"
-        :multiselector-placeholder="
-          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.SELECT_PLACEHOLDER')
-        "
-        :no-search-result="
-          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.NO_RESULTS')
-        "
-        :input-placeholder="
-          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.INPUT_PLACEHOLDER')
-        "
-        @select="onClickAssignPriority"
+    <div v-if="ticketPaiId || ticketFilhosIds.length">
+      <ContactDetailsItem
+        compact
+        :title="$t('CONVERSATION_SIDEBAR.LINKED_TICKETS.SECTION_TITLE')"
       />
+      <div class="flex flex-col gap-1.5 px-2 pb-2">
+        <LinkedTicketCard
+          v-if="ticketPaiId"
+          :conversation-id="ticketPaiId"
+          :relation-label="
+            $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.PARENT_LABEL')
+          "
+        />
+        <LinkedTicketCard
+          v-for="childId in ticketFilhosIds"
+          :key="childId"
+          :conversation-id="childId"
+          :relation-label="
+            $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.CHILD_LABEL')
+          "
+        />
+      </div>
     </div>
     <ContactDetailsItem
       compact
