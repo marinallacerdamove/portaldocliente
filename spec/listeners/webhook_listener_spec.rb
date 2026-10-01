@@ -36,6 +36,20 @@ describe WebhookListener do
       end
     end
 
+    # PATCH LOCAL (fork) - atividade de checklist vai pro Portal; as outras não.
+    context 'with activity messages (fork)' do
+      it 'sends the checklist activity and keeps other activities out' do
+        webhook = create(:webhook, inbox: inbox, account: account)
+        checklist = create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :activity,
+                                     content: 'x', content_attributes: { checklist: { source: 'chatwoot' } })
+        other = create(:message, conversation: conversation, account: account, inbox: inbox, message_type: :activity, content: 'y')
+
+        expect(WebhookJob).to receive(:perform_later).with(webhook.url, hash_including(event: 'message_created'), any_args).once
+        listener.message_created(Events::Base.new(event_name, Time.zone.now, message: checklist))
+        listener.message_created(Events::Base.new(event_name, Time.zone.now, message: other))
+      end
+    end
+
     context 'when webhook is configured and event is not subscribed' do
       it 'does not trigger the webhook event' do
         create(:webhook, subscriptions: ['conversation_created'], inbox: inbox, account: account)

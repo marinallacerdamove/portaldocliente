@@ -185,7 +185,8 @@
         "single_select": "Single choice",
         "multi_select": "Multiple choice",
         "date": "Date",
-        "datetime": "Date and time"
+        "datetime": "Date and time",
+        "checklist": "Checklist"
       },
       "FORM": {
         "DETAILS_TITLE": "Type and options",
@@ -204,6 +205,9 @@
         "SELECT_PLACEHOLDER": "Select",
         "SAVE_ERROR": "Could not save the field, try again",
         "MISSING_ON_RESOLVE": "Fill in the required additional fields before resolving: {fields}"
+      },
+      "CHECKLIST": {
+        "PROGRESS": "{done} of {total}"
       }
     },
     "FIELD_RULES": {

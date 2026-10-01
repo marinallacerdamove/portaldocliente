@@ -4,8 +4,10 @@
 # pra renomear sem perder os valores já gravados nas conversas; o Portal gera
 # a mesma chave do mesmo nome, é por ela que os valores sincronizam.
 class TicketCustomField < ApplicationRecord
-  FIELD_TYPES = %w[text textarea list single_select multi_select date datetime].freeze
-  OPTION_TYPES = %w[list single_select multi_select].freeze
+  # checklist = seleção múltipla mostrada como caixinhas no topo da conversa,
+  # com quem marcou nas atividades (Conversations::ChecklistActivityService).
+  FIELD_TYPES = %w[text textarea list single_select multi_select checklist date datetime].freeze
+  OPTION_TYPES = %w[list single_select multi_select checklist].freeze
   KEY_MAX_LENGTH = 60
 
   belongs_to :account

@@ -13,7 +13,17 @@ export const CUSTOM_FIELDS_ATTRIBUTE_KEY = 'campos_adicionais';
 // Status especial do Movidesk: qualquer status que não encerra o ticket.
 export const STATUS_NOT_CONCLUDED = '__nao_concluido';
 
-export const OPTION_FIELD_TYPES = ['list', 'single_select', 'multi_select'];
+// checklist = seleção múltipla mostrada como caixinhas num bloco próprio
+// (topo da conversa), fora da lista de campos.
+export const CHECKLIST_FIELD_TYPE = 'checklist';
+export const OPTION_FIELD_TYPES = [
+  'list',
+  'single_select',
+  'multi_select',
+  CHECKLIST_FIELD_TYPE,
+];
+export const isChecklistItem = item =>
+  item.field.field_type === CHECKLIST_FIELD_TYPE;
 
 export const CONDITION_ATTRIBUTES = [
   'servico',

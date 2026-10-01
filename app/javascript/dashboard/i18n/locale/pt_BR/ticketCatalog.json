@@ -185,7 +185,8 @@
         "single_select": "Seleção única",
         "multi_select": "Seleção múltipla",
         "date": "Data",
-        "datetime": "Data e hora"
+        "datetime": "Data e hora",
+        "checklist": "Checklist"
       },
       "FORM": {
         "DETAILS_TITLE": "Tipo e opções",
@@ -204,6 +205,9 @@
         "SELECT_PLACEHOLDER": "Selecione",
         "SAVE_ERROR": "Não foi possível salvar o campo, tente de novo",
         "MISSING_ON_RESOLVE": "Preencha os campos adicionais obrigatórios antes de resolver: {fields}"
+      },
+      "CHECKLIST": {
+        "PROGRESS": "{done} de {total}"
       }
     },
     "FIELD_RULES": {

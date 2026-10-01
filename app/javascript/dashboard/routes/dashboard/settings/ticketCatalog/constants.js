@@ -23,6 +23,7 @@ export const FIELD_TYPES = [
   'list',
   'single_select',
   'multi_select',
+  'checklist',
   'date',
   'datetime',
 ];

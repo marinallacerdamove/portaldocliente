@@ -8,11 +8,14 @@ module ResolveRequirementsGuard
   private
 
   def enforce_resolve_requirements?
-    return false unless Current.user.is_a?(User)
-    return true unless authenticate_by_access_token?
+    Current.user.is_a?(User) && !portal_integration_request?
+  end
+
+  def portal_integration_request?
+    return false unless authenticate_by_access_token?
 
     integration_email = ENV.fetch('PORTAL_INTEGRATION_USER_EMAIL', '').strip
-    integration_email.present? && !Current.user.email.casecmp?(integration_email)
+    integration_email.blank? || Current.user&.email&.casecmp?(integration_email)
   end
 
   def resolve_requirements_missing(conversation)

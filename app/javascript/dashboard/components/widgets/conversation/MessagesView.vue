@@ -22,6 +22,8 @@ import ReferralBubble from 'dashboard/components-next/Conversation/ReferralBubbl
 import NewInternalTicket from 'dashboard/components-next/NewConversation/NewInternalTicket.vue';
 import AddToExistingTicket from 'dashboard/components-next/NewConversation/AddToExistingTicket.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+// PATCH LOCAL (fork) - checklists do ticket no topo da conversa.
+import ConversationChecklists from 'dashboard/routes/dashboard/conversation/ConversationChecklists.vue';
 
 // stores and apis
 import { mapGetters } from 'vuex';
@@ -51,6 +53,7 @@ import { INBOX_TYPES } from 'dashboard/helper/inbox';
 
 export default {
   components: {
+    ConversationChecklists,
     MessageList,
     ReplyBox,
     MessageEditBar,
@@ -589,6 +592,7 @@ export default {
     class="flex flex-col justify-between flex-grow h-full min-w-0 m-0"
   >
     <div ref="topBannerRef" class="relative">
+      <ConversationChecklists :key="currentChat.id" />
       <NextButton
         v-if="activityMessageCount"
         xs

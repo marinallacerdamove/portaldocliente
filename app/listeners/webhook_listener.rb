@@ -26,7 +26,8 @@ class WebhookListener < BaseListener
     message = extract_message_and_account(event)[0]
     inbox = message.inbox
 
-    return unless message.webhook_sendable?
+    # PATCH LOCAL (fork) - a atividade de checklist vai pro Portal (histórico).
+    return unless message.webhook_sendable? || message.content_attributes['checklist'].present?
 
     payload = message.webhook_data.merge(event: __method__.to_s)
     deliver_webhook_payloads(payload, inbox)

@@ -3,7 +3,9 @@
 // chave do campo (gerada do nome na criação e fixa depois, ver
 // TicketCustomField). Classificação/Tipo do serviço ficam em "Ações da
 // conversa" logo depois de Serviço; os campos do fluxo PO em "Ações do
-// QA/DEV"; o resto (checklists etc.) em "Detalhes do ticket".
+// QA/DEV"; o resto em "Detalhes do ticket". Checklist não entra na lateral.
+import { isChecklistItem } from 'dashboard/helper/ticketFieldRules';
+
 export const FIELD_GROUPS = Object.freeze({
   CLASSIFICATION: 'classification',
   QA_DEV: 'qaDev',
@@ -43,9 +45,13 @@ const RANKS = {
 
 // Itens visíveis (visibleCustomFields) de um grupo, na ordem do grupo; empate
 // mantém a ordem das regras (sort é estável).
+// Checklist fica fora dos grupos da lateral: tem bloco próprio no topo da
+// conversa (ConversationChecklists.vue).
 export const itemsInGroup = (items, group) =>
   items
-    .filter(item => fieldGroup(item.field.key) === group)
+    .filter(
+      item => !isChecklistItem(item) && fieldGroup(item.field.key) === group
+    )
     .sort((a, b) => RANKS[group](a.field.key) - RANKS[group](b.field.key));
 
 // "Classificação do Serviço - SUP" / "Tipo do Serviço - Usuários (2)": a
