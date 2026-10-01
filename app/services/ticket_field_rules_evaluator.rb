@@ -53,10 +53,14 @@ class TicketFieldRulesEvaluator
   end
 
   def rule_matches?(rule, context, visible_ids)
-    all, any = Array(rule['conditions']).map(&:stringify_keys).partition { |c| c['group'] == 'all' }
-    any.select! { |c| c['group'] == 'any' }
     matches = ->(condition) { condition_matches?(condition, context, visible_ids) }
+    all, any = condition_groups(rule)
     all.all?(&matches) && (any.empty? || any.any?(&matches))
+  end
+
+  def condition_groups(rule)
+    conditions = Array(rule['conditions']).map(&:stringify_keys)
+    [conditions.select { |c| c['group'] == 'all' }, conditions.select { |c| c['group'] == 'any' }]
   end
 
   def condition_matches?(condition, context, visible_ids)
