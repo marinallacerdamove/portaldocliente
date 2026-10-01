@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { usePolicy } from 'dashboard/composables/usePolicy';
 import { dynamicTime } from 'shared/helpers/timeHelper';
@@ -13,6 +14,7 @@ import Select from 'dashboard/components-next/select/Select.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import { useCompaniesStore } from 'dashboard/stores/companies';
+import CompanyAPI from 'dashboard/api/companies';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
 import InfoCardFields from 'dashboard/components-next/InfoCard/InfoCardFields.vue';
 import CompanyDocuments from './CompanyDocuments.vue';
@@ -168,6 +170,7 @@ const customAttrs = reactive(
       ...ALL_EXTRA_FIELDS.map(f => f.key),
       'cnpj',
       'cep',
+      'matriz_cnpj',
       'dominios_vinculados',
       'urls_acesso',
     ].map(key => [key, ''])
@@ -186,6 +189,119 @@ const cnpjLookupLoading = ref(false);
 const cnpjLookupNotFound = ref(false);
 const cepLookupLoading = ref(false);
 const cepLookupNotFound = ref(false);
+
+// PATCH LOCAL (fork) - matriz/filial como no Portal. O Chatwoot não tem esse
+// vínculo: a filial guarda o CPF/CNPJ da matriz em custom_attributes.
+// matriz_cnpj (a mesma chave que liga Company e Empresa do Portal, e que o
+// Portal sincroniza nos dois sentidos). As filiais de uma matriz saem daí.
+const route = useRoute();
+const cnpjKey = value =>
+  String(value || '')
+    .replace(/[^0-9A-Za-z]/g, '')
+    .toUpperCase();
+const accountCompanies = ref([]);
+const filialIds = ref([]);
+const addFilialValue = ref('');
+
+// Poucas empresas por conta: carrega todas as páginas.
+const loadAccountCompanies = async (page = 1, loaded = []) => {
+  const { data } = await CompanyAPI.get({ page });
+  const all = [...loaded, ...data.payload];
+  if (data.payload.length && all.length < data.meta.total_count)
+    return loadAccountCompanies(page + 1, all);
+  accountCompanies.value = all;
+  return all;
+};
+
+const otherCompanies = computed(() =>
+  accountCompanies.value.filter(item => item.id !== Number(props.company?.id))
+);
+const ownCnpjKey = computed(() =>
+  cnpjKey(props.company?.customAttributes?.cnpj)
+);
+const savedFiliais = computed(() =>
+  ownCnpjKey.value
+    ? otherCompanies.value.filter(
+        item =>
+          cnpjKey(item.custom_attributes?.matriz_cnpj) === ownCnpjKey.value
+      )
+    : []
+);
+const savedFilialIds = computed(() => savedFiliais.value.map(item => item.id));
+const matrizCompany = computed(() => {
+  const key = cnpjKey(props.company?.customAttributes?.matriz_cnpj);
+  return key
+    ? accountCompanies.value.find(
+        item => cnpjKey(item.custom_attributes?.cnpj) === key
+      )
+    : null;
+});
+const matrizOptions = computed(() => [
+  { value: '', label: t('COMPANIES.DETAIL.PORTAL_FIELDS.MATRIZ_NONE') },
+  ...otherCompanies.value
+    .filter(
+      item =>
+        item.custom_attributes?.cnpj &&
+        item.custom_attributes?.tipo_empresa !== 'filial'
+    )
+    .map(item => ({ value: item.custom_attributes.cnpj, label: item.name })),
+]);
+const filialOptions = computed(() =>
+  otherCompanies.value
+    .filter(item => !filialIds.value.includes(item.id))
+    .map(item => ({ value: item.id, label: item.name }))
+);
+const companyById = id => accountCompanies.value.find(item => item.id === id);
+const companyRoute = id => ({
+  name: 'companies_dashboard_show',
+  params: { accountId: route.params.accountId, companyId: id },
+});
+const companyRouteLink = item => ({
+  id: item.id,
+  label: item.name,
+  to: companyRoute(item.id),
+});
+const removeFilial = id => {
+  filialIds.value = filialIds.value.filter(item => item !== id);
+};
+
+watch(addFilialValue, id => {
+  if (!id) return;
+  if (!filialIds.value.includes(id)) filialIds.value = [...filialIds.value, id];
+  addFilialValue.value = '';
+});
+watch(
+  savedFilialIds,
+  ids => {
+    if (!editingSection.value) filialIds.value = ids;
+  },
+  { immediate: true }
+);
+
+// Cada filial é outra Company: vincular/desvincular grava nela.
+const saveFiliais = async cnpj => {
+  const added = filialIds.value.filter(
+    id => !savedFilialIds.value.includes(id)
+  );
+  const removed = savedFilialIds.value.filter(
+    id => !filialIds.value.includes(id)
+  );
+  if (!added.length && !removed.length) return;
+  await Promise.all([
+    ...added.map(id =>
+      companiesStore.update({
+        id,
+        customAttributes: { tipo_empresa: 'filial', matriz_cnpj: cnpj },
+      })
+    ),
+    ...removed.map(id =>
+      companiesStore.update({ id, customAttributes: { matriz_cnpj: '' } })
+    ),
+  ]);
+  await loadAccountCompanies();
+};
+
+loadAccountCompanies().catch(() => {});
 
 const uiFlags = computed(() => companiesStore.getUIFlags);
 const isUpdating = computed(() => uiFlags.value.updatingItem);
@@ -217,6 +333,8 @@ const hasChanges = computed(() => {
       (attrs.contabilidade_observacoes || '') ||
     customAttrs.cnpj !== (attrs.cnpj || '') ||
     customAttrs.cep !== (attrs.cep || '') ||
+    customAttrs.matriz_cnpj !== (attrs.matriz_cnpj || '') ||
+    arraysDiffer(filialIds.value, savedFilialIds.value) ||
     customAttrs.dominios_vinculados !== (attrs.dominios_vinculados || '') ||
     customAttrs.urls_acesso !== (attrs.urls_acesso || '')
   ) {
@@ -273,6 +391,8 @@ const syncForm = company => {
   });
   customAttrs.cnpj = attrs.cnpj || '';
   customAttrs.cep = attrs.cep || '';
+  customAttrs.matriz_cnpj = attrs.matriz_cnpj || '';
+  filialIds.value = savedFilialIds.value;
   customAttrs.dominios_vinculados = attrs.dominios_vinculados || '';
   customAttrs.urls_acesso = attrs.urls_acesso || '';
   isentaInscricaoEstadual.value = !!attrs.inscricao_estadual_isenta;
@@ -439,6 +559,10 @@ const handleUpdateCompany = async () => {
         ),
         cnpj: customAttrs.cnpj.trim(),
         cep: customAttrs.cep.trim(),
+        matriz_cnpj:
+          customAttrs.tipo_empresa === 'filial'
+            ? customAttrs.matriz_cnpj.trim()
+            : '',
         dominios_vinculados: customAttrs.dominios_vinculados.trim(),
         urls_acesso: customAttrs.urls_acesso.trim(),
         inscricao_estadual_isenta: isentaInscricaoEstadual.value,
@@ -448,6 +572,8 @@ const handleUpdateCompany = async () => {
         modulos_contratados: modulosContratados.value.join(', '),
       },
     });
+    if (customAttrs.tipo_empresa !== 'filial')
+      await saveFiliais(customAttrs.cnpj.trim());
     if (!isCurrentCompany(companyId)) return false;
 
     syncForm(updated);
@@ -538,6 +664,21 @@ const dadosItems = computed(() => [
     label: labelOf('tipo_empresa'),
     value: optionLabel(TIPO_EMPRESA_OPTIONS, attrs.value.tipo_empresa),
   },
+  attrs.value.tipo_empresa === 'filial'
+    ? {
+        key: 'matriz',
+        label: labelOf('matriz_cnpj'),
+        value: matrizCompany.value
+          ? [companyRouteLink(matrizCompany.value)]
+          : attrs.value.matriz_cnpj || '',
+        kind: matrizCompany.value ? 'links' : undefined,
+      }
+    : {
+        key: 'filiais',
+        label: labelOf('filiais'),
+        value: savedFiliais.value.map(companyRouteLink),
+        kind: 'links',
+      },
   {
     key: 'domain',
     label: t('COMPANIES.DETAIL.PROFILE.FIELDS.DOMAIN'),
@@ -795,6 +936,56 @@ const contabilidadeItems = computed(() => [
                 custom-input-class="h-8 !pt-1 !pb-1"
               />
             </template>
+            <!-- PATCH LOCAL (fork) - matriz/filial (ver saveFiliais) -->
+            <Select
+              v-if="customAttrs.tipo_empresa === 'filial'"
+              v-model="customAttrs.matriz_cnpj"
+              :options="matrizOptions"
+              :label="labelOf('matriz_cnpj')"
+              :disabled="isUpdating"
+              class="w-full"
+            />
+            <div v-else class="flex flex-col gap-1 sm:col-span-2">
+              <label class="mb-0.5 text-heading-3 text-n-slate-12">
+                {{ labelOf('filiais') }}
+              </label>
+              <p
+                v-if="!customAttrs.cnpj.trim()"
+                class="mb-0 text-label-small text-n-slate-11"
+              >
+                {{ t('COMPANIES.DETAIL.PORTAL_FIELDS.FILIAIS_NEED_CNPJ') }}
+              </p>
+              <template v-else>
+                <Select
+                  v-model="addFilialValue"
+                  :options="filialOptions"
+                  :placeholder="t('COMPANIES.DETAIL.PORTAL_FIELDS.FILIAL_ADD')"
+                  :disabled="isUpdating"
+                  class="w-full"
+                />
+                <div v-if="filialIds.length" class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="id in filialIds"
+                    :key="id"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-md bg-n-alpha-2 text-n-slate-12"
+                  >
+                    {{ companyById(id)?.name || id }}
+                    <button
+                      type="button"
+                      class="flex p-0 bg-transparent border-0 text-n-slate-11 hover:text-n-ruby-11"
+                      :aria-label="
+                        t('COMPANIES.DETAIL.PORTAL_FIELDS.FILIAL_REMOVE', {
+                          name: companyById(id)?.name || id,
+                        })
+                      "
+                      @click="removeFilial(id)"
+                    >
+                      <span class="i-lucide-x size-3" />
+                    </button>
+                  </span>
+                </div>
+              </template>
+            </div>
             <Input
               v-model="form.domain"
               :label="t('COMPANIES.DETAIL.PROFILE.FIELDS.DOMAIN')"

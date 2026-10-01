@@ -65,6 +65,8 @@
           "classificacao": "Classificação",
           "segmento": "Segmento",
           "tipo_empresa": "Empresa",
+          "matriz_cnpj": "Matriz",
+          "filiais": "Filiais vinculadas",
           "cep": "CEP",
           "rua": "Logradouro",
           "numero": "Número",
@@ -105,7 +107,11 @@
         "CNPJ_NOT_FOUND": "CNPJ não encontrado na Receita - preencha os dados manualmente.",
         "CEP_PLACEHOLDER": "00000-000",
         "CEP_LOOKUP_TITLE": "Buscar endereço pelo CEP",
-        "CEP_NOT_FOUND": "CEP não encontrado."
+        "CEP_NOT_FOUND": "CEP não encontrado.",
+        "MATRIZ_NONE": "Nenhuma / não vinculada",
+        "FILIAL_ADD": "Adicionar filial...",
+        "FILIAL_REMOVE": "Remover {name}",
+        "FILIAIS_NEED_CNPJ": "Preencha o CPF/CNPJ da empresa para vincular filiais."
       },
       "EMPTY_STATE": {
         "TITLE": "Empresa não encontrada",
