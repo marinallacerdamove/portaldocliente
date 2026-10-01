@@ -27,7 +27,11 @@ import {
   CUSTOM_FIELDS_ATTRIBUTE_KEY,
   visibleCustomFields,
 } from 'dashboard/helper/ticketFieldRules';
-import { FIELD_GROUPS, itemsInGroup } from 'dashboard/helper/ticketFieldGroups';
+import {
+  FIELD_GROUPS,
+  itemsInGroup,
+  fieldDisplayName,
+} from 'dashboard/helper/ticketFieldGroups';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
@@ -46,6 +50,8 @@ const NONE_OPTION = computed(() => ({
   name: t('NEW_INTERNAL_TICKET_DIALOG.NONE_OPTION'),
 }));
 
+// Rótulo à esquerda, campo à direita (painel de propriedades).
+const FIELD_ROW_CLASS = 'grid grid-cols-[8.5rem_1fr] items-center gap-3';
 const SECTION_TITLE_CLASS =
   'flex items-center gap-2 mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11';
 
@@ -642,19 +648,19 @@ defineExpose({ open });
     @confirm="onSubmit"
   >
     <div
-      class="grid grid-cols-1 lg:grid-cols-[26rem_1fr] items-start gap-6 w-full max-h-[75vh] overflow-y-auto pr-1"
+      class="grid grid-cols-1 lg:grid-cols-[30rem_1fr] items-start gap-6 w-full max-h-[75vh] overflow-y-auto pr-1"
     >
       <!-- PATCH LOCAL (fork) - painel de propriedades no padrão da lateral
       (Ações da conversa / QA/DEV), seções separadas por linha. -->
       <div
         class="flex flex-col gap-5 p-5 border rounded-xl border-n-weak bg-n-alpha-1"
       >
-        <section class="flex flex-col gap-4">
+        <section class="flex flex-col gap-3">
           <h3 :class="SECTION_TITLE_CLASS">
             <span class="i-lucide-user-round size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.REQUEST') }}
           </h3>
-          <div class="flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">
               {{ t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL') }}
               <span class="text-n-ruby-9">*</span>
@@ -674,53 +680,57 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="relative flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">
               {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUESTER_LABEL') }}
               <span class="text-n-ruby-9">*</span>
             </span>
-            <Input
-              v-model="query"
-              :size="FIELD_SIZE"
-              :custom-input-class="FIELD_INPUT_CLASS"
-              :placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.CONTACT_SEARCH_PLACEHOLDER')
-              "
-              @input="onSearch"
-            />
-            <ul
-              v-if="results.length"
-              class="absolute top-full z-10 w-full mt-1 bg-n-solid-2 border border-n-weak rounded-md max-h-40 overflow-y-auto"
-            >
-              <li
-                v-for="contact in results"
-                :key="contact.id"
-                class="px-2 py-1 text-sm cursor-pointer hover:bg-n-alpha-2"
-                @click="selectContact(contact)"
+            <div class="relative flex flex-col min-w-0 gap-1">
+              <Input
+                v-model="query"
+                :size="FIELD_SIZE"
+                :custom-input-class="FIELD_INPUT_CLASS"
+                :placeholder="
+                  t('NEW_INTERNAL_TICKET_DIALOG.CONTACT_SEARCH_PLACEHOLDER')
+                "
+                @input="onSearch"
+              />
+              <ul
+                v-if="results.length"
+                class="absolute z-10 w-full mt-1 overflow-y-auto border rounded-md top-9 bg-n-solid-2 border-n-weak max-h-40"
               >
-                <div class="flex items-center justify-between gap-2">
-                  <span>{{ contact.name }}</span>
-                  <span class="text-n-slate-10">{{ contact.email }}</span>
-                </div>
-                <div
-                  v-if="contact.additionalAttributes?.companyName"
-                  class="text-xs text-n-slate-10"
+                <li
+                  v-for="contact in results"
+                  :key="contact.id"
+                  class="px-2 py-1.5 text-xs cursor-pointer hover:bg-n-alpha-2"
+                  @click="selectContact(contact)"
                 >
-                  {{ contact.additionalAttributes.companyName }}
-                </div>
-              </li>
-            </ul>
-            <p v-if="formState.contact" class="mb-0 text-xs text-n-teal-11">
-              {{ selectedContactLabel }}
-            </p>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-n-slate-12">{{ contact.name }}</span>
+                    <span class="truncate text-n-slate-10">
+                      {{ contact.email }}
+                    </span>
+                  </div>
+                  <div
+                    v-if="contact.additionalAttributes?.companyName"
+                    class="text-n-slate-10"
+                  >
+                    {{ contact.additionalAttributes.companyName }}
+                  </div>
+                </li>
+              </ul>
+              <p v-if="formState.contact" class="mb-0 text-xs text-n-teal-11">
+                {{ selectedContactLabel }}
+              </p>
+            </div>
           </div>
         </section>
-        <section class="flex flex-col gap-4 pt-5 border-t border-n-weak">
+        <section class="flex flex-col gap-3 pt-5 border-t border-n-weak">
           <h3 :class="SECTION_TITLE_CLASS">
             <span class="i-lucide-folder-tree size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.CLASSIFICATION') }}
           </h3>
-          <div class="flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">{{
               t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
             }}</span>
@@ -740,7 +750,7 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">{{
               t('CONVERSATION_SIDEBAR.SERVICO_LABEL')
             }}</span>
@@ -764,9 +774,11 @@ defineExpose({ open });
           <div
             v-for="{ field } in classificationItems"
             :key="field.id"
-            class="flex flex-col gap-1.5"
+            :class="FIELD_ROW_CLASS"
           >
-            <span :class="FIELD_LABEL_CLASS">{{ field.name }}</span>
+            <span :class="FIELD_LABEL_CLASS">{{
+              fieldDisplayName(field)
+            }}</span>
             <ComboBox
               :size="FIELD_SIZE"
               :model-value="formState.classification[field.key] || ''"
@@ -777,12 +789,12 @@ defineExpose({ open });
             />
           </div>
         </section>
-        <section class="flex flex-col gap-4 pt-5 border-t border-n-weak">
+        <section class="flex flex-col gap-3 pt-5 border-t border-n-weak">
           <h3 :class="SECTION_TITLE_CLASS">
             <span class="i-lucide-headset size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.SERVICE') }}
           </h3>
-          <div class="flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL')
             }}</span>
@@ -802,7 +814,7 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.RESPONSIBLE_LABEL')
             }}</span>
@@ -820,7 +832,7 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">
               {{ t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL') }}
               <span class="text-n-ruby-9">*</span>
@@ -839,7 +851,7 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1.5">
+          <div :class="FIELD_ROW_CLASS">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.PREVISAO_LABEL')
             }}</span>
@@ -851,13 +863,13 @@ defineExpose({ open });
             />
           </div>
         </section>
-        <section class="flex flex-col gap-4 pt-5 border-t border-n-weak">
+        <section class="flex flex-col gap-3 pt-5 border-t border-n-weak">
           <h3 :class="SECTION_TITLE_CLASS">
             <span class="i-lucide-code-xml size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.QA_DEV') }}
           </h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="flex flex-col gap-1.5">
+          <div class="flex flex-col gap-3">
+            <div :class="FIELD_ROW_CLASS">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.LIBERACOES_LABEL')
               }}</span>
@@ -879,7 +891,7 @@ defineExpose({ open });
                 "
               />
             </div>
-            <div class="flex flex-col gap-1.5">
+            <div :class="FIELD_ROW_CLASS">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.ISSUE_JIRA_LABEL')
               }}</span>
@@ -890,7 +902,7 @@ defineExpose({ open });
                 :custom-input-class="FIELD_INPUT_CLASS"
               />
             </div>
-            <div class="flex flex-col gap-1.5">
+            <div :class="FIELD_ROW_CLASS">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.DECISAO_PO_LABEL')
               }}</span>
@@ -912,7 +924,7 @@ defineExpose({ open });
                 "
               />
             </div>
-            <div class="flex flex-col gap-1.5">
+            <div :class="FIELD_ROW_CLASS">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.STATUS_COBRANCA_LABEL')
               }}</span>
@@ -934,7 +946,7 @@ defineExpose({ open });
                 "
               />
             </div>
-            <div class="flex flex-col gap-1.5">
+            <div :class="FIELD_ROW_CLASS">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.DATA_ENTREGA_LABEL')
               }}</span>
@@ -945,7 +957,7 @@ defineExpose({ open });
                 :custom-input-class="FIELD_INPUT_CLASS"
               />
             </div>
-            <div class="flex flex-col gap-1.5">
+            <div :class="FIELD_ROW_CLASS">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.DATA_ATUALIZACAO_LABEL')
               }}</span>
@@ -986,13 +998,13 @@ defineExpose({ open });
       </div>
 
       <div class="flex flex-col gap-5">
-        <div class="flex flex-col gap-2">
-          <div class="grid grid-cols-2 gap-1 p-1 rounded-lg bg-n-alpha-2">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <div class="inline-flex gap-0.5 p-0.5 rounded-lg bg-n-alpha-2">
             <button
               v-for="option in VISIBILITY_OPTIONS"
               :key="option.key"
               type="button"
-              class="flex items-center justify-center h-8 gap-2 text-xs font-medium transition-colors rounded-md"
+              class="flex items-center gap-1.5 h-7 px-3 text-xs font-medium transition-colors rounded-md"
               :class="
                 formState.visibleToClient === option.visible
                   ? `bg-n-solid-1 shadow-sm ${option.activeClass}`
@@ -1004,7 +1016,7 @@ defineExpose({ open });
               {{ t(option.label) }}
             </button>
           </div>
-          <p class="mb-0 text-xs text-n-slate-11">
+          <p class="mb-0 text-xs text-n-slate-10">
             {{
               formState.visibleToClient
                 ? t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_HELP')
@@ -1033,7 +1045,7 @@ defineExpose({ open });
               <div
                 ref="messageEditorRef"
                 contenteditable="true"
-                class="w-full min-h-[20rem] max-h-[36rem] overflow-y-auto px-4 py-3 text-sm outline-none text-n-slate-12"
+                class="w-full min-h-[18rem] max-h-[36rem] overflow-y-auto px-4 py-3 text-sm outline-none text-n-slate-12"
                 @input="onMessageInput"
                 @paste="onPasteMessage"
               />

@@ -47,3 +47,11 @@ export const itemsInGroup = (items, group) =>
   items
     .filter(item => fieldGroup(item.field.key) === group)
     .sort((a, b) => RANKS[group](a.field.key) - RANKS[group](b.field.key));
+
+// "Classificação do Serviço - SUP" / "Tipo do Serviço - Usuários (2)": a
+// variante depois do " - " só existe porque o Movidesk tinha um campo por
+// serviço; pra quem preenche, o campo é "Classificação do Serviço".
+export const fieldDisplayName = field =>
+  fieldGroup(field.key) === FIELD_GROUPS.CLASSIFICATION
+    ? field.name.split(' - ')[0].trim()
+    : field.name;

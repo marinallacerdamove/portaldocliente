@@ -19,7 +19,11 @@ import {
   FIELD_SIZE,
   FIELD_INPUT_CLASS,
 } from 'dashboard/constants/ticketFieldLayout';
-import { FIELD_GROUPS, itemsInGroup } from 'dashboard/helper/ticketFieldGroups';
+import {
+  FIELD_GROUPS,
+  itemsInGroup,
+  fieldDisplayName,
+} from 'dashboard/helper/ticketFieldGroups';
 
 const props = defineProps({
   group: {
@@ -101,7 +105,7 @@ onMounted(load);
       class="flex flex-col gap-1.5"
     >
       <span class="break-words" :class="FIELD_LABEL_CLASS">
-        {{ field.name }}
+        {{ fieldDisplayName(field) }}
         <span
           v-if="requiredOn === 'conclusao'"
           v-tooltip.top="
@@ -167,7 +171,7 @@ onMounted(load);
       class="flex flex-col gap-0.5"
     >
       <span class="break-words" :class="FIELD_LABEL_CLASS">
-        {{ field.name }}
+        {{ fieldDisplayName(field) }}
       </span>
       <span class="text-xs break-words text-n-slate-12">
         {{ displayValue(values[field.key]) }}
