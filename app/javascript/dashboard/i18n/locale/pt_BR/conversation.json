@@ -447,6 +447,8 @@
     "ASSIGNEE_LABEL": "Agente atribuído",
     "SELF_ASSIGN": "Atribuir a mim",
     "TEAM_LABEL": "Time atribuído",
+    "ASSUNTO_LABEL": "Assunto",
+    "ASSUNTO_PLACEHOLDER": "Resumo do ticket",
     "SERVICO_LABEL": "Serviço",
     "TIPO_DE_SOLICITACAO_LABEL": "Tipo de solicitação",
     "STATUS_ATENDIMENTO_LABEL": "Status",

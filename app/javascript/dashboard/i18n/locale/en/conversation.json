@@ -493,6 +493,8 @@
     "ASSIGNEE_LABEL": "Assigned Agent",
     "SELF_ASSIGN": "Assign to me",
     "TEAM_LABEL": "Assigned Team",
+    "ASSUNTO_LABEL": "Subject",
+    "ASSUNTO_PLACEHOLDER": "Ticket summary",
     "SERVICO_LABEL": "Service",
     "TIPO_DE_SOLICITACAO_LABEL": "Request type",
     "STATUS_ATENDIMENTO_LABEL": "Status",

@@ -13,7 +13,9 @@ import { FIELD_GROUPS } from 'dashboard/helper/ticketFieldGroups';
 import {
   FIELD_LABEL_CLASS,
   FIELD_SIZE,
+  FIELD_INPUT_CLASS,
 } from 'dashboard/constants/ticketFieldLayout';
+import NextInput from 'dashboard/components-next/input/Input.vue';
 import {
   PORTAL_INFO_ATTRIBUTE_KEYS,
   SERVICO_ATTRIBUTE_KEY,
@@ -43,6 +45,7 @@ const optionKey = item =>
 export default {
   components: {
     ComboBox,
+    NextInput,
     ConversationLabels,
     CustomAttributes,
     LinkedTicketCard,
@@ -65,6 +68,7 @@ export default {
       FIELD_GROUPS,
       FIELD_LABEL_CLASS,
       FIELD_SIZE,
+      FIELD_INPUT_CLASS,
       saveConversationAttributes,
       agentsList,
       executeMacro,
@@ -75,6 +79,8 @@ export default {
   },
   data() {
     return {
+      // Rascunho do Assunto até sair do campo (Enter também salva).
+      assuntoDraft: '',
       priorityOptions: [
         {
           id: null,
@@ -303,10 +309,34 @@ export default {
       return false;
     },
   },
+  watch: {
+    'currentChat.id': function resetAssuntoDraft() {
+      this.assuntoDraft = this.customAttributes.assunto || '';
+    },
+    'currentChat.custom_attributes.assunto': {
+      handler(value) {
+        this.assuntoDraft = value || '';
+      },
+      immediate: true,
+    },
+  },
   mounted() {
     ['services', 'categories'].forEach(kind => this.fetchList(kind));
   },
   methods: {
+    // PATCH LOCAL (fork) - Assunto editável (o Portal recebe a mudança pelo
+    // conversation_updated). Vazio volta pro valor salvo: ticket sempre tem
+    // assunto no Portal.
+    saveAssunto() {
+      const value = this.assuntoDraft.trim();
+      const current = this.customAttributes.assunto || '';
+      if (!value) {
+        this.assuntoDraft = current;
+        return;
+      }
+      if (value === current) return;
+      this.onUpdatePortalAttribute('assunto', value);
+    },
     // PATCH LOCAL (fork) - ponte entre as listas {id, name} e o ComboBox
     // {value, label}. Escolher de novo o valor atual limpa o campo: o
     // ComboBox manda '' e o handler recebe o item atual, que já trata "mesmo
@@ -491,6 +521,19 @@ export default {
   <!-- PATCH LOCAL (fork) - mesmo visual dos campos adicionais (Ações do QA/DEV):
   rótulo pequeno, ComboBox e espaço entre os campos. -->
   <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-1.5">
+      <span :class="FIELD_LABEL_CLASS">
+        {{ $t('CONVERSATION_SIDEBAR.ASSUNTO_LABEL') }}
+      </span>
+      <NextInput
+        v-model="assuntoDraft"
+        :size="FIELD_SIZE"
+        :custom-input-class="FIELD_INPUT_CLASS"
+        :placeholder="$t('CONVERSATION_SIDEBAR.ASSUNTO_PLACEHOLDER')"
+        @blur="saveAssunto"
+        @enter="saveAssunto"
+      />
+    </div>
     <div v-if="empresaDefinition" class="flex flex-col gap-1.5">
       <span :class="FIELD_LABEL_CLASS">
         {{ empresaDefinition.attribute_display_name }}
