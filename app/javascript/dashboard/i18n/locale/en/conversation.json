@@ -609,7 +609,7 @@
     "CC_LABEL": "Cc (agents added as participants)",
     "INTERNAL_TICKET_BADGE": "Internal ticket",
     "VISIBLE_TO_CLIENT_BADGE": "Visible to client",
-    "VISIBLE_TO_CLIENT_HELP": "Off: the client can't see it and isn't notified (e.g. blocked for non-payment). On: the client gets the message as usual.",
+    "VISIBLE_TO_CLIENT_HELP": "The customer receives the message as usual.",
     "SUBJECT_LABEL": "Subject",
     "MESSAGE_LABEL": "Message",
     "MESSAGE_PLACEHOLDER": "Type something...",
@@ -633,8 +633,14 @@
       "REQUEST": "Request",
       "CLASSIFICATION": "Classification",
       "SERVICE": "Handling",
-      "QA_DEV": "QA/DEV actions"
-    }
+      "QA_DEV": "QA/DEV actions",
+      "CC": "In copy"
+    },
+    "DESCRIPTION": "Fill in the ticket details and describe the request.",
+    "INTERNAL_TICKET_HELP": "The customer can't see it and isn't notified (e.g. blocked for non-payment).",
+    "SUBJECT_PLACEHOLDER": "Ticket summary",
+    "PASTE_HINT": "Paste images straight into the text",
+    "REQUIRED_HINT": "* Required fields"
   },
   "CONVERSATION_CUSTOM_ATTRIBUTES": {
     "ADD_BUTTON_TEXT": "Create attribute",

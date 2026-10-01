@@ -563,7 +563,7 @@
     "CC_LABEL": "Cc (agentes adicionados como participantes)",
     "INTERNAL_TICKET_BADGE": "Ticket interno",
     "VISIBLE_TO_CLIENT_BADGE": "Visível para o cliente",
-    "VISIBLE_TO_CLIENT_HELP": "Desligado: o cliente não vê nem é notificado (ex: bloqueio por falta de pagamento). Ligado: o cliente recebe a mensagem normalmente.",
+    "VISIBLE_TO_CLIENT_HELP": "O cliente recebe a mensagem normalmente.",
     "SUBJECT_LABEL": "Assunto",
     "MESSAGE_LABEL": "Mensagem",
     "MESSAGE_PLACEHOLDER": "Digite algo...",
@@ -587,8 +587,14 @@
       "REQUEST": "Solicitação",
       "CLASSIFICATION": "Classificação",
       "SERVICE": "Atendimento",
-      "QA_DEV": "Ações do QA/DEV"
-    }
+      "QA_DEV": "Ações do QA/DEV",
+      "CC": "Em cópia"
+    },
+    "DESCRIPTION": "Preencha as informações do ticket e descreva a solicitação.",
+    "INTERNAL_TICKET_HELP": "O cliente não vê nem é notificado (ex.: bloqueio por falta de pagamento).",
+    "SUBJECT_PLACEHOLDER": "Resumo do ticket",
+    "PASTE_HINT": "Cole imagens direto no texto",
+    "REQUIRED_HINT": "* Campos obrigatórios"
   },
   "CONVERSATION_CUSTOM_ATTRIBUTES": {
     "ADD_BUTTON_TEXT": "Criar atributo",

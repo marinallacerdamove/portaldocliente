@@ -38,8 +38,6 @@ import {
   FIELD_INPUT_CLASS,
 } from 'dashboard/constants/ticketFieldLayout';
 import Button from 'dashboard/components-next/button/Button.vue';
-import Switch from 'dashboard/components-next/switch/Switch.vue';
-import Label from 'dashboard/components-next/label/Label.vue';
 import AttachmentPreviews from 'dashboard/components-next/NewConversation/components/AttachmentPreviews.vue';
 
 const { t } = useI18n();
@@ -49,7 +47,25 @@ const NONE_OPTION = computed(() => ({
 }));
 
 const SECTION_TITLE_CLASS =
-  'mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11';
+  'flex items-center gap-2 mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11';
+
+// Interno (padrão: o cliente não vê nem é notificado) x Visível ao cliente.
+const VISIBILITY_OPTIONS = [
+  {
+    key: 'internal',
+    visible: false,
+    icon: 'i-lucide-lock',
+    label: 'NEW_INTERNAL_TICKET_DIALOG.INTERNAL_TICKET_BADGE',
+    activeClass: 'text-n-amber-11',
+  },
+  {
+    key: 'visible',
+    visible: true,
+    icon: 'i-lucide-eye',
+    label: 'NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_BADGE',
+    activeClass: 'text-n-teal-11',
+  },
+];
 
 // Listas {id, name} <-> ComboBox {value, label}; a opção "Nenhum" (id vazio)
 // fica de fora, o campo vazio já faz esse papel.
@@ -618,6 +634,7 @@ defineExpose({ open });
   <Dialog
     ref="dialogRef"
     :title="t('NEW_INTERNAL_TICKET_DIALOG.TITLE')"
+    :description="t('NEW_INTERNAL_TICKET_DIALOG.DESCRIPTION')"
     width="full"
     overflow-y-auto
     :is-loading="isSubmitting"
@@ -625,19 +642,23 @@ defineExpose({ open });
     @confirm="onSubmit"
   >
     <div
-      class="grid grid-cols-1 lg:grid-cols-[28rem_1fr] items-start gap-8 w-full max-h-[80vh] overflow-y-auto pr-1"
+      class="grid grid-cols-1 lg:grid-cols-[26rem_1fr] items-start gap-6 w-full max-h-[75vh] overflow-y-auto pr-1"
     >
-      <!-- PATCH LOCAL (fork) - mesmo visual da lateral (Ações da conversa /
-      QA/DEV): seções, rótulo pequeno, ComboBox e espaço entre os campos. -->
-      <div class="flex flex-col gap-6">
+      <!-- PATCH LOCAL (fork) - painel de propriedades no padrão da lateral
+      (Ações da conversa / QA/DEV), seções separadas por linha. -->
+      <div
+        class="flex flex-col gap-5 p-5 border rounded-xl border-n-weak bg-n-alpha-1"
+      >
         <section class="flex flex-col gap-4">
           <h3 :class="SECTION_TITLE_CLASS">
+            <span class="i-lucide-user-round size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.REQUEST') }}
           </h3>
           <div class="flex flex-col gap-1.5">
-            <span :class="FIELD_LABEL_CLASS">{{
-              t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL')
-            }}</span>
+            <span :class="FIELD_LABEL_CLASS">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL') }}
+              <span class="text-n-ruby-9">*</span>
+            </span>
             <ComboBox
               :size="FIELD_SIZE"
               :model-value="formState.inbox?.id ?? ''"
@@ -656,6 +677,7 @@ defineExpose({ open });
           <div class="relative flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">
               {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUESTER_LABEL') }}
+              <span class="text-n-ruby-9">*</span>
             </span>
             <Input
               v-model="query"
@@ -693,8 +715,9 @@ defineExpose({ open });
             </p>
           </div>
         </section>
-        <section class="flex flex-col gap-4">
+        <section class="flex flex-col gap-4 pt-5 border-t border-n-weak">
           <h3 :class="SECTION_TITLE_CLASS">
+            <span class="i-lucide-folder-tree size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.CLASSIFICATION') }}
           </h3>
           <div class="flex flex-col gap-1.5">
@@ -754,8 +777,9 @@ defineExpose({ open });
             />
           </div>
         </section>
-        <section class="flex flex-col gap-4">
+        <section class="flex flex-col gap-4 pt-5 border-t border-n-weak">
           <h3 :class="SECTION_TITLE_CLASS">
+            <span class="i-lucide-headset size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.SERVICE') }}
           </h3>
           <div class="flex flex-col gap-1.5">
@@ -797,9 +821,10 @@ defineExpose({ open });
             />
           </div>
           <div class="flex flex-col gap-1.5">
-            <span :class="FIELD_LABEL_CLASS">{{
-              t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL')
-            }}</span>
+            <span :class="FIELD_LABEL_CLASS">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL') }}
+              <span class="text-n-ruby-9">*</span>
+            </span>
             <ComboBox
               :size="FIELD_SIZE"
               :model-value="formState.team?.id ?? ''"
@@ -826,8 +851,9 @@ defineExpose({ open });
             />
           </div>
         </section>
-        <section class="flex flex-col gap-4">
+        <section class="flex flex-col gap-4 pt-5 border-t border-n-weak">
           <h3 :class="SECTION_TITLE_CLASS">
+            <span class="i-lucide-code-xml size-3.5" />
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.QA_DEV') }}
           </h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -932,17 +958,21 @@ defineExpose({ open });
             </div>
           </div>
         </section>
-        <div class="flex flex-col gap-1.5">
-          <span :class="FIELD_LABEL_CLASS">
+        <section class="flex flex-col gap-3 pt-5 border-t border-n-weak">
+          <h3 :class="SECTION_TITLE_CLASS">
+            <span class="i-lucide-users-round size-3.5" />
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.CC') }}
+          </h3>
+          <p class="mb-0 text-xs text-n-slate-11">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.CC_LABEL') }}
-          </span>
+          </p>
           <div
-            class="max-h-28 overflow-y-auto border border-n-weak rounded-md p-2 flex flex-col gap-1"
+            class="flex flex-col overflow-y-auto border divide-y max-h-40 rounded-lg border-n-weak divide-n-weak bg-n-solid-1"
           >
             <label
               v-for="agent in agentsList"
               :key="agent.id"
-              class="flex items-center gap-2 mb-0 text-sm text-n-slate-12 cursor-pointer"
+              class="flex items-center gap-2 px-3 py-2 mb-0 text-xs cursor-pointer text-n-slate-12 hover:bg-n-alpha-2"
             >
               <input
                 type="checkbox"
@@ -952,28 +982,35 @@ defineExpose({ open });
               {{ agent.name }}
             </label>
           </div>
-        </div>
+        </section>
       </div>
 
-      <div class="flex flex-col gap-4">
-        <div
-          class="flex items-start gap-2 p-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2"
-        >
-          <Switch v-model="formState.visibleToClient" class="mt-0.5" />
-          <div>
-            <Label
-              :label="
-                formState.visibleToClient
-                  ? t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_BADGE')
-                  : t('NEW_INTERNAL_TICKET_DIALOG.INTERNAL_TICKET_BADGE')
+      <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-2">
+          <div class="grid grid-cols-2 gap-1 p-1 rounded-lg bg-n-alpha-2">
+            <button
+              v-for="option in VISIBILITY_OPTIONS"
+              :key="option.key"
+              type="button"
+              class="flex items-center justify-center h-8 gap-2 text-xs font-medium transition-colors rounded-md"
+              :class="
+                formState.visibleToClient === option.visible
+                  ? `bg-n-solid-1 shadow-sm ${option.activeClass}`
+                  : 'text-n-slate-11 hover:text-n-slate-12'
               "
-              :color="formState.visibleToClient ? 'teal' : 'amber'"
-              compact
-            />
-            <p class="text-xs text-n-slate-11 mt-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_HELP') }}
-            </p>
+              @click="formState.visibleToClient = option.visible"
+            >
+              <span :class="option.icon" class="size-3.5" />
+              {{ t(option.label) }}
+            </button>
           </div>
+          <p class="mb-0 text-xs text-n-slate-11">
+            {{
+              formState.visibleToClient
+                ? t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_HELP')
+                : t('NEW_INTERNAL_TICKET_DIALOG.INTERNAL_TICKET_HELP')
+            }}
+          </p>
         </div>
         <div class="flex flex-col gap-1.5">
           <span :class="FIELD_LABEL_CLASS">
@@ -981,63 +1018,76 @@ defineExpose({ open });
           </span>
           <Input
             v-model="formState.subject"
-            :size="FIELD_SIZE"
-            :custom-input-class="FIELD_INPUT_CLASS"
+            :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SUBJECT_PLACEHOLDER')"
           />
         </div>
         <div class="flex flex-col gap-1.5">
           <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_LABEL') }}
+            <span class="text-n-ruby-9">*</span>
           </span>
-          <div class="relative">
-            <div
-              ref="messageEditorRef"
-              contenteditable="true"
-              class="w-full min-h-[22rem] max-h-[40rem] overflow-y-auto p-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
-              @input="onMessageInput"
-              @paste="onPasteMessage"
-            />
-            <span
-              v-if="!messageHasContent"
-              class="absolute top-2 left-2 text-sm text-n-slate-11 pointer-events-none"
-            >
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER') }}
-            </span>
-          </div>
-          <AttachmentPreviews
-            v-if="attachedFiles.length"
-            class="!p-0 !max-h-none mt-2"
-            :attachments="attachedFiles"
-            @update:attachments="attachedFiles = $event"
-          />
-          <FileUpload
-            input-id="newInternalTicketAttachment"
-            :size="4096 * 4096"
-            :accept="ALLOWED_FILE_TYPES"
-            multiple
-            :drop-directory="false"
-            :data="{
-              direct_upload_url: '/rails/active_storage/direct_uploads',
-              direct_upload: true,
-            }"
-            class="mt-2 self-start"
-            @input-file="onFileUpload"
+          <div
+            class="flex flex-col overflow-hidden border rounded-xl border-n-weak bg-n-solid-1 focus-within:border-n-brand"
           >
-            <Button
-              type="button"
-              icon="i-lucide-paperclip"
-              variant="outline"
-              color="slate"
-              size="sm"
-              :label="t('NEW_INTERNAL_TICKET_DIALOG.ATTACH_BUTTON')"
+            <div class="relative">
+              <div
+                ref="messageEditorRef"
+                contenteditable="true"
+                class="w-full min-h-[20rem] max-h-[36rem] overflow-y-auto px-4 py-3 text-sm outline-none text-n-slate-12"
+                @input="onMessageInput"
+                @paste="onPasteMessage"
+              />
+              <span
+                v-if="!messageHasContent"
+                class="absolute text-sm pointer-events-none top-3 left-4 text-n-slate-10"
+              >
+                {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_PLACEHOLDER') }}
+              </span>
+            </div>
+            <AttachmentPreviews
+              v-if="attachedFiles.length"
+              class="!max-h-none px-4 pb-3"
+              :attachments="attachedFiles"
+              @update:attachments="attachedFiles = $event"
             />
-          </FileUpload>
+            <div
+              class="flex items-center justify-between gap-2 px-3 py-2 border-t border-n-weak bg-n-alpha-1"
+            >
+              <FileUpload
+                input-id="newInternalTicketAttachment"
+                :size="4096 * 4096"
+                :accept="ALLOWED_FILE_TYPES"
+                multiple
+                :drop-directory="false"
+                :data="{
+                  direct_upload_url: '/rails/active_storage/direct_uploads',
+                  direct_upload: true,
+                }"
+                @input-file="onFileUpload"
+              >
+                <Button
+                  type="button"
+                  icon="i-lucide-paperclip"
+                  variant="ghost"
+                  color="slate"
+                  size="sm"
+                  :label="t('NEW_INTERNAL_TICKET_DIALOG.ATTACH_BUTTON')"
+                />
+              </FileUpload>
+              <span class="text-xs text-n-slate-10">
+                {{ t('NEW_INTERNAL_TICKET_DIALOG.PASTE_HINT') }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <template #footer>
       <div class="flex items-center justify-end w-full gap-2">
+        <span class="text-xs ltr:mr-auto rtl:ml-auto text-n-slate-10">
+          {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUIRED_HINT') }}
+        </span>
         <Button
           variant="faded"
           color="slate"
