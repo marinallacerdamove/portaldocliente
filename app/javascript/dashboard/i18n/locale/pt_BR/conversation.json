@@ -546,7 +546,7 @@
     "SELECTED_LABEL_WITH_COMPANY": "Selecionado: {name} · {company}",
     "SELECT_PLACEHOLDER": "Selecione",
     "INBOX_LABEL": "Canal",
-    "URGENCIA_LABEL": "Urgência",
+    "URGENCIA_LABEL": "Prioridade",
     "PREVISAO_LABEL": "Previsão de solução",
     "RESPONSIBLE_LABEL": "Responsável (Agente)",
     "NO_AGENT_FOUND": "Nenhum agente encontrado",

@@ -4,10 +4,8 @@ import { mapGetters } from 'vuex';
 import { useAlert } from 'dashboard/composables';
 import { useAgentsList } from 'dashboard/composables/useAgentsList';
 import { useMacroExecution } from 'dashboard/composables/useMacroExecution';
-import ContactDetailsItem from './ContactDetailsItem.vue';
-import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
+import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import ConversationLabels from './labels/LabelBox.vue';
-import CustomAttribute from 'dashboard/components/CustomAttribute.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 import LinkedTicketCard from './LinkedTicketCard.vue';
 import TicketCustomFields from './TicketCustomFields.vue';
@@ -32,12 +30,19 @@ import { CONVERSATION_EVENTS } from '../../../helper/AnalyticsHelper/events';
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 
+// Mesmo rótulo dos campos adicionais (TicketCustomFields.vue).
+const FIELD_LABEL_CLASS = 'text-xs font-medium break-words text-n-slate-12';
+
+// Opção "Nenhum/Nenhuma" de cada lista: no ComboBox vira o campo vazio.
+const isNoneOption = item => [null, '', 0].includes(item?.id);
+// Agente e bot podem ter o mesmo id.
+const optionKey = item =>
+  item.assignee_type === 'AgentBot' ? `bot-${item.id}` : String(item.id);
+
 export default {
   components: {
-    ContactDetailsItem,
-    MultiselectDropdown,
+    ComboBox,
     ConversationLabels,
-    CustomAttribute,
     CustomAttributes,
     LinkedTicketCard,
     NextButton,
@@ -57,6 +62,7 @@ export default {
     const saveConversationAttributes = useSaveConversationAttributes();
     return {
       FIELD_GROUPS,
+      FIELD_LABEL_CLASS,
       saveConversationAttributes,
       agentsList,
       executeMacro,
@@ -155,6 +161,12 @@ export default {
       return this.getAttributesByModel('conversation_attribute').find(
         attr => attr.attribute_key === 'empresa'
       );
+    },
+    empresaOptions() {
+      return (this.empresaDefinition?.attribute_values || []).map(value => ({
+        value,
+        label: value,
+      }));
     },
     empresaValue() {
       return (this.currentChat.custom_attributes || {}).empresa || '';
@@ -293,6 +305,25 @@ export default {
     ['services', 'categories'].forEach(kind => this.fetchList(kind));
   },
   methods: {
+    // PATCH LOCAL (fork) - ponte entre as listas {id, name} e o ComboBox
+    // {value, label}. Escolher de novo o valor atual limpa o campo: o
+    // ComboBox manda '' e o handler recebe o item atual, que já trata "mesmo
+    // item" como desmarcar.
+    comboOptions(items) {
+      return items
+        .filter(item => !isNoneOption(item))
+        .map(item => ({ value: optionKey(item), label: item.name }));
+    },
+    comboValue(selected) {
+      return selected && !isNoneOption(selected) ? optionKey(selected) : '';
+    },
+    onComboSelect(items, selected, handler, value) {
+      if (value === '') {
+        if (this.comboValue(selected)) handler(selected);
+        return;
+      }
+      handler(items.find(item => optionKey(item) === value));
+    },
     // PATCH LOCAL (fork) - opções dos seletores dos cadastros ("Nenhuma" +
     // nomes). Valor gravado que não está mais na lista (inativado, ou veio do
     // Portal) continua aparecendo como selecionado em vez de sumir.
@@ -455,139 +486,150 @@ export default {
 </script>
 
 <template>
-  <div>
-    <div v-if="empresaDefinition">
-      <CustomAttribute
-        class="!px-0 !py-0"
-        attribute-key="empresa"
-        :attribute-type="empresaDefinition.attribute_display_type"
-        :label="empresaDefinition.attribute_display_name"
-        :description="empresaDefinition.attribute_description"
-        :attribute-regex="empresaDefinition.regex_pattern"
-        :regex-cue="empresaDefinition.regex_cue"
-        :values="empresaDefinition.attribute_values"
-        :value="empresaValue"
-        @update="onUpdatePortalAttribute"
+  <!-- PATCH LOCAL (fork) - mesmo visual dos campos adicionais (Ações do QA/DEV):
+  rótulo pequeno, ComboBox e espaço entre os campos. -->
+  <div class="flex flex-col gap-4">
+    <div v-if="empresaDefinition" class="flex flex-col gap-1">
+      <span :class="FIELD_LABEL_CLASS">
+        {{ empresaDefinition.attribute_display_name }}
+      </span>
+      <ComboBox
+        :model-value="empresaValue"
+        :options="empresaOptions"
+        :display-label="empresaValue"
+        :placeholder="
+          $t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
+        "
+        @update:model-value="value => onUpdatePortalAttribute('empresa', value)"
       />
     </div>
-    <!-- PATCH LOCAL (fork) - Tipo de solicitação (= Categoria do Movidesk) vem do cadastro, limitado pelo serviço -->
-    <div>
-      <ContactDetailsItem
-        compact
-        :title="$t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')"
-      />
-      <MultiselectDropdown
-        :options="tipoDeSolicitacaoOptions"
-        :selected-item="assignedTipoDeSolicitacao"
-        :multiselector-title="
-          $t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
+    <div class="flex flex-col gap-1">
+      <span :class="FIELD_LABEL_CLASS">{{
+        $t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
+      }}</span>
+      <ComboBox
+        :model-value="comboValue(assignedTipoDeSolicitacao)"
+        :options="comboOptions(tipoDeSolicitacaoOptions)"
+        :display-label="
+          comboValue(assignedTipoDeSolicitacao)
+            ? assignedTipoDeSolicitacao.name
+            : ''
         "
-        :multiselector-placeholder="$t('AGENT_MGMT.MULTI_SELECTOR.PLACEHOLDER')"
-        :no-search-result="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.AGENT')
+        :placeholder="
+          $t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
         "
-        :input-placeholder="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
+        @update:model-value="
+          value =>
+            onComboSelect(
+              tipoDeSolicitacaoOptions,
+              assignedTipoDeSolicitacao,
+              onClickAssignTipoDeSolicitacao,
+              value
+            )
         "
-        @select="onClickAssignTipoDeSolicitacao"
       />
     </div>
-    <div>
-      <ContactDetailsItem
-        compact
-        :title="$t('CONVERSATION_SIDEBAR.SERVICO_LABEL')"
-      />
-      <MultiselectDropdown
-        :options="servicoOptions"
-        :selected-item="assignedServico"
-        :multiselector-title="$t('CONVERSATION_SIDEBAR.SERVICO_LABEL')"
-        :multiselector-placeholder="$t('AGENT_MGMT.MULTI_SELECTOR.PLACEHOLDER')"
-        :no-search-result="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.AGENT')
+    <div class="flex flex-col gap-1">
+      <span :class="FIELD_LABEL_CLASS">{{
+        $t('CONVERSATION_SIDEBAR.SERVICO_LABEL')
+      }}</span>
+      <ComboBox
+        :model-value="comboValue(assignedServico)"
+        :options="comboOptions(servicoOptions)"
+        :display-label="comboValue(assignedServico) ? assignedServico.name : ''"
+        :placeholder="
+          $t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
         "
-        :input-placeholder="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
+        @update:model-value="
+          value =>
+            onComboSelect(
+              servicoOptions,
+              assignedServico,
+              onClickAssignServico,
+              value
+            )
         "
-        @select="onClickAssignServico"
       />
     </div>
     <!-- PATCH LOCAL (fork) - Classificação/Tipo do serviço (campos adicionais) logo depois de Serviço -->
     <TicketCustomFields inline :group="FIELD_GROUPS.CLASSIFICATION" />
-    <div>
-      <ContactDetailsItem compact :title="$t('CONVERSATION.PRIORITY.TITLE')" />
-      <MultiselectDropdown
-        :options="availablePriorityOptions"
-        :selected-item="assignedPriority"
-        :multiselector-title="$t('CONVERSATION.PRIORITY.TITLE')"
-        :multiselector-placeholder="
-          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.SELECT_PLACEHOLDER')
+    <div class="flex flex-col gap-1">
+      <span :class="FIELD_LABEL_CLASS">{{
+        $t('CONVERSATION.PRIORITY.TITLE')
+      }}</span>
+      <ComboBox
+        :model-value="comboValue(assignedPriority)"
+        :options="comboOptions(availablePriorityOptions)"
+        :display-label="
+          comboValue(assignedPriority) ? assignedPriority.name : ''
         "
-        :no-search-result="
-          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.NO_RESULTS')
+        :placeholder="
+          $t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
         "
-        :input-placeholder="
-          $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.INPUT_PLACEHOLDER')
+        @update:model-value="
+          value =>
+            onComboSelect(
+              availablePriorityOptions,
+              assignedPriority,
+              onClickAssignPriority,
+              value
+            )
         "
-        @select="onClickAssignPriority"
       />
     </div>
-    <div>
-      <ContactDetailsItem
-        compact
-        :title="$t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL')"
-      >
-        <template #button>
-          <NextButton
-            v-if="showSelfAssign"
-            link
-            xs
-            icon="i-lucide-arrow-right"
-            class="!gap-1"
-            :label="$t('CONVERSATION_SIDEBAR.SELF_ASSIGN')"
-            @click="onSelfAssign"
-          />
-        </template>
-      </ContactDetailsItem>
-      <MultiselectDropdown
-        :options="agentsList"
-        :selected-item="assignedAgent"
-        :multiselector-title="$t('AGENT_MGMT.MULTI_SELECTOR.TITLE.AGENT')"
-        :multiselector-placeholder="$t('AGENT_MGMT.MULTI_SELECTOR.PLACEHOLDER')"
-        :no-search-result="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.AGENT')
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center justify-between gap-2">
+        <span :class="FIELD_LABEL_CLASS">
+          {{ $t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL') }}
+        </span>
+        <NextButton
+          v-if="showSelfAssign"
+          link
+          xs
+          icon="i-lucide-arrow-right"
+          class="!gap-1"
+          :label="$t('CONVERSATION_SIDEBAR.SELF_ASSIGN')"
+          @click="onSelfAssign"
+        />
+      </div>
+      <ComboBox
+        :model-value="comboValue(assignedAgent)"
+        :options="comboOptions(agentsList)"
+        :display-label="comboValue(assignedAgent) ? assignedAgent.name : ''"
+        :placeholder="
+          $t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
         "
-        :input-placeholder="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
+        @update:model-value="
+          value =>
+            onComboSelect(agentsList, assignedAgent, onClickAssignAgent, value)
         "
-        @select="onClickAssignAgent"
       />
     </div>
-    <div>
-      <ContactDetailsItem
-        compact
-        :title="$t('CONVERSATION_SIDEBAR.TEAM_LABEL')"
-      />
-      <MultiselectDropdown
-        :options="teamsList"
-        :selected-item="assignedTeam"
-        show-emoji-icon
-        :multiselector-title="$t('AGENT_MGMT.MULTI_SELECTOR.TITLE.TEAM')"
-        :multiselector-placeholder="$t('AGENT_MGMT.MULTI_SELECTOR.PLACEHOLDER')"
-        :no-search-result="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.NO_RESULTS.TEAM')
+    <div class="flex flex-col gap-1">
+      <span :class="FIELD_LABEL_CLASS">{{
+        $t('CONVERSATION_SIDEBAR.TEAM_LABEL')
+      }}</span>
+      <ComboBox
+        :model-value="comboValue(assignedTeam)"
+        :options="comboOptions(teamsList)"
+        :display-label="comboValue(assignedTeam) ? assignedTeam.name : ''"
+        :placeholder="
+          $t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
         "
-        :input-placeholder="
-          $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.TEAM')
+        @update:model-value="
+          value =>
+            onComboSelect(teamsList, assignedTeam, onClickAssignTeam, value)
         "
-        @select="onClickAssignTeam"
       />
     </div>
-    <div v-if="ticketPaiId || ticketFilhosIds.length">
-      <ContactDetailsItem
-        compact
-        :title="$t('CONVERSATION_SIDEBAR.LINKED_TICKETS.SECTION_TITLE')"
-      />
-      <div class="flex flex-col gap-1.5 px-2 pb-2">
+    <div
+      v-if="ticketPaiId || ticketFilhosIds.length"
+      class="flex flex-col gap-1"
+    >
+      <span :class="FIELD_LABEL_CLASS">
+        {{ $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.SECTION_TITLE') }}
+      </span>
+      <div class="flex flex-col gap-1.5">
         <LinkedTicketCard
           v-if="ticketPaiId"
           :conversation-id="ticketPaiId"
@@ -605,11 +647,12 @@ export default {
         />
       </div>
     </div>
-    <ContactDetailsItem
-      compact
-      :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_LABELS')"
-    />
-    <ConversationLabels :conversation-id="conversationId" />
+    <div class="flex flex-col gap-1">
+      <span :class="FIELD_LABEL_CLASS">
+        {{ $t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_LABELS') }}
+      </span>
+      <ConversationLabels :conversation-id="conversationId" />
+    </div>
 
     <div
       v-if="hasPortalInfo"

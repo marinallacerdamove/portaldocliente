@@ -592,7 +592,7 @@
     "SELECTED_LABEL_WITH_COMPANY": "Selected: {name} · {company}",
     "SELECT_PLACEHOLDER": "Select",
     "INBOX_LABEL": "Inbox",
-    "URGENCIA_LABEL": "Urgency",
+    "URGENCIA_LABEL": "Priority",
     "PREVISAO_LABEL": "Resolution forecast",
     "RESPONSIBLE_LABEL": "Assignee (Agent)",
     "NO_AGENT_FOUND": "No agent found",

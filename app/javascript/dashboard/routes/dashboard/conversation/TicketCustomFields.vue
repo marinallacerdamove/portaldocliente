@@ -84,8 +84,8 @@ onMounted(load);
 <template>
   <div
     v-if="!inline || groupItems.length"
-    class="flex flex-col gap-3"
-    :class="inline ? '' : 'px-2 pb-3'"
+    class="flex flex-col gap-4"
+    :class="inline ? '' : 'px-2 py-4'"
   >
     <p v-if="!groupItems.length" class="mb-0 text-xs text-n-slate-10">
       {{ t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.EMPTY') }}
