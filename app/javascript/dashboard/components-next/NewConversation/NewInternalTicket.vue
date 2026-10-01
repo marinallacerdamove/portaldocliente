@@ -31,7 +31,7 @@ import { FIELD_GROUPS, itemsInGroup } from 'dashboard/helper/ticketFieldGroups';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
-import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
+import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 import Label from 'dashboard/components-next/label/Label.vue';
@@ -42,6 +42,20 @@ const NONE_OPTION = computed(() => ({
   id: '',
   name: t('NEW_INTERNAL_TICKET_DIALOG.NONE_OPTION'),
 }));
+
+// Mesmo rótulo dos campos da lateral (TicketCustomFields.vue).
+const FIELD_LABEL_CLASS = 'text-xs font-medium text-n-slate-12';
+const SECTION_TITLE_CLASS =
+  'mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11';
+
+// Listas {id, name} <-> ComboBox {value, label}; a opção "Nenhum" (id vazio)
+// fica de fora, o campo vazio já faz esse papel.
+const toComboOptions = items =>
+  items
+    .filter(item => item.id !== '' && item.id != null)
+    .map(item => ({ value: item.id, label: item.name }));
+const fromCombo = (items, value) =>
+  value === '' ? null : items.find(item => item.id === value) || null;
 
 const dialogRef = ref(null);
 const store = useStore();
@@ -608,308 +622,295 @@ defineExpose({ open });
     @confirm="onSubmit"
   >
     <div
-      class="grid grid-cols-1 lg:grid-cols-[26rem_1fr] items-start gap-6 w-full max-h-[80vh] overflow-y-auto pr-1"
+      class="grid grid-cols-1 lg:grid-cols-[28rem_1fr] items-start gap-8 w-full max-h-[80vh] overflow-y-auto pr-1"
     >
-      <div class="flex flex-col gap-3">
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL') }}
-          </p>
-          <MultiselectDropdown
-            :options="inboxes"
-            :selected-item="formState.inbox"
-            :multiselector-title="t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL')"
-            :multiselector-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-            "
-            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
-            :input-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-            "
-            @select="onSelectInbox"
-          />
-        </div>
-
-        <div class="relative">
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUESTER_LABEL') }}
-          </p>
-          <input
-            v-model="query"
-            type="text"
-            :placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.CONTACT_SEARCH_PLACEHOLDER')
-            "
-            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
-            @input="onSearch"
-          />
-          <ul
-            v-if="results.length"
-            class="absolute z-10 w-full mt-1 bg-n-solid-2 border border-n-weak rounded-md max-h-40 overflow-y-auto"
-          >
-            <li
-              v-for="contact in results"
-              :key="contact.id"
-              class="px-2 py-1 text-sm cursor-pointer hover:bg-n-alpha-2"
-              @click="selectContact(contact)"
+      <!-- PATCH LOCAL (fork) - mesmo visual da lateral (Ações da conversa /
+      QA/DEV): seções, rótulo pequeno, ComboBox e espaço entre os campos. -->
+      <div class="flex flex-col gap-6">
+        <section class="flex flex-col gap-4">
+          <h3 :class="SECTION_TITLE_CLASS">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.REQUEST') }}
+          </h3>
+          <div class="flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">{{
+              t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL')
+            }}</span>
+            <ComboBox
+              :model-value="formState.inbox?.id ?? ''"
+              :options="toComboOptions(inboxes)"
+              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+              :search-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
+              :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+              @update:model-value="
+                value =>
+                  value !== '' && onSelectInbox(fromCombo(inboxes, value))
+              "
+            />
+          </div>
+          <div class="relative flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">
+              {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUESTER_LABEL') }}
+            </span>
+            <Input
+              v-model="query"
+              :placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.CONTACT_SEARCH_PLACEHOLDER')
+              "
+              @input="onSearch"
+            />
+            <ul
+              v-if="results.length"
+              class="absolute top-full z-10 w-full mt-1 bg-n-solid-2 border border-n-weak rounded-md max-h-40 overflow-y-auto"
             >
-              <div class="flex items-center justify-between gap-2">
-                <span>{{ contact.name }}</span>
-                <span class="text-n-slate-10">{{ contact.email }}</span>
-              </div>
-              <div
-                v-if="contact.additionalAttributes?.companyName"
-                class="text-xs text-n-slate-10"
+              <li
+                v-for="contact in results"
+                :key="contact.id"
+                class="px-2 py-1 text-sm cursor-pointer hover:bg-n-alpha-2"
+                @click="selectContact(contact)"
               >
-                {{ contact.additionalAttributes.companyName }}
-              </div>
-            </li>
-          </ul>
-          <p v-if="formState.contact" class="text-xs text-n-teal-11 mt-1">
-            {{ selectedContactLabel }}
-          </p>
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL') }}
-          </p>
-          <MultiselectDropdown
-            :options="tipoOptions"
-            :selected-item="formState.tipo"
-            :multiselector-title="
+                <div class="flex items-center justify-between gap-2">
+                  <span>{{ contact.name }}</span>
+                  <span class="text-n-slate-10">{{ contact.email }}</span>
+                </div>
+                <div
+                  v-if="contact.additionalAttributes?.companyName"
+                  class="text-xs text-n-slate-10"
+                >
+                  {{ contact.additionalAttributes.companyName }}
+                </div>
+              </li>
+            </ul>
+            <p v-if="formState.contact" class="mb-0 text-xs text-n-teal-11">
+              {{ selectedContactLabel }}
+            </p>
+          </div>
+        </section>
+        <section class="flex flex-col gap-4">
+          <h3 :class="SECTION_TITLE_CLASS">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.CLASSIFICATION') }}
+          </h3>
+          <div class="flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">{{
               t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
-            "
-            :multiselector-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-            "
-            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
-            :input-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-            "
-            @select="formState.tipo = $event"
-          />
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('CONVERSATION_SIDEBAR.SERVICO_LABEL') }}
-          </p>
-          <MultiselectDropdown
-            :options="servicoOptions"
-            :selected-item="formState.servico"
-            :multiselector-title="t('CONVERSATION_SIDEBAR.SERVICO_LABEL')"
-            :multiselector-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-            "
-            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
-            :input-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-            "
-            @select="onSelectServico"
-          />
-        </div>
-
-        <div v-for="{ field } in classificationItems" :key="field.id">
-          <p class="text-xs text-n-slate-11 mb-1">{{ field.name }}</p>
-          <ComboBox
-            :model-value="formState.classification[field.key] || ''"
-            :options="fieldComboOptions(field)"
-            :display-label="formState.classification[field.key] || ''"
-            :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
-            @update:model-value="value => setClassification(field.key, value)"
-          />
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL') }}
-          </p>
-          <MultiselectDropdown
-            :options="urgenciaOptions"
-            :selected-item="formState.urgencia"
-            :multiselector-title="
+            }}</span>
+            <ComboBox
+              :model-value="formState.tipo.id"
+              :options="toComboOptions(tipoOptions)"
+              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+              :search-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
+              :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+              @update:model-value="
+                value =>
+                  (formState.tipo =
+                    fromCombo(tipoOptions, value) || NONE_OPTION)
+              "
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">{{
+              t('CONVERSATION_SIDEBAR.SERVICO_LABEL')
+            }}</span>
+            <ComboBox
+              :model-value="formState.servico.id"
+              :options="toComboOptions(servicoOptions)"
+              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+              :search-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
+              :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+              @update:model-value="
+                value =>
+                  onSelectServico(
+                    fromCombo(servicoOptions, value) || NONE_OPTION
+                  )
+              "
+            />
+          </div>
+          <div
+            v-for="{ field } in classificationItems"
+            :key="field.id"
+            class="flex flex-col gap-1"
+          >
+            <span :class="FIELD_LABEL_CLASS">{{ field.name }}</span>
+            <ComboBox
+              :model-value="formState.classification[field.key] || ''"
+              :options="fieldComboOptions(field)"
+              :display-label="formState.classification[field.key] || ''"
+              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+              @update:model-value="value => setClassification(field.key, value)"
+            />
+          </div>
+        </section>
+        <section class="flex flex-col gap-4">
+          <h3 :class="SECTION_TITLE_CLASS">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.SERVICE') }}
+          </h3>
+          <div class="flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL')
-            "
-            :multiselector-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-            "
-            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
-            :input-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-            "
-            @select="formState.urgencia = $event"
-          />
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.RESPONSIBLE_LABEL') }}
-          </p>
-          <MultiselectDropdown
-            :options="agentsList"
-            :selected-item="formState.agent"
-            :multiselector-title="
+            }}</span>
+            <ComboBox
+              :model-value="formState.urgencia.id"
+              :options="toComboOptions(urgenciaOptions)"
+              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+              :search-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
+              :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+              @update:model-value="
+                value =>
+                  (formState.urgencia =
+                    fromCombo(urgenciaOptions, value) || urgenciaOptions[0])
+              "
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.RESPONSIBLE_LABEL')
-            "
-            :multiselector-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-            "
-            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_AGENT_FOUND')"
-            :input-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_AGENT_PLACEHOLDER')
-            "
-            @select="onSelectAgent"
-          />
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL') }}
-          </p>
-          <MultiselectDropdown
-            :options="teams"
-            :selected-item="formState.team"
-            show-emoji-icon
-            :multiselector-title="t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL')"
-            :multiselector-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-            "
-            :no-search-result="t('NEW_INTERNAL_TICKET_DIALOG.NO_TEAM_FOUND')"
-            :input-placeholder="
-              t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_TEAM_PLACEHOLDER')
-            "
-            @select="formState.team = $event"
-          />
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
-            {{ t('NEW_INTERNAL_TICKET_DIALOG.PREVISAO_LABEL') }}
-          </p>
-          <input
-            v-model="formState.prazoResolucao"
-            type="date"
-            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
-          />
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.LIBERACOES_LABEL') }}
-            </p>
-            <MultiselectDropdown
-              :options="liberacoesOptions"
-              :selected-item="formState.liberacoes"
-              :multiselector-title="
+            }}</span>
+            <ComboBox
+              :model-value="formState.agent?.id ?? ''"
+              :options="toComboOptions(agentsList)"
+              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+              :search-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
+              :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+              @update:model-value="
+                value => onSelectAgent(fromCombo(agentsList, value))
+              "
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">{{
+              t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL')
+            }}</span>
+            <ComboBox
+              :model-value="formState.team?.id ?? ''"
+              :options="toComboOptions(teams)"
+              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
+              :search-placeholder="
+                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+              "
+              :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+              @update:model-value="
+                value => (formState.team = fromCombo(teams, value))
+              "
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <span :class="FIELD_LABEL_CLASS">{{
+              t('NEW_INTERNAL_TICKET_DIALOG.PREVISAO_LABEL')
+            }}</span>
+            <Input v-model="formState.prazoResolucao" type="date" />
+          </div>
+        </section>
+        <section class="flex flex-col gap-4">
+          <h3 :class="SECTION_TITLE_CLASS">
+            {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.QA_DEV') }}
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.LIBERACOES_LABEL')
-              "
-              :multiselector-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-              "
-              :no-search-result="
-                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
-              "
-              :input-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-              "
-              @select="formState.liberacoes = $event"
-            />
-          </div>
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.ISSUE_JIRA_LABEL') }}
-            </p>
-            <input
-              v-model="formState.issueJira"
-              type="text"
-              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
-            />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.DECISAO_PO_LABEL') }}
-            </p>
-            <MultiselectDropdown
-              :options="decisaoPoOptions"
-              :selected-item="formState.decisaoPo"
-              :multiselector-title="
+              }}</span>
+              <ComboBox
+                :model-value="formState.liberacoes.id"
+                :options="toComboOptions(liberacoesOptions)"
+                :placeholder="
+                  t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+                "
+                :search-placeholder="
+                  t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+                "
+                :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+                @update:model-value="
+                  value =>
+                    (formState.liberacoes =
+                      fromCombo(liberacoesOptions, value) || NONE_OPTION)
+                "
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <span :class="FIELD_LABEL_CLASS">{{
+                t('NEW_INTERNAL_TICKET_DIALOG.ISSUE_JIRA_LABEL')
+              }}</span>
+              <Input v-model="formState.issueJira" type="text" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.DECISAO_PO_LABEL')
-              "
-              :multiselector-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-              "
-              :no-search-result="
-                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
-              "
-              :input-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-              "
-              @select="formState.decisaoPo = $event"
-            />
-          </div>
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.STATUS_COBRANCA_LABEL') }}
-            </p>
-            <MultiselectDropdown
-              :options="statusCobrancaOptions"
-              :selected-item="formState.statusCobranca"
-              :multiselector-title="
+              }}</span>
+              <ComboBox
+                :model-value="formState.decisaoPo.id"
+                :options="toComboOptions(decisaoPoOptions)"
+                :placeholder="
+                  t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+                "
+                :search-placeholder="
+                  t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+                "
+                :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+                @update:model-value="
+                  value =>
+                    (formState.decisaoPo =
+                      fromCombo(decisaoPoOptions, value) || NONE_OPTION)
+                "
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.STATUS_COBRANCA_LABEL')
-              "
-              :multiselector-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
-              "
-              :no-search-result="
-                t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')
-              "
-              :input-placeholder="
-                t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
-              "
-              @select="formState.statusCobranca = $event"
-            />
+              }}</span>
+              <ComboBox
+                :model-value="formState.statusCobranca.id"
+                :options="toComboOptions(statusCobrancaOptions)"
+                :placeholder="
+                  t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
+                "
+                :search-placeholder="
+                  t('NEW_INTERNAL_TICKET_DIALOG.SEARCH_INPUT_PLACEHOLDER')
+                "
+                :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
+                @update:model-value="
+                  value =>
+                    (formState.statusCobranca =
+                      fromCombo(statusCobrancaOptions, value) || NONE_OPTION)
+                "
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <span :class="FIELD_LABEL_CLASS">{{
+                t('NEW_INTERNAL_TICKET_DIALOG.DATA_ENTREGA_LABEL')
+              }}</span>
+              <Input v-model="formState.dataEntrega" type="date" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <span :class="FIELD_LABEL_CLASS">{{
+                t('NEW_INTERNAL_TICKET_DIALOG.DATA_ATUALIZACAO_LABEL')
+              }}</span>
+              <Input
+                v-model="formState.dataAtualizacaoSistema"
+                type="datetime-local"
+              />
+            </div>
           </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.DATA_ENTREGA_LABEL') }}
-            </p>
-            <input
-              v-model="formState.dataEntrega"
-              type="date"
-              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
-            />
-          </div>
-          <div>
-            <p class="text-xs text-n-slate-11 mb-1">
-              {{ t('NEW_INTERNAL_TICKET_DIALOG.DATA_ATUALIZACAO_LABEL') }}
-            </p>
-            <input
-              v-model="formState.dataAtualizacaoSistema"
-              type="datetime-local"
-              class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
-            />
-          </div>
-        </div>
-
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
+        </section>
+        <div class="flex flex-col gap-1">
+          <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.CC_LABEL') }}
-          </p>
+          </span>
           <div
             class="max-h-28 overflow-y-auto border border-n-weak rounded-md p-2 flex flex-col gap-1"
           >
             <label
               v-for="agent in agentsList"
               :key="agent.id"
-              class="flex items-center gap-2 text-sm text-n-slate-12 cursor-pointer"
+              class="flex items-center gap-2 mb-0 text-sm text-n-slate-12 cursor-pointer"
             >
               <input
                 type="checkbox"
@@ -922,7 +923,7 @@ defineExpose({ open });
         </div>
       </div>
 
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-4">
         <div
           class="flex items-start gap-2 p-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2"
         >
@@ -942,20 +943,16 @@ defineExpose({ open });
             </p>
           </div>
         </div>
-        <div>
-          <p class="text-xs text-n-slate-11 mb-1">
+        <div class="flex flex-col gap-1">
+          <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SUBJECT_LABEL') }}
-          </p>
-          <input
-            v-model="formState.subject"
-            type="text"
-            class="w-full h-8 px-2 rounded-md outline outline-1 outline-n-weak outline-offset-[-1px] focus:outline-n-brand bg-n-solid-2 text-sm text-n-slate-12"
-          />
+          </span>
+          <Input v-model="formState.subject" />
         </div>
-        <div class="flex flex-col">
-          <p class="text-xs text-n-slate-11 mb-1">
+        <div class="flex flex-col gap-1">
+          <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_LABEL') }}
-          </p>
+          </span>
           <div class="relative">
             <div
               ref="messageEditorRef"

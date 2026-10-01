@@ -628,6 +628,12 @@
       "HIGH": "High",
       "MEDIUM": "Medium",
       "LOW": "Low"
+    },
+    "SECTIONS": {
+      "REQUEST": "Request",
+      "CLASSIFICATION": "Classification",
+      "SERVICE": "Handling",
+      "QA_DEV": "QA/DEV actions"
     }
   },
   "CONVERSATION_CUSTOM_ATTRIBUTES": {

@@ -582,6 +582,12 @@
       "HIGH": "Alta",
       "MEDIUM": "Média",
       "LOW": "Baixa"
+    },
+    "SECTIONS": {
+      "REQUEST": "Solicitação",
+      "CLASSIFICATION": "Classificação",
+      "SERVICE": "Atendimento",
+      "QA_DEV": "Ações do QA/DEV"
     }
   },
   "CONVERSATION_CUSTOM_ATTRIBUTES": {
