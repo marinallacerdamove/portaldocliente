@@ -1082,7 +1082,7 @@ defineExpose({ open });
                   icon="i-lucide-paperclip"
                   variant="ghost"
                   color="slate"
-                  size="sm"
+                  size="xs"
                   :label="t('NEW_INTERNAL_TICKET_DIALOG.ATTACH_BUTTON')"
                 />
               </FileUpload>

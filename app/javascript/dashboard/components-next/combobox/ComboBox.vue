@@ -116,7 +116,8 @@ watch(
         class="justify-between w-full !px-3 text-n-slate-12 font-normal group-hover/combobox:border-n-slate-6 focus:outline-n-brand"
         :class="{
           '!py-2.5': size === 'md',
-          '!text-xs': size === 'sm',
+          // Mesmo fundo do Input, pra seleção e texto ficarem iguais.
+          '!text-xs !bg-n-alpha-black2': size === 'sm',
           focused: open,
           '[&:not(.focused)]:dark:outline-n-weak [&:not(.focused)]:hover:enabled:outline-n-slate-6 [&:not(.focused)]:dark:hover:enabled:outline-n-slate-6':
             !hasError,
