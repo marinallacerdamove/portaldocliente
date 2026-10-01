@@ -17,6 +17,8 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 import VoiceCallButton from 'dashboard/components-next/Contacts/VoiceCallButton.vue';
 import InlineInput from 'dashboard/components-next/inline-input/InlineInput.vue';
 import { useCompaniesStore } from 'dashboard/stores/companies';
+import CompanyAPI from 'dashboard/api/companies';
+import { EMPRESA_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
 import { useLinkedCompanies } from 'dashboard/composables/useLinkedCompanies';
 
 export default {
@@ -59,6 +61,8 @@ export default {
   data() {
     return {
       showEditModal: false,
+      // Company do campo Empresa da conversa (achada pelo nome).
+      ticketCompanyId: null,
       isEditingName: false,
       editName: '',
     };
@@ -74,8 +78,15 @@ export default {
     // que depois popula custom_attributes dela com cnpj/site/etc). O
     // payload do contato só traz company_id (ver _contact.json.jbuilder);
     // os dados completos vêm de um fetch separado via companiesStore.
+    // PATCH LOCAL (fork) - o card mostra a empresa DO TICKET (campo Empresa
+    // em Ações da conversa) e só cai pra empresa do contato quando o ticket
+    // não tem empresa. Agente/parceiro sem empresa no Portal abre ticket pra
+    // um cliente: sem isso o card ficava sem empresa, ou com a errada.
+    ticketCompanyName() {
+      return this.currentChat?.custom_attributes?.[EMPRESA_ATTRIBUTE_KEY] || '';
+    },
     companyId() {
-      return this.contact.company_id || null;
+      return this.ticketCompanyId || this.contact.company_id || null;
     },
     company() {
       return this.companyId
@@ -146,6 +157,12 @@ export default {
       },
       immediate: true,
     },
+    ticketCompanyName: {
+      handler(name) {
+        this.resolveTicketCompany(name);
+      },
+      immediate: true,
+    },
     companyId: {
       handler(id) {
         if (id) this.companiesStore.show(id);
@@ -154,6 +171,23 @@ export default {
     },
   },
   methods: {
+    async resolveTicketCompany(name) {
+      this.ticketCompanyId = null;
+      if (!name) return;
+      try {
+        const {
+          data: { payload },
+        } = await CompanyAPI.search(name);
+        if (name !== this.ticketCompanyName) return;
+        const target = name.trim().toLowerCase();
+        const match = (payload || []).find(
+          item => item.name?.trim().toLowerCase() === target
+        );
+        this.ticketCompanyId = match?.id || null;
+      } catch {
+        this.ticketCompanyId = null;
+      }
+    },
     companyLink(companyId) {
       return `/app/accounts/${this.$route.params.accountId}/companies/${companyId}`;
     },
