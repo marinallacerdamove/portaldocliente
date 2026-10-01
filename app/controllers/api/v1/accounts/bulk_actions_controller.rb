@@ -1,9 +1,12 @@
 class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseController
+  include ResolveRequirementsGuard
+
   def create
     case normalized_type
     when 'Conversation'
-      enqueue_conversation_job
-      head :ok
+      skipped_ids = unresolvable_conversation_ids
+      enqueue_conversation_job(skipped_ids)
+      render json: { skipped_ids: skipped_ids }
     when 'Contact'
       check_authorization_for_contact_action
       enqueue_contact_job
@@ -19,12 +22,26 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
     params[:type].to_s.camelize
   end
 
-  def enqueue_conversation_job
+  def enqueue_conversation_job(skipped_ids = [])
+    job_params = conversation_params
+    job_params[:ids] = Array(job_params[:ids]).map(&:to_s) - skipped_ids.map(&:to_s)
+    return if job_params[:ids].empty?
+
     ::BulkActionsJob.perform_later(
       account: @current_account,
       user: current_user,
-      params: conversation_params
+      params: job_params
     )
+  end
+
+  # PATCH LOCAL (fork) - ResolveRequirementsGuard: resolver em massa pula as
+  # conversas que o botão Resolver travaria (a tela avisa quantas ficaram).
+  def unresolvable_conversation_ids
+    return [] unless params.dig(:fields, :status) == 'resolved'
+
+    @current_account.conversations.where(display_id: params[:ids])
+                    .reject { |conversation| resolve_requirements_missing(conversation).empty? }
+                    .map(&:display_id)
   end
 
   def enqueue_contact_job

@@ -197,7 +197,7 @@ export function useBulkActions() {
 
     try {
       if (conversationIds.length > 0) {
-        await store.dispatch('bulkActions/process', {
+        const result = await store.dispatch('bulkActions/process', {
           type: 'Conversation',
           ids: conversationIds,
           fields: {
@@ -205,6 +205,14 @@ export function useBulkActions() {
           },
           snoozed_until: snoozedUntil,
         });
+        // PATCH LOCAL (fork) - conversa com motivo, Ações da conversa ou campo
+        // adicional obrigatório vazio é pulada pelo servidor.
+        const serverSkipped = result?.skipped_ids?.length || 0;
+        if (serverSkipped && serverSkipped === conversationIds.length) {
+          useAlert(t('BULK_ACTION.RESOLVE.ALL_MISSING_ATTRIBUTES'));
+          return;
+        }
+        skippedCount += serverSkipped;
       }
 
       store.dispatch('bulkActions/clearSelectedConversationIds');

@@ -46,6 +46,23 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
+      # PATCH LOCAL (fork) - ResolveRequirementsGuard
+      it 'pula ao resolver em massa as conversas que o Resolver travaria' do
+        ready = Conversation.first
+        ready.update!(assignee: agent, priority: :medium)
+        blocked = Conversation.last
+
+        perform_enqueued_jobs do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token,
+               params: { type: 'Conversation', fields: { status: 'resolved' }, ids: [ready.display_id, blocked.display_id] }
+        end
+
+        expect(response.parsed_body['skipped_ids']).to eq([blocked.display_id])
+        expect(ready.reload.status).to eq('resolved')
+        expect(blocked.reload.status).to eq('open')
+      end
+
       it 'Bulk update conversation status' do
         expect(Conversation.first.status).to eq('open')
         expect(Conversation.last.status).to eq('open')

@@ -3,6 +3,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   include DateRangeHelper
   include HmacConcern
   include ConversationCustomAttributesConcern
+  include ResolveRequirementsGuard
 
   before_action :conversation, except: [:index, :meta, :search, :create, :filter]
   before_action :inbox, :contact, :contact_inbox, only: [:create]
@@ -80,6 +81,8 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def toggle_status
+    return if resolve_blocked?
+
     # FIXME: move this logic into a service object
     if bot_handoff?
       @conversation.bot_handoff!
@@ -90,6 +93,17 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
       @status = @conversation.toggle_status
     end
     handle_human_open if @conversation.open? && Current.user.is_a?(User)
+  end
+
+  # PATCH LOCAL (fork) - ResolveRequirementsGuard: recusa resolver com motivo,
+  # Ações da conversa ou campo adicional obrigatório vazio.
+  def resolve_blocked?
+    resolving = params[:status].present? ? params[:status] == 'resolved' : @conversation.open?
+    missing = resolving ? resolve_requirements_missing(@conversation) : []
+    return false if missing.empty?
+
+    render json: { error: "Preencha antes de resolver: #{missing.join(', ')}", missing: missing }, status: :unprocessable_entity
+    true
   end
 
   def bot_handoff?

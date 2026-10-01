@@ -623,7 +623,41 @@ RSpec.describe 'Conversations API', type: :request do
         create(:inbox_member, user: agent, inbox: conversation.inbox)
       end
 
+      # PATCH LOCAL (fork) - ResolveRequirementsGuard
+      context 'with resolve requirements (fork)' do
+        let(:blocked) { create(:conversation, account: account, inbox: conversation.inbox, priority: nil) }
+
+        it 'recusa resolver pela tela sem prioridade e agente' do
+          post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
+               headers: agent.create_new_auth_token, params: { status: 'resolved' }, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response.parsed_body['missing']).to include('Prioridade', 'Agente')
+          expect(blocked.reload.status).to eq('open')
+        end
+
+        it 'deixa a integração do Portal resolver pelo token' do
+          with_modified_env PORTAL_INTEGRATION_USER_EMAIL: administrator.email do
+            post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
+                 headers: { api_access_token: administrator.access_token.token }, params: { status: 'resolved' }, as: :json
+          end
+
+          expect(blocked.reload.status).to eq('resolved')
+        end
+
+        it 'trava outro usuário por token quando a integração está configurada' do
+          with_modified_env PORTAL_INTEGRATION_USER_EMAIL: 'portal@example.com' do
+            post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
+                 headers: { api_access_token: agent.access_token.token }, params: { status: 'resolved' }, as: :json
+          end
+
+          expect(response).to have_http_status(:unprocessable_entity)
+        end
+      end
+
       it 'toggles the conversation status if status is empty' do
+        # PATCH LOCAL (fork) - resolver exige prioridade e agente (ResolveRequirementsGuard)
+        conversation.update!(priority: :medium, assignee: agent)
         expect(conversation.status).to eq('open')
 
         post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/toggle_status",

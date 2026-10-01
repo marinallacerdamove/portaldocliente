@@ -21,7 +21,10 @@ export const actions = {
   process: async function processAction({ commit }, payload) {
     commit(types.SET_BULK_ACTIONS_FLAG, { isUpdating: true });
     try {
-      await BulkActionsAPI.create(payload);
+      // PATCH LOCAL (fork) - devolve a resposta: em "resolver" o servidor diz
+      // quais conversas pulou (skipped_ids, ver ResolveRequirementsGuard).
+      const { data } = await BulkActionsAPI.create(payload);
+      return data;
     } catch (error) {
       throw new Error(error);
     } finally {
