@@ -1,4 +1,5 @@
 <script setup>
+import { EMPRESA_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
@@ -114,6 +115,16 @@ const copyConversationId = async () => {
 const ticketSubject = computed(
   () => props.chat.custom_attributes?.assunto || ''
 );
+// PATCH LOCAL (fork) - empresa ao lado do solicitante: a da conversa (campo
+// Empresa em Ações da conversa) ou, sem ela, a do contato. O nome do contato
+// sozinho não diz de que empresa é (ex.: "Débora Sousa").
+const companyName = computed(() => {
+  const company =
+    props.chat.custom_attributes?.[EMPRESA_ATTRIBUTE_KEY] ||
+    currentContact.value?.additional_attributes?.company_name ||
+    '';
+  return company === currentContact.value?.name ? '' : company;
+});
 const ticketPortalId = computed(
   () => props.chat.custom_attributes?.ticket_id || ''
 );
@@ -145,6 +156,12 @@ const ticketPortalId = computed(
             class="text-sm font-medium truncate leading-tight text-n-slate-12"
           >
             {{ currentContact.name }}
+          </span>
+          <span
+            v-if="companyName"
+            class="text-sm leading-tight truncate text-n-slate-11"
+          >
+            · {{ companyName }}
           </span>
           <fluent-icon
             v-if="!isHMACVerified"
