@@ -4,8 +4,6 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
-import { getLastMessage } from 'dashboard/helper/conversationHelper';
-import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import wootConstants from 'dashboard/constants/globals';
 
 const props = defineProps({
@@ -17,7 +15,6 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
-const { getPlainText } = useMessageFormatter();
 
 const conversationGetter = useMapGetter('getConversationById');
 const contactGetter = useMapGetter('contacts/getContact');
@@ -36,18 +33,14 @@ const contact = computed(
   () => contactGetter.value(conversation.value?.meta?.sender?.id) || {}
 );
 
-// Conversas do Chatwoot não têm um "assunto" formal como o ticket do Portal
-// (só as sincronizadas do Portal têm custom_attributes.assunto) — pra
-// identificar qualquer ticket vinculado, mesmo um ticket interno nativo,
-// cai pra última mensagem e por último pro nome do contato.
+// PATCH LOCAL (fork) - o card identifica o ticket pelo assunto
+// (custom_attributes.assunto). Conversa sem assunto (ex.: WhatsApp) cai pro
+// nome do contato - nunca pra última mensagem, que costuma ser um aviso
+// automático ("Ticket pai criado para o time...") e não diz o que é o ticket.
 const preview = computed(() => {
   if (!conversation.value) return '';
-  const lastMessageContent = getLastMessage(conversation.value)?.content;
   return (
-    conversation.value.custom_attributes?.assunto ||
-    (lastMessageContent ? getPlainText(lastMessageContent) : '') ||
-    contact.value.name ||
-    ''
+    conversation.value.custom_attributes?.assunto || contact.value.name || ''
   );
 });
 
