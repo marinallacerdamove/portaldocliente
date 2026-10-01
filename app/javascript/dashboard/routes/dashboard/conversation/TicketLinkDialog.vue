@@ -9,6 +9,7 @@ import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import ContactDetailsItem from './ContactDetailsItem.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
+import TicketVisibilityToggle from 'dashboard/components-next/NewConversation/TicketVisibilityToggle.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 
 const { t } = useI18n();
@@ -34,6 +35,7 @@ const linkMode = ref(null);
 const internalTicketAgent = ref(null);
 const internalTicketTeam = ref(null);
 const internalTicketMessage = ref('');
+const visibleToClient = ref(false);
 const existingTicketQuery = ref('');
 const existingTicketResults = ref([]);
 const isSearchingExisting = ref(false);
@@ -68,6 +70,7 @@ const reset = () => {
   internalTicketAgent.value = null;
   internalTicketTeam.value = null;
   internalTicketMessage.value = '';
+  visibleToClient.value = false;
   existingTicketQuery.value = '';
   existingTicketResults.value = [];
 };
@@ -186,16 +189,26 @@ const onCreateInternalTicket = async () => {
     firstLine.length > SUBJECT_MAX_LENGTH
       ? `${firstLine.slice(0, SUBJECT_MAX_LENGTH - 1)}…`
       : firstLine;
-  const protocolo = (conv.custom_attributes || {}).ticket_id_externo;
+  // Número do Portal quando a conversa já tem ticket lá - o id da conversa
+  // não é o mesmo do ticket.
+  const { ticket_id_externo: protocolo, ticket_id: portalTicketId } =
+    conv.custom_attributes || {};
+  const originReference = portalTicketId
+    ? `do ticket #${portalTicketId} do Portal (conversa #${conv.id})`
+    : `da conversa #${conv.id}`;
   const originalUrl = `${window.location.origin}/app/accounts/${accountId}/conversations/${conv.id}`;
-  const content = [
-    `Ticket ${relationLabel} para o time ${targetTeam.name}, a partir da conversa #${
-      conv.id
-    }${protocolo ? ` (Protocolo ${protocolo})` : ''}.`,
-    `Conversa original: ${originalUrl}`,
-    '',
-    internalTicketMessage.value.trim(),
-  ].join('\n');
+  // Visível ao cliente: só a descrição - o link e o roteamento por time são
+  // da equipe. O vínculo pai/filho aparece no Portal de qualquer jeito.
+  const content = visibleToClient.value
+    ? internalTicketMessage.value.trim()
+    : [
+        `Ticket ${relationLabel} para o time ${targetTeam.name}, a partir ${originReference}${
+          protocolo ? ` (Protocolo ${protocolo})` : ''
+        }.`,
+        `Conversa original: ${originalUrl}`,
+        '',
+        internalTicketMessage.value.trim(),
+      ].join('\n');
 
   isCreatingInternalTicket.value = true;
   try {
@@ -203,7 +216,7 @@ const onCreateInternalTicket = async () => {
       params: {
         inboxId: targetInbox.value.id,
         contactId: conv.meta.sender.id,
-        message: { content, private: true },
+        message: { content, private: !visibleToClient.value },
       },
     });
 
@@ -297,6 +310,7 @@ defineExpose({ open });
     @close="reset"
   >
     <div v-if="showCreateForm" class="flex flex-col gap-2 w-full">
+      <TicketVisibilityToggle v-model="visibleToClient" />
       <div>
         <ContactDetailsItem
           compact

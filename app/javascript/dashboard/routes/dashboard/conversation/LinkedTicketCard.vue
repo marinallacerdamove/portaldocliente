@@ -44,6 +44,12 @@ const preview = computed(() => {
   );
 });
 
+// Número do Portal, igual ao cabeçalho da conversa - o id da conversa não é
+// o do ticket. Conversa sem ticket no Portal fica com o próprio id.
+const portalTicketId = computed(
+  () => conversation.value?.custom_attributes?.ticket_id || ''
+);
+
 const assigneeName = computed(
   () => conversation.value?.meta?.assignee?.name || null
 );
@@ -81,7 +87,13 @@ const goToConversation = () => {
   >
     <span class="text-xs text-n-slate-11">{{ relationLabel }}</span>
     <span class="text-sm font-medium truncate text-n-slate-12">
-      #{{ conversationId }}<template v-if="preview"> · {{ preview }}</template>
+      <template v-if="portalTicketId">
+        {{ $t('CONVERSATION.HEADER.PORTAL_TICKET_ID_PREFIX') }} #{{
+          portalTicketId
+        }}
+      </template>
+      <template v-else>#{{ conversationId }}</template>
+      <template v-if="preview"> · {{ preview }}</template>
     </span>
     <div v-if="conversation" class="flex items-center justify-between gap-2">
       <span class="text-xs truncate text-n-slate-11">

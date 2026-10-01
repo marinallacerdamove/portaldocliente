@@ -43,6 +43,7 @@ import {
 } from 'dashboard/constants/ticketFieldLayout';
 import Button from 'dashboard/components-next/button/Button.vue';
 import AttachmentPreviews from 'dashboard/components-next/NewConversation/components/AttachmentPreviews.vue';
+import TicketVisibilityToggle from 'dashboard/components-next/NewConversation/TicketVisibilityToggle.vue';
 
 const { t } = useI18n();
 const NONE_OPTION = computed(() => ({
@@ -54,24 +55,6 @@ const NONE_OPTION = computed(() => ({
 const FIELD_ROW_CLASS = 'grid grid-cols-[8.5rem_1fr] items-center gap-3';
 const SECTION_TITLE_CLASS =
   'flex items-center gap-2 mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11';
-
-// Interno (padrão: o cliente não vê nem é notificado) x Visível ao cliente.
-const VISIBILITY_OPTIONS = [
-  {
-    key: 'internal',
-    visible: false,
-    icon: 'i-lucide-lock',
-    label: 'NEW_INTERNAL_TICKET_DIALOG.INTERNAL_TICKET_BADGE',
-    activeClass: 'text-n-amber-11',
-  },
-  {
-    key: 'visible',
-    visible: true,
-    icon: 'i-lucide-eye',
-    label: 'NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_BADGE',
-    activeClass: 'text-n-teal-11',
-  },
-];
 
 // Listas {id, name} <-> ComboBox {value, label}; a opção "Nenhum" (id vazio)
 // fica de fora, o campo vazio já faz esse papel.
@@ -998,32 +981,7 @@ defineExpose({ open });
       </div>
 
       <div class="flex flex-col gap-5">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <div class="inline-flex gap-0.5 p-0.5 rounded-lg bg-n-alpha-2">
-            <button
-              v-for="option in VISIBILITY_OPTIONS"
-              :key="option.key"
-              type="button"
-              class="flex items-center gap-1.5 h-7 px-3 text-xs font-medium transition-colors rounded-md"
-              :class="
-                formState.visibleToClient === option.visible
-                  ? `bg-n-solid-1 shadow-sm ${option.activeClass}`
-                  : 'text-n-slate-11 hover:text-n-slate-12'
-              "
-              @click="formState.visibleToClient = option.visible"
-            >
-              <span :class="option.icon" class="size-3.5" />
-              {{ t(option.label) }}
-            </button>
-          </div>
-          <p class="mb-0 text-xs text-n-slate-10">
-            {{
-              formState.visibleToClient
-                ? t('NEW_INTERNAL_TICKET_DIALOG.VISIBLE_TO_CLIENT_HELP')
-                : t('NEW_INTERNAL_TICKET_DIALOG.INTERNAL_TICKET_HELP')
-            }}
-          </p>
-        </div>
+        <TicketVisibilityToggle v-model="formState.visibleToClient" />
         <div class="flex flex-col gap-1.5">
           <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SUBJECT_LABEL') }}
