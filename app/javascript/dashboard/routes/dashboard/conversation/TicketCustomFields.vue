@@ -14,6 +14,11 @@ import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
+import {
+  FIELD_LABEL_CLASS,
+  FIELD_SIZE,
+  FIELD_INPUT_CLASS,
+} from 'dashboard/constants/ticketFieldLayout';
 import { FIELD_GROUPS, itemsInGroup } from 'dashboard/helper/ticketFieldGroups';
 
 const props = defineProps({
@@ -93,9 +98,9 @@ onMounted(load);
     <div
       v-for="{ field, required_on: requiredOn } in editableItems"
       :key="field.id"
-      class="flex flex-col gap-1"
+      class="flex flex-col gap-1.5"
     >
-      <span class="text-xs font-medium break-words text-n-slate-12">
+      <span class="break-words" :class="FIELD_LABEL_CLASS">
         {{ field.name }}
         <span
           v-if="requiredOn === 'conclusao'"
@@ -112,6 +117,7 @@ onMounted(load);
         v-if="
           field.field_type === 'list' || field.field_type === 'single_select'
         "
+        :size="FIELD_SIZE"
         :model-value="values[field.key] || ''"
         :options="optionsOf(field)"
         :display-label="values[field.key] || ''"
@@ -149,6 +155,8 @@ onMounted(load);
       <Input
         v-else
         v-model="drafts[field.key]"
+        :size="FIELD_SIZE"
+        :custom-input-class="FIELD_INPUT_CLASS"
         :type="INPUT_TYPES[field.field_type]"
         @blur="save(field.key, drafts[field.key])"
       />
@@ -158,7 +166,7 @@ onMounted(load);
       :key="field.id"
       class="flex flex-col gap-0.5"
     >
-      <span class="text-xs font-medium break-words text-n-slate-11">
+      <span class="break-words" :class="FIELD_LABEL_CLASS">
         {{ field.name }}
       </span>
       <span class="text-xs break-words text-n-slate-12">

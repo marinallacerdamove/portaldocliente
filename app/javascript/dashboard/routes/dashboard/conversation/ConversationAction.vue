@@ -11,6 +11,10 @@ import LinkedTicketCard from './LinkedTicketCard.vue';
 import TicketCustomFields from './TicketCustomFields.vue';
 import { FIELD_GROUPS } from 'dashboard/helper/ticketFieldGroups';
 import {
+  FIELD_LABEL_CLASS,
+  FIELD_SIZE,
+} from 'dashboard/constants/ticketFieldLayout';
+import {
   PORTAL_INFO_ATTRIBUTE_KEYS,
   SERVICO_ATTRIBUTE_KEY,
   TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
@@ -29,9 +33,6 @@ import { CONVERSATION_PRIORITY } from '../../../../shared/constants/messages';
 import { CONVERSATION_EVENTS } from '../../../helper/AnalyticsHelper/events';
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
-
-// Mesmo rótulo dos campos adicionais (TicketCustomFields.vue).
-const FIELD_LABEL_CLASS = 'text-xs font-medium break-words text-n-slate-12';
 
 // Opção "Nenhum/Nenhuma" de cada lista: no ComboBox vira o campo vazio.
 const isNoneOption = item => [null, '', 0].includes(item?.id);
@@ -63,6 +64,7 @@ export default {
     return {
       FIELD_GROUPS,
       FIELD_LABEL_CLASS,
+      FIELD_SIZE,
       saveConversationAttributes,
       agentsList,
       executeMacro,
@@ -489,11 +491,12 @@ export default {
   <!-- PATCH LOCAL (fork) - mesmo visual dos campos adicionais (Ações do QA/DEV):
   rótulo pequeno, ComboBox e espaço entre os campos. -->
   <div class="flex flex-col gap-4">
-    <div v-if="empresaDefinition" class="flex flex-col gap-1">
+    <div v-if="empresaDefinition" class="flex flex-col gap-1.5">
       <span :class="FIELD_LABEL_CLASS">
         {{ empresaDefinition.attribute_display_name }}
       </span>
       <ComboBox
+        :size="FIELD_SIZE"
         :model-value="empresaValue"
         :options="empresaOptions"
         :display-label="empresaValue"
@@ -503,11 +506,12 @@ export default {
         @update:model-value="value => onUpdatePortalAttribute('empresa', value)"
       />
     </div>
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5">
       <span :class="FIELD_LABEL_CLASS">{{
         $t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
       }}</span>
       <ComboBox
+        :size="FIELD_SIZE"
         :model-value="comboValue(assignedTipoDeSolicitacao)"
         :options="comboOptions(tipoDeSolicitacaoOptions)"
         :display-label="
@@ -529,11 +533,12 @@ export default {
         "
       />
     </div>
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5">
       <span :class="FIELD_LABEL_CLASS">{{
         $t('CONVERSATION_SIDEBAR.SERVICO_LABEL')
       }}</span>
       <ComboBox
+        :size="FIELD_SIZE"
         :model-value="comboValue(assignedServico)"
         :options="comboOptions(servicoOptions)"
         :display-label="comboValue(assignedServico) ? assignedServico.name : ''"
@@ -553,11 +558,12 @@ export default {
     </div>
     <!-- PATCH LOCAL (fork) - Classificação/Tipo do serviço (campos adicionais) logo depois de Serviço -->
     <TicketCustomFields inline :group="FIELD_GROUPS.CLASSIFICATION" />
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5">
       <span :class="FIELD_LABEL_CLASS">{{
         $t('CONVERSATION.PRIORITY.TITLE')
       }}</span>
       <ComboBox
+        :size="FIELD_SIZE"
         :model-value="comboValue(assignedPriority)"
         :options="comboOptions(availablePriorityOptions)"
         :display-label="
@@ -577,7 +583,7 @@ export default {
         "
       />
     </div>
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5">
       <div class="flex items-center justify-between gap-2">
         <span :class="FIELD_LABEL_CLASS">
           {{ $t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL') }}
@@ -593,6 +599,7 @@ export default {
         />
       </div>
       <ComboBox
+        :size="FIELD_SIZE"
         :model-value="comboValue(assignedAgent)"
         :options="comboOptions(agentsList)"
         :display-label="comboValue(assignedAgent) ? assignedAgent.name : ''"
@@ -605,11 +612,12 @@ export default {
         "
       />
     </div>
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5">
       <span :class="FIELD_LABEL_CLASS">{{
         $t('CONVERSATION_SIDEBAR.TEAM_LABEL')
       }}</span>
       <ComboBox
+        :size="FIELD_SIZE"
         :model-value="comboValue(assignedTeam)"
         :options="comboOptions(teamsList)"
         :display-label="comboValue(assignedTeam) ? assignedTeam.name : ''"
@@ -624,7 +632,7 @@ export default {
     </div>
     <div
       v-if="ticketPaiId || ticketFilhosIds.length"
-      class="flex flex-col gap-1"
+      class="flex flex-col gap-1.5"
     >
       <span :class="FIELD_LABEL_CLASS">
         {{ $t('CONVERSATION_SIDEBAR.LINKED_TICKETS.SECTION_TITLE') }}
@@ -647,7 +655,7 @@ export default {
         />
       </div>
     </div>
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5">
       <span :class="FIELD_LABEL_CLASS">
         {{ $t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_LABELS') }}
       </span>

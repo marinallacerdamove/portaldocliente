@@ -32,6 +32,11 @@ import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
+import {
+  FIELD_LABEL_CLASS,
+  FIELD_SIZE,
+  FIELD_INPUT_CLASS,
+} from 'dashboard/constants/ticketFieldLayout';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 import Label from 'dashboard/components-next/label/Label.vue';
@@ -43,8 +48,6 @@ const NONE_OPTION = computed(() => ({
   name: t('NEW_INTERNAL_TICKET_DIALOG.NONE_OPTION'),
 }));
 
-// Mesmo rótulo dos campos da lateral (TicketCustomFields.vue).
-const FIELD_LABEL_CLASS = 'text-xs font-medium text-n-slate-12';
 const SECTION_TITLE_CLASS =
   'mb-0 text-xs font-semibold uppercase tracking-wide text-n-slate-11';
 
@@ -631,11 +634,12 @@ defineExpose({ open });
           <h3 :class="SECTION_TITLE_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.REQUEST') }}
           </h3>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.INBOX_LABEL')
             }}</span>
             <ComboBox
+              :size="FIELD_SIZE"
               :model-value="formState.inbox?.id ?? ''"
               :options="toComboOptions(inboxes)"
               :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
@@ -649,12 +653,14 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="relative flex flex-col gap-1">
+          <div class="relative flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">
               {{ t('NEW_INTERNAL_TICKET_DIALOG.REQUESTER_LABEL') }}
             </span>
             <Input
               v-model="query"
+              :size="FIELD_SIZE"
+              :custom-input-class="FIELD_INPUT_CLASS"
               :placeholder="
                 t('NEW_INTERNAL_TICKET_DIALOG.CONTACT_SEARCH_PLACEHOLDER')
               "
@@ -691,11 +697,12 @@ defineExpose({ open });
           <h3 :class="SECTION_TITLE_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.CLASSIFICATION') }}
           </h3>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">{{
               t('CONVERSATION_SIDEBAR.TIPO_DE_SOLICITACAO_LABEL')
             }}</span>
             <ComboBox
+              :size="FIELD_SIZE"
               :model-value="formState.tipo.id"
               :options="toComboOptions(tipoOptions)"
               :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
@@ -710,11 +717,12 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">{{
               t('CONVERSATION_SIDEBAR.SERVICO_LABEL')
             }}</span>
             <ComboBox
+              :size="FIELD_SIZE"
               :model-value="formState.servico.id"
               :options="toComboOptions(servicoOptions)"
               :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
@@ -733,10 +741,11 @@ defineExpose({ open });
           <div
             v-for="{ field } in classificationItems"
             :key="field.id"
-            class="flex flex-col gap-1"
+            class="flex flex-col gap-1.5"
           >
             <span :class="FIELD_LABEL_CLASS">{{ field.name }}</span>
             <ComboBox
+              :size="FIELD_SIZE"
               :model-value="formState.classification[field.key] || ''"
               :options="fieldComboOptions(field)"
               :display-label="formState.classification[field.key] || ''"
@@ -749,11 +758,12 @@ defineExpose({ open });
           <h3 :class="SECTION_TITLE_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.SERVICE') }}
           </h3>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_LABEL')
             }}</span>
             <ComboBox
+              :size="FIELD_SIZE"
               :model-value="formState.urgencia.id"
               :options="toComboOptions(urgenciaOptions)"
               :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
@@ -768,11 +778,12 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.RESPONSIBLE_LABEL')
             }}</span>
             <ComboBox
+              :size="FIELD_SIZE"
               :model-value="formState.agent?.id ?? ''"
               :options="toComboOptions(agentsList)"
               :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
@@ -785,11 +796,12 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.TEAM_LABEL')
             }}</span>
             <ComboBox
+              :size="FIELD_SIZE"
               :model-value="formState.team?.id ?? ''"
               :options="toComboOptions(teams)"
               :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
@@ -802,11 +814,16 @@ defineExpose({ open });
               "
             />
           </div>
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1.5">
             <span :class="FIELD_LABEL_CLASS">{{
               t('NEW_INTERNAL_TICKET_DIALOG.PREVISAO_LABEL')
             }}</span>
-            <Input v-model="formState.prazoResolucao" type="date" />
+            <Input
+              v-model="formState.prazoResolucao"
+              type="date"
+              :size="FIELD_SIZE"
+              :custom-input-class="FIELD_INPUT_CLASS"
+            />
           </div>
         </section>
         <section class="flex flex-col gap-4">
@@ -814,11 +831,12 @@ defineExpose({ open });
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SECTIONS.QA_DEV') }}
           </h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1.5">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.LIBERACOES_LABEL')
               }}</span>
               <ComboBox
+                :size="FIELD_SIZE"
                 :model-value="formState.liberacoes.id"
                 :options="toComboOptions(liberacoesOptions)"
                 :placeholder="
@@ -835,17 +853,23 @@ defineExpose({ open });
                 "
               />
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1.5">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.ISSUE_JIRA_LABEL')
               }}</span>
-              <Input v-model="formState.issueJira" type="text" />
+              <Input
+                v-model="formState.issueJira"
+                type="text"
+                :size="FIELD_SIZE"
+                :custom-input-class="FIELD_INPUT_CLASS"
+              />
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1.5">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.DECISAO_PO_LABEL')
               }}</span>
               <ComboBox
+                :size="FIELD_SIZE"
                 :model-value="formState.decisaoPo.id"
                 :options="toComboOptions(decisaoPoOptions)"
                 :placeholder="
@@ -862,11 +886,12 @@ defineExpose({ open });
                 "
               />
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1.5">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.STATUS_COBRANCA_LABEL')
               }}</span>
               <ComboBox
+                :size="FIELD_SIZE"
                 :model-value="formState.statusCobranca.id"
                 :options="toComboOptions(statusCobrancaOptions)"
                 :placeholder="
@@ -883,24 +908,31 @@ defineExpose({ open });
                 "
               />
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1.5">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.DATA_ENTREGA_LABEL')
               }}</span>
-              <Input v-model="formState.dataEntrega" type="date" />
+              <Input
+                v-model="formState.dataEntrega"
+                type="date"
+                :size="FIELD_SIZE"
+                :custom-input-class="FIELD_INPUT_CLASS"
+              />
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="flex flex-col gap-1.5">
               <span :class="FIELD_LABEL_CLASS">{{
                 t('NEW_INTERNAL_TICKET_DIALOG.DATA_ATUALIZACAO_LABEL')
               }}</span>
               <Input
                 v-model="formState.dataAtualizacaoSistema"
+                :size="FIELD_SIZE"
+                :custom-input-class="FIELD_INPUT_CLASS"
                 type="datetime-local"
               />
             </div>
           </div>
         </section>
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
           <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.CC_LABEL') }}
           </span>
@@ -943,13 +975,17 @@ defineExpose({ open });
             </p>
           </div>
         </div>
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
           <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.SUBJECT_LABEL') }}
           </span>
-          <Input v-model="formState.subject" />
+          <Input
+            v-model="formState.subject"
+            :size="FIELD_SIZE"
+            :custom-input-class="FIELD_INPUT_CLASS"
+          />
         </div>
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1.5">
           <span :class="FIELD_LABEL_CLASS">
             {{ t('NEW_INTERNAL_TICKET_DIALOG.MESSAGE_LABEL') }}
           </span>
