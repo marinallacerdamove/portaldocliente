@@ -2,8 +2,10 @@
 # Conversations::ResolveRequirementsService). Vale pra agente pela tela. Fica
 # de fora a integração: o Portal resolve pelo token do usuário em
 # PORTAL_INTEGRATION_USER_EMAIL (o cliente fecha ticket no Portal sem ver
-# campo interno), e automação/bot não é User. Sem a variável, nenhum acesso
-# por token é travado - nunca quebra o sync do Portal por falta de config.
+# campo interno), e automação/bot não é User. Sem a variável, nenhum token
+# ganha a exceção (fail closed): o sync de fechamento do Portal passa a ser
+# recusado e aparece como evento dead no Portal, em vez de abrir a regra pra
+# qualquer token pessoal.
 module ResolveRequirementsGuard
   private
 
@@ -15,7 +17,7 @@ module ResolveRequirementsGuard
     return false unless authenticate_by_access_token?
 
     integration_email = ENV.fetch('PORTAL_INTEGRATION_USER_EMAIL', '').strip
-    integration_email.blank? || Current.user&.email&.casecmp?(integration_email)
+    integration_email.present? && Current.user&.email&.casecmp?(integration_email) == true
   end
 
   def resolve_requirements_missing(conversation)

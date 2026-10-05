@@ -645,6 +645,16 @@ RSpec.describe 'Conversations API', type: :request do
           expect(blocked.reload.status).to eq('resolved')
         end
 
+        it 'trava qualquer token pessoal quando a integração não está configurada (fail closed)' do
+          with_modified_env PORTAL_INTEGRATION_USER_EMAIL: nil do
+            post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
+                 headers: { api_access_token: administrator.access_token.token }, params: { status: 'resolved' }, as: :json
+          end
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(blocked.reload.status).to eq('open')
+        end
+
         it 'trava outro usuário por token quando a integração está configurada' do
           with_modified_env PORTAL_INTEGRATION_USER_EMAIL: 'portal@example.com' do
             post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
