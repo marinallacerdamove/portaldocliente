@@ -96,8 +96,12 @@ if resource.email?
     json.imap_enable_ssl resource.channel.try(:imap_enable_ssl)
     json.imap_authentication resource.channel.try(:imap_authentication)
 
-    if resource.channel.try(:microsoft?) || resource.channel.try(:google?) || resource.channel.try(:legacy_google?)
+    if resource.channel.try(:microsoft?) || resource.channel.try(:google?)
       json.reauthorization_required resource.channel.try(:provider_config).empty? || resource.channel.try(:reauthorization_required?)
+    elsif resource.channel.try(:legacy_google?)
+      # Portal: Gmail via IMAP/SMTP com senha de app é suportado (não exige OAuth),
+      # então só avisa quando o login do IMAP falhar de verdade
+      json.reauthorization_required resource.channel.try(:reauthorization_required?)
     end
   end
 
