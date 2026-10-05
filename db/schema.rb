@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_01_190000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_05_180000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -776,6 +776,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_01_190000) do
     t.jsonb "custom_attributes", default: {}
     t.datetime "last_activity_at", precision: nil
     t.index ["account_id", "domain"], name: "index_companies_on_account_and_domain", unique: true, where: "(domain IS NOT NULL)"
+    t.index "account_id, upper(regexp_replace((custom_attributes ->> 'cnpj'::text), '[^0-9A-Za-z]'::text, ''::text, 'g'::text))", name: "index_companies_on_account_id_and_cnpj_key", unique: true, where: "(regexp_replace((custom_attributes ->> 'cnpj'::text), '[^0-9A-Za-z]'::text, ''::text, 'g'::text) <> ''::text)"
     t.index ["account_id"], name: "index_companies_on_account_id"
     t.index ["name", "account_id"], name: "index_companies_on_name_and_account_id"
   end

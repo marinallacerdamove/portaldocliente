@@ -26,7 +26,7 @@ volumes:
 
 services:
   postgres:
-    image: ankane/pgvector:latest
+    image: ankane/pgvector:latest@sha256:956744bd14e9cbdf639c61c2a2a7c7c2c48a9c8cdd42f7de4ac034f4e96b90f8
     container_name: backend-postgres-1
     restart: always
     logging: *default-logging
@@ -38,7 +38,7 @@ services:
       - backend_chatwoot_pgdata:/var/lib/postgresql/data
 
   redis:
-    image: redis:alpine
+    image: redis:alpine@sha256:09160599abd229764c0fb44cb6be640294e1d360a54b19985ab4843dcf2d90f1
     container_name: backend-redis-1
     restart: always
     logging: *default-logging
@@ -75,7 +75,7 @@ services:
       - redis
 
   glitchtip:
-    image: glitchtip/glitchtip:latest
+    image: glitchtip/glitchtip:latest@sha256:95e0e2d6b1bc18446902ae0cb47910cc55d7c0d6756ee901b0cd8dce9f8ef5a9
     container_name: glitchtip
     restart: always
     logging: *default-logging
