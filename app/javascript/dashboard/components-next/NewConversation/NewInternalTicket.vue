@@ -554,7 +554,10 @@ const onSubmit = async () => {
       });
     }
 
-    const customAttributes = {};
+    // Parte do que a criação já gravou (ex.: "empresa" vinda da empresa do
+    // contato): o endpoint substitui o hash inteiro, e mandar só os campos do
+    // formulário apagava o resto. Mesmo padrão do TicketLinkDialog.
+    const customAttributes = { ...(data.custom_attributes || {}) };
     if (formState.subject.trim())
       customAttributes.assunto = formState.subject.trim();
     if (formState.servico?.id) customAttributes.servico = formState.servico.id;
