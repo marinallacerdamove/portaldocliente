@@ -33,6 +33,10 @@ en:
   hello: 'Hello world'
   portal_assistant:
     portal_unavailable: 'The assistant is unavailable right now (Portal did not respond). Try again in a moment.'
+  portal_contact_registration:
+    portal_unreachable: 'Portal did not respond right now. Try again in a moment.'
+    choose_one: 'Select Register in Portal and/or Complete Chatwoot contact.'
+    company_required: 'Link the contact to a company before registering in Portal.'
   portal_documents:
     portal_unavailable: 'Documents are unavailable right now (Portal did not respond). Try again in a moment.'
   inbox:

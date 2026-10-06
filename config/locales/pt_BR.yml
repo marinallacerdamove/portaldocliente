@@ -20,6 +20,10 @@ pt_BR:
   hello: 'Olá, mundo'
   portal_assistant:
     portal_unavailable: 'O Assistente está indisponível agora (o Portal não respondeu). Tente de novo em instantes.'
+  portal_contact_registration:
+    portal_unreachable: 'O Portal não respondeu agora. Tente de novo em instantes.'
+    choose_one: 'Marque Cadastrar no Portal e/ou Completar contato no Chatwoot.'
+    company_required: 'Vincule o contato a uma empresa antes de cadastrar no Portal.'
   portal_documents:
     portal_unavailable: 'Os documentos estão indisponíveis agora (o Portal não respondeu). Tente de novo em instantes.'
   inbox:

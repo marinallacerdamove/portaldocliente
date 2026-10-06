@@ -7,6 +7,7 @@ import {
 } from 'shared/helpers/CustomErrors';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import ContactInfoRow from './ContactInfoRow.vue';
+import PortalContactRegistration from './PortalContactRegistration.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import SocialIcons from './SocialIcons.vue';
 import EditContact from './EditContact.vue';
@@ -23,6 +24,7 @@ import { useLinkedCompanies } from 'dashboard/composables/useLinkedCompanies';
 
 export default {
   components: {
+    PortalContactRegistration,
     NextButton,
     ContactInfoRow,
     EditContact,
@@ -551,6 +553,12 @@ export default {
             icon="tag"
             emoji="🏷️"
             :title="$t('CONTACT_PANEL.CLASSIFICATION')"
+          />
+          <PortalContactRegistration
+            v-if="currentChat?.id"
+            :contact="contact"
+            :conversation-id="currentChat.id"
+            :company-name="company?.name || ''"
           />
         </div>
       </div>

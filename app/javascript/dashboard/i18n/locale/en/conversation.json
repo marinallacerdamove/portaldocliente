@@ -723,5 +723,24 @@
     "INVALID_TICKET": "Ticket not found. Enter the number of a ticket (Customer Portal or Internal Tickets).",
     "ERROR": "Could not add the messages to the ticket.",
     "TICKET_NUMBER": "#{id}"
+  },
+  "PORTAL_CONTACT_REGISTRATION": {
+    "NOT_REGISTERED": "This contact is not a Portal user.",
+    "BUTTON": "Register contact",
+    "TITLE": "Register contact",
+    "DESCRIPTION": "Choose where to register this conversation's requester.",
+    "CONFIRM": "Register",
+    "REGISTER_PORTAL": "Register in Portal (Client user, no access for now)",
+    "COMPLETE_CHATWOOT": "Complete Chatwoot contact",
+    "NAME": "Name",
+    "EMAIL": "E-mail",
+    "PHONE": "Phone",
+    "COMPANY_HINT": "Will be linked to company {company}, and this conversation becomes a Portal ticket.",
+    "NO_COMPANY": "Link the contact to a company before registering in Portal.",
+    "SUCCESS_CREATED": "Contact registered in Portal.",
+    "SUCCESS_LINKED": "Contact linked to the Portal user that already had this e-mail.",
+    "SUCCESS_TICKET": "The conversation is becoming a Portal ticket.",
+    "SUCCESS_CHATWOOT": "Contact updated in Chatwoot.",
+    "ERROR": "Could not register the contact."
   }
 }

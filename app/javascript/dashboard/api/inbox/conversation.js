@@ -148,6 +148,14 @@ class ConversationApi extends ApiClient {
     return axios.get(`${this.url}/${conversationId}/inbox_assistant`);
   }
 
+  // PATCH LOCAL (fork) - "Cadastrar contato" (Portal e/ou Chatwoot)
+  registerPortalContact(conversationId, payload) {
+    return axios.post(
+      `${this.url}/${conversationId}/portal_contact_registration`,
+      payload
+    );
+  }
+
   delete(conversationId) {
     return axios.delete(`${this.url}/${conversationId}`);
   }

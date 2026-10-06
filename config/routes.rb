@@ -195,6 +195,8 @@ Rails.application.routes.draw do
               resources :labels, only: [:create, :index]
               resource :participants, only: [:show, :create, :update, :destroy]
               resource :direct_uploads, only: [:create]
+              # PATCH LOCAL (fork) - "Cadastrar contato" (Portal/Chatwoot)
+              resource :portal_contact_registration, only: [:create]
               resource :draft_messages, only: [:show, :update, :destroy]
             end
             member do

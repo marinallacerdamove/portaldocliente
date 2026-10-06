@@ -677,5 +677,24 @@
     "INVALID_TICKET": "Ticket não encontrado. Informe o número de um ticket (Portal do Cliente ou Tickets Internos).",
     "ERROR": "Não foi possível incluir as mensagens no ticket.",
     "TICKET_NUMBER": "#{id}"
+  },
+  "PORTAL_CONTACT_REGISTRATION": {
+    "NOT_REGISTERED": "Este contato não é usuário do Portal.",
+    "BUTTON": "Cadastrar contato",
+    "TITLE": "Cadastrar contato",
+    "DESCRIPTION": "Escolha onde cadastrar o solicitante desta conversa.",
+    "CONFIRM": "Cadastrar",
+    "REGISTER_PORTAL": "Cadastrar no Portal (usuário Cliente, sem acesso por enquanto)",
+    "COMPLETE_CHATWOOT": "Completar contato no Chatwoot",
+    "NAME": "Nome",
+    "EMAIL": "E-mail",
+    "PHONE": "Telefone",
+    "COMPANY_HINT": "Será vinculado à empresa {company}, e esta conversa vira ticket no Portal.",
+    "NO_COMPANY": "Vincule o contato a uma empresa antes de cadastrar no Portal.",
+    "SUCCESS_CREATED": "Contato cadastrado no Portal.",
+    "SUCCESS_LINKED": "Contato vinculado ao usuário do Portal que já tinha esse e-mail.",
+    "SUCCESS_TICKET": "A conversa está virando ticket no Portal.",
+    "SUCCESS_CHATWOOT": "Contato atualizado no Chatwoot.",
+    "ERROR": "Não foi possível cadastrar o contato."
   }
 }
