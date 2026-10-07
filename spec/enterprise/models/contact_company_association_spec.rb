@@ -24,14 +24,15 @@ RSpec.describe Contact, type: :model do
       end
     end
 
+    # PATCH LOCAL (fork) - associação por domínio desligada
+    # (Enterprise::Concerns::Contact#should_associate_company?): a empresa do
+    # contato vem do Portal do Cliente, pelo CPF/CNPJ.
     context 'when creating a new contact with business email' do
-      it 'automatically creates and associates a company' do
+      it 'does not create nor associate a company by the e-mail domain' do
         expect do
           create(:contact, email: 'john@acme.com', account: account)
-        end.to change(Company, :count).by(1)
-        contact = described_class.last
-        expect(contact.company).to be_present
-        expect(contact.company.domain).to eq('acme.com')
+        end.not_to change(Company, :count)
+        expect(described_class.last.company).to be_nil
       end
 
       it 'does not create company for free email providers' do
@@ -42,13 +43,12 @@ RSpec.describe Contact, type: :model do
     end
 
     context 'when updating a contact to add email for first time' do
-      it 'creates and associates company' do
+      it 'does not create nor associate a company by the e-mail domain' do
         contact = create(:contact, email: nil, account: account)
         expect do
           contact.update(email: 'john@acme.com')
-        end.to change(Company, :count).by(1)
-        contact.reload
-        expect(contact.company.domain).to eq('acme.com')
+        end.not_to change(Company, :count)
+        expect(contact.reload.company).to be_nil
       end
     end
 
@@ -75,15 +75,13 @@ RSpec.describe Contact, type: :model do
     end
 
     context 'when multiple contacts share the same domain' do
-      it 'associates all contacts with the same company' do
-        contacts = ['john@acme.com', 'jane@acme.com', 'bob@acme.com']
-        contacts.each do |contact|
-          create(:contact, email: contact, account: account)
+      it 'does not group them into a company by the domain' do
+        ['john@acme.com', 'jane@acme.com', 'bob@acme.com'].each do |email|
+          create(:contact, email: email, account: account)
         end
 
-        expect(Company.where(domain: 'acme.com', account: account).count).to eq(1)
-        company = Company.find_by(domain: 'acme.com', account: account)
-        expect(company.contacts.count).to eq(contacts.length)
+        expect(Company.where(domain: 'acme.com', account: account)).to be_empty
+        expect(described_class.where(account: account).where.not(company_id: nil)).to be_empty
       end
     end
   end
