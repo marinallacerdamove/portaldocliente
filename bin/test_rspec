@@ -2,13 +2,16 @@
 # PATCH LOCAL (fork) - RSpec do fork contra Postgres/Redis de TESTE (containers
 # chatwoot-test-postgres / chatwoot-test-redis, só localhost), nunca os de
 # produção. Uso: bin/test_rspec [arquivos ou pastas de spec]
-#   bin/test_rspec --setup   (recria o banco de teste a partir do schema.rb)
+#   bin/test_rspec --setup   (recria o banco de teste a partir do schema.rb e compila os assets de teste)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 export RAILS_ENV=test NODE_ENV=test TZ=UTC LANG=en_US.UTF-8
 export POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=55432 POSTGRES_USERNAME=postgres POSTGRES_PASSWORD=test
 export POSTGRES_DATABASE=chatwoot_test REDIS_URL=redis://127.0.0.1:56379
+# Teste que abre tela compila o frontend (vite autoBuild); com a memória padrão
+# do Node essa compilação estoura e a tela responde 500.
+export NODE_OPTIONS=--max-old-space-size=8192
 
 for c in chatwoot-test-postgres chatwoot-test-redis; do
   docker start "$c" > /dev/null
@@ -16,6 +19,7 @@ done
 
 if [ "${1:-}" = "--setup" ]; then
   bundle exec rails db:drop db:create db:schema:load
+  bin/vite build
   exit 0
 fi
 
