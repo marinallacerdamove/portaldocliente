@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe Whatsapp::Providers::WhatsappCloudService do
+describe Whatsapp::Providers::WhatsappCloudService, :without_sender_name_prefix do
   subject(:service) { described_class.new(whatsapp_channel: whatsapp_channel) }
 
   let(:conversation) { create(:conversation, inbox: whatsapp_channel.inbox) }

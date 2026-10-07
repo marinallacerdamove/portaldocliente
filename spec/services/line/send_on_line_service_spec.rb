@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe Line::SendOnLineService do
+describe Line::SendOnLineService, :without_sender_name_prefix do
   describe '#perform' do
     let(:line_client) { double }
     let(:line_channel) { create(:channel_line) }

@@ -6,6 +6,33 @@ RSpec.describe MessageContentPresenter do
   let(:presenter) { described_class.new(message) }
 
   describe '#outgoing_content' do
+    # PATCH LOCAL (fork) - mensagem de agente sai pelos canais com o nome dele na frente.
+    context 'with the agent name prefix' do
+      let(:whatsapp_channel) { create(:channel_whatsapp, sync_templates: false, validate_provider_config: false) }
+      let(:whatsapp_conversation) { create(:conversation, inbox: whatsapp_channel.inbox) }
+      let(:agent) { create(:user, account: whatsapp_conversation.account, name: 'Ana Agente') }
+
+      def outgoing(conversation:, sender:, content: 'Olá')
+        described_class.new(create(:message, conversation: conversation, message_type: :outgoing, sender: sender, content: content))
+                       .outgoing_content
+      end
+
+      it 'prefixes the agent name on a customer channel (WhatsApp)' do
+        expect(outgoing(conversation: whatsapp_conversation, sender: agent)).to eq('*Ana Agente*: Olá')
+      end
+
+      it 'does not prefix bot or contact messages' do
+        expect(outgoing(conversation: whatsapp_conversation, sender: create(:agent_bot))).to eq('Olá')
+        expect(outgoing(conversation: whatsapp_conversation, sender: create(:contact, account: whatsapp_conversation.account))).to eq('Olá')
+      end
+
+      it 'does not prefix on API channels (Portal do Cliente gets the message as is)' do
+        api_conversation = create(:conversation, inbox: create(:channel_api).inbox)
+        api_agent = create(:user, account: api_conversation.account)
+        expect(outgoing(conversation: api_conversation, sender: api_agent)).not_to include(api_agent.name)
+      end
+    end
+
     context 'when message is not input_csat' do
       let(:content_type) { 'text' }
       let(:content) { 'Regular message' }

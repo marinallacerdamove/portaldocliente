@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Channel::Telegram do
+RSpec.describe Channel::Telegram, :without_sender_name_prefix do
   let(:telegram_channel) { create(:channel_telegram) }
 
   describe '#convert_markdown_to_telegram_html' do

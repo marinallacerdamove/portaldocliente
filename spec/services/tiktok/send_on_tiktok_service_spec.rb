@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Tiktok::SendOnTiktokService do
+RSpec.describe Tiktok::SendOnTiktokService, :without_sender_name_prefix do
   let(:tiktok_client) { instance_double(Tiktok::Client) }
   let(:status_update_service) { instance_double(Messages::StatusUpdateService, perform: true) }
 

@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe Whatsapp::SendOnWhatsappService do
+describe Whatsapp::SendOnWhatsappService, :without_sender_name_prefix do
   template_params = {
     name: 'sample_shipping_confirmation',
     namespace: '23423423_2342423_324234234_2343224',

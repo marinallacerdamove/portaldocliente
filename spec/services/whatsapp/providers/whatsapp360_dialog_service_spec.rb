@@ -1,7 +1,7 @@
 ## the older specs are covered in send in spec/services/whatsapp/send_on_whatsapp_service_spec.rb
 require 'rails_helper'
 
-describe Whatsapp::Providers::Whatsapp360DialogService do
+describe Whatsapp::Providers::Whatsapp360DialogService, :without_sender_name_prefix do
   subject(:service) { described_class.new(whatsapp_channel: whatsapp_channel) }
 
   let!(:whatsapp_channel) { create(:channel_whatsapp, sync_templates: false, validate_provider_config: false) }

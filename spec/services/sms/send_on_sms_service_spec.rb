@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe Sms::SendOnSmsService do
+describe Sms::SendOnSmsService, :without_sender_name_prefix do
   describe '#perform' do
     context 'when a valid message' do
       let(:sms_request) { double }
