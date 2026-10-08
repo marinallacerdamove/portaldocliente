@@ -42,10 +42,10 @@ class Webhooks::Trigger
   # Só chega aqui pra falha que NÃO vira RetryableError (erro definitivo, ou
   # a chamada de handle_failure feita pelo AgentBots::WebhookJob depois de
   # esgotar as tentativas - ver retry_on em app/jobs/agent_bots/webhook_job.rb).
-  # Como :account_webhook agora propaga RetryableError direto (sem retry_on
-  # próprio - ver comentário em WebhookJob), o Sidekiq já reporta cada
-  # tentativa que falha via sentry-sidekiq automaticamente; aqui cobre o
-  # caminho que NÃO relança (não tinha nenhum report antes desta mudança).
+  # Como :account_webhook propaga RetryableError direto (sem retry_on próprio:
+  # o retry é o do Sidekiq, ver spec/jobs/webhook_job_spec.rb), o Sidekiq já
+  # reporta cada tentativa que falha via sentry-sidekiq automaticamente; aqui
+  # cobre o caminho que NÃO relança (não tinha nenhum report antes desta mudança).
   def handle_failure(error)
     handle_error(error)
     Rails.logger.warn "Exception: Invalid webhook URL #{@url} : #{error.message}"

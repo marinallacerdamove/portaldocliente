@@ -34,6 +34,6 @@ class Api::V1::Accounts::BotFlowsController < Api::V1::Accounts::BaseController
   end
 
   def fetch_bot_flow
-    @bot_flow = Current.account.bot_flows.find_by(id: params[:id])
+    @bot_flow = Current.account.bot_flows.find(params[:id])
   end
 end

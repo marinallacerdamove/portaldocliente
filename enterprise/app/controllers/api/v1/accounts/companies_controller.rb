@@ -37,7 +37,9 @@ class Api::V1::Accounts::CompaniesController < Api::V1::Accounts::EnterpriseAcco
   def show; end
 
   def create
-    @company = Current.account.companies.build(company_params)
+    @company = Current.account.companies.build(
+      company_params.except(:custom_attributes).merge(custom_attributes: writable_custom_attributes(company_params[:custom_attributes]))
+    )
     @company.save!
   end
 
@@ -49,7 +51,7 @@ class Api::V1::Accounts::CompaniesController < Api::V1::Accounts::EnterpriseAcco
     custom_attributes = custom_attributes_to_destroy
     return if performed?
 
-    @company.custom_attributes = @company.custom_attributes.excluding(*custom_attributes)
+    @company.custom_attributes = @company.custom_attributes.excluding(*deletable_custom_attributes(custom_attributes))
     @company.save!
   end
 
@@ -103,9 +105,18 @@ class Api::V1::Accounts::CompaniesController < Api::V1::Accounts::EnterpriseAcco
     custom_attributes = company_params[:custom_attributes]
     return @company.custom_attributes if custom_attributes.blank?
 
-    incoming = custom_attributes.to_h
-    incoming = incoming.except(*FINANCEIRO_KEYS) unless @can_view_financeiro
-    @company.custom_attributes.merge(incoming)
+    @company.custom_attributes.merge(writable_custom_attributes(custom_attributes))
+  end
+
+  # Campos de Contrato/Financeiro só valem pra quem tem financeiro_manage, em
+  # qualquer escrita: criar, editar ou apagar a chave.
+  def writable_custom_attributes(attributes)
+    attributes = (attributes || {}).to_h
+    @can_view_financeiro ? attributes : attributes.except(*FINANCEIRO_KEYS)
+  end
+
+  def deletable_custom_attributes(keys)
+    @can_view_financeiro ? keys : keys - FINANCEIRO_KEYS
   end
 
   # Exposto pro jbuilder (_company.json.jbuilder) filtrar os campos de

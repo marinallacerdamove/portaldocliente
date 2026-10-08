@@ -20,10 +20,10 @@ module ResolveRequirementsGuard
     integration_email.present? && Current.user&.email&.casecmp?(integration_email) == true
   end
 
-  def resolve_requirements_missing(conversation)
+  def resolve_requirements_missing(conversation, account_data: nil)
     return [] if conversation.resolved? || !enforce_resolve_requirements?
 
-    Conversations::ResolveRequirementsService.new(conversation).missing
+    Conversations::ResolveRequirementsService.new(conversation, account_data: account_data).missing
   end
 
   # toggle_status: pedido de resolver (status 'resolved', ou alternar uma

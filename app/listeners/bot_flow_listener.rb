@@ -20,6 +20,7 @@ class BotFlowListener < BaseListener
     return unless whatsapp_conversation?(conversation)
 
     engine = BotFlows::Engine.new(conversation)
+    engine.stop if human_took_over?(conversation)
     if engine.running?
       engine.resume(message)
     else
@@ -30,15 +31,20 @@ class BotFlowListener < BaseListener
 
   private
 
+  # Agente atribuído ou conversa resolvida: o bot não retoma o fluxo parado.
+  def human_took_over?(conversation)
+    conversation.assignee_id.present? || conversation.resolved?
+  end
+
   def whatsapp_conversation?(conversation)
     conversation.present? && conversation.inbox.channel_type == 'Channel::Whatsapp'
   end
 
   def matching_flow(conversation, trigger_type:, message: nil)
     candidates = conversation.account.bot_flows.active
-                              .where(trigger_type: trigger_type)
-                              .for_inbox(conversation.inbox_id)
-                              .order(:priority, :id)
+                             .where(trigger_type: trigger_type)
+                             .for_inbox(conversation.inbox_id)
+                             .order(:priority, :id)
 
     return candidates.first if trigger_type == 'conversation_created'
 

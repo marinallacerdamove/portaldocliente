@@ -408,4 +408,44 @@ RSpec.describe 'Companies API', type: :request do
       end
     end
   end
+
+  # PATCH LOCAL (fork) - campos de Contrato/Financeiro só pra quem tem financeiro_manage
+  describe 'financial fields without the financeiro_manage permission' do
+    let(:agent) { create(:user, account: account, role: :agent) }
+    let(:admin) { create(:user, account: account, role: :administrator) }
+    let(:company) { create(:company, account: account, custom_attributes: { 'contrato_valor' => '100', 'plan' => 'pro' }) }
+
+    it 'drops them when creating a company' do
+      post "/api/v1/accounts/#{account.id}/companies",
+           params: { company: { name: 'Nova', custom_attributes: { contrato_valor: '999', plan: 'pro' } } },
+           headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(account.companies.find_by(name: 'Nova').custom_attributes).to eq('plan' => 'pro')
+    end
+
+    it 'keeps them when an administrator creates a company' do
+      post "/api/v1/accounts/#{account.id}/companies",
+           params: { company: { name: 'Nova', custom_attributes: { contrato_valor: '999' } } },
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(account.companies.find_by(name: 'Nova').custom_attributes).to eq('contrato_valor' => '999')
+    end
+
+    it 'does not let them be deleted' do
+      post "/api/v1/accounts/#{account.id}/companies/#{company.id}/destroy_custom_attributes",
+           params: { custom_attributes: %w[contrato_valor plan] },
+           headers: agent.create_new_auth_token, as: :json
+
+      expect(company.reload.custom_attributes).to eq('contrato_valor' => '100')
+    end
+
+    it 'lets an administrator delete them' do
+      post "/api/v1/accounts/#{account.id}/companies/#{company.id}/destroy_custom_attributes",
+           params: { custom_attributes: ['contrato_valor'] },
+           headers: admin.create_new_auth_token, as: :json
+
+      expect(company.reload.custom_attributes).to eq('plan' => 'pro')
+    end
+  end
 end

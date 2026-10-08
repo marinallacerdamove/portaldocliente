@@ -42,4 +42,14 @@ RSpec.describe Conversations::ResolveRequirementsService do
     conversation.update!(custom_attributes: conversation.custom_attributes.merge('campos_adicionais' => { field.key => 'x' }))
     expect(missing).to eq([])
   end
+
+  it 'gives the same answer with the account data computed once by the caller' do
+    create(:custom_attribute_definition, account: account, attribute_model: :conversation_attribute,
+                                         attribute_key: 'tipo_de_solicitao', attribute_display_name: 'Tipo de solicitação')
+    create(:team, account: account)
+    conversation.update!(assignee: nil)
+    account_data = described_class.account_data(account)
+
+    expect(described_class.new(conversation.reload, account_data: account_data).missing).to eq(missing)
+  end
 end

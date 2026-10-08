@@ -7,6 +7,18 @@ class BotFlows::Engine
   STATE_FLOW_KEY = 'bot_flow_id'.freeze
   STATE_NODE_KEY = 'bot_flow_node_id'.freeze
   STATE_VARS_KEY = 'bot_flow_vars'.freeze
+  STATE_STARTED_AT_KEY = 'bot_flow_started_at'.freeze
+  STATE_RETRIES_KEY = 'bot_flow_menu_retries'.freeze
+  STATE_KEYS = [STATE_FLOW_KEY, STATE_NODE_KEY, STATE_VARS_KEY, STATE_STARTED_AT_KEY, STATE_RETRIES_KEY].freeze
+
+  # Ciclo entre nós que não pausam (ex. webhook erro -> mensagem -> webhook)
+  # mandaria mensagem sem parar; nenhum fluxo legítimo passa disso sem pausar.
+  MAX_STEPS = 50
+  # Fluxo parado esperando resposta há mais que isso (ou sem registro de quando
+  # parou) é abandonado: o cliente que volta depois não recebe o menu antigo.
+  STATE_TTL = 24.hours
+  # Respostas que não batem com nenhuma opção do menu antes de desistir.
+  MAX_MENU_RETRIES = 2
 
   PRESET_PATTERNS = {
     'cnpj' => BotFlows::CnpjLookup::CNPJ_REGEX,
@@ -22,7 +34,12 @@ class BotFlows::Engine
   end
 
   def running?
-    @conversation.additional_attributes[STATE_NODE_KEY].present?
+    @conversation.additional_attributes[STATE_NODE_KEY].present? && !state_expired?
+  end
+
+  # Atendimento humano assumiu ou a conversa foi resolvida: o fluxo para.
+  def stop
+    clear_state if @conversation.additional_attributes[STATE_NODE_KEY].present?
   end
 
   def start(flow)
@@ -55,7 +72,7 @@ class BotFlows::Engine
   private
 
   def run_from(flow, node_id, vars)
-    loop do
+    MAX_STEPS.times do
       node = node_id && flow.nodes.find { |n| n['id'] == node_id }
       return clear_state unless node
 
@@ -90,6 +107,8 @@ class BotFlows::Engine
         node_id = next_node_id(flow, node['id'], 'default')
       end
     end
+    Rails.logger.warn("[BotFlows::Engine] flow #{flow.id} passed #{MAX_STEPS} steps without pausing in conversation #{@conversation.id}")
+    clear_state
   end
 
   def next_node_id(flow, from_id, handle)
@@ -104,7 +123,7 @@ class BotFlows::Engine
     chosen = options.detect { |o| o['label'].to_s.strip.casecmp(message.content.to_s.strip).zero? }
 
     unless chosen
-      send_menu(node, vars, retry_text: node['retry_prompt'].presence || DEFAULT_RETRY_TEXT)
+      retry_menu(node, vars)
       return
     end
 
@@ -189,15 +208,29 @@ class BotFlows::Engine
     )
   end
 
+  # Reapresenta o menu até MAX_MENU_RETRIES vezes; depois desiste (o cliente
+  # pode estar falando com uma pessoa) em vez de repetir pra sempre.
+  def retry_menu(node, vars)
+    retries = @conversation.additional_attributes[STATE_RETRIES_KEY].to_i
+    return clear_state if retries >= MAX_MENU_RETRIES
+
+    @conversation.update!(additional_attributes: @conversation.additional_attributes.merge(STATE_RETRIES_KEY => retries + 1))
+    send_menu(node, vars, retry_text: node['retry_prompt'].presence || DEFAULT_RETRY_TEXT)
+  end
+
+  def state_expired?
+    started_at = @conversation.additional_attributes[STATE_STARTED_AT_KEY]
+    started_at.blank? || Time.zone.at(started_at.to_i) < STATE_TTL.ago
+  end
+
   def set_state(flow_id, node_id, vars)
     @conversation.update!(additional_attributes: @conversation.additional_attributes.merge(
-      STATE_FLOW_KEY => flow_id, STATE_NODE_KEY => node_id, STATE_VARS_KEY => vars
+      STATE_FLOW_KEY => flow_id, STATE_NODE_KEY => node_id, STATE_VARS_KEY => vars,
+      STATE_STARTED_AT_KEY => Time.current.to_i, STATE_RETRIES_KEY => 0
     ))
   end
 
   def clear_state
-    @conversation.update!(
-      additional_attributes: @conversation.additional_attributes.except(STATE_FLOW_KEY, STATE_NODE_KEY, STATE_VARS_KEY)
-    )
+    @conversation.update!(additional_attributes: @conversation.additional_attributes.except(*STATE_KEYS))
   end
 end

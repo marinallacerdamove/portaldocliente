@@ -39,8 +39,9 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
   def unresolvable_conversation_ids
     return [] unless params.dig(:fields, :status) == 'resolved'
 
-    @current_account.conversations.where(display_id: params[:ids])
-                    .reject { |conversation| resolve_requirements_missing(conversation).empty? }
+    account_data = Conversations::ResolveRequirementsService.account_data(@current_account)
+    @current_account.conversations.where(display_id: params[:ids]).includes(:inbox, :team, :assignee)
+                    .reject { |conversation| resolve_requirements_missing(conversation, account_data: account_data).empty? }
                     .map(&:display_id)
   end
 

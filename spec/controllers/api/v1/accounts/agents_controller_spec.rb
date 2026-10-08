@@ -40,6 +40,19 @@ RSpec.describe 'Agents API', type: :request do
         data = response.parsed_body
         expect(data.first['custom_attributes']['test']).to eq('test')
       end
+
+      # PATCH LOCAL (fork) - NewInternalTicket sugere o time pelo responsável
+      it 'returns the team ids of each agent, only for teams of this account' do
+        team = create(:team, account: account)
+        create(:team_member, team: team, user: agent)
+        create(:team_member, team: create(:team, account: create(:account)), user: agent)
+
+        get "/api/v1/accounts/#{account.id}/agents", headers: agent.create_new_auth_token, as: :json
+
+        by_id = response.parsed_body.index_by { |item| item['id'] }
+        expect(by_id[agent.id]['team_ids']).to eq([team.id])
+        expect(by_id[admin.id]['team_ids']).to eq([])
+      end
     end
   end
 

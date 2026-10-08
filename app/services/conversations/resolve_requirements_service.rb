@@ -16,10 +16,25 @@ class Conversations::ResolveRequirementsService
     'Channel::WebWidget' => 'chat'
   }.freeze
 
-  def initialize(conversation)
+  # O que vem da conta e não muda de uma conversa pra outra; quem confere várias
+  # conversas (resolver em massa) calcula uma vez e passa em account_data.
+  AccountData = Struct.new(:definitions, :evaluator, :teams_exist, keyword_init: true)
+
+  def self.account_data(account)
+    AccountData.new(
+      definitions: account.custom_attribute_definitions.conversation_attribute.index_by(&:attribute_key),
+      evaluator: TicketFieldRulesEvaluator.new(
+        rules: TicketFieldRule.where(account_id: account.id).ordered, fields: TicketCustomField.where(account_id: account.id).to_a
+      ),
+      teams_exist: account.teams.exists?
+    )
+  end
+
+  def initialize(conversation, account_data: nil)
     @conversation = conversation
     @account = conversation.account
     @attributes = conversation.custom_attributes || {}
+    @account_data = account_data || self.class.account_data(@account)
   end
 
   # Nomes do que falta, na ordem em que a tela cobra.
@@ -34,7 +49,7 @@ class Conversations::ResolveRequirementsService
   end
 
   def definitions
-    @definitions ||= @account.custom_attribute_definitions.conversation_attribute.index_by(&:attribute_key)
+    @account_data.definitions
   end
 
   def missing_actions
@@ -49,16 +64,12 @@ class Conversations::ResolveRequirementsService
     labels = []
     labels << 'Prioridade' if @conversation.priority.blank?
     labels << 'Agente' if @conversation.assignee_id.blank?
-    labels << 'Time' if @conversation.team_id.blank? && @account.teams.exists?
+    labels << 'Time' if @conversation.team_id.blank? && @account_data.teams_exist
     labels
   end
 
   def missing_custom_fields
-    evaluator = TicketFieldRulesEvaluator.new(
-      rules: TicketFieldRule.where(account_id: @account.id).ordered,
-      fields: TicketCustomField.where(account_id: @account.id).to_a
-    )
-    items = evaluator.visible_items(context).select { |item| item['editable_by_agents'] }
+    items = @account_data.evaluator.visible_items(context).select { |item| item['editable_by_agents'] }
     TicketFieldRulesEvaluator.missing_required(items, custom_field_values, ['conclusao']).map { |item| item['field'].name }
   end
 
