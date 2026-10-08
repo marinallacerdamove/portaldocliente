@@ -1,6 +1,12 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {
+  cnpjKey,
+  formatCnpj,
+  isNumericCnpj,
+  isValidCnpj,
+} from 'dashboard/helper/cnpj';
 import { useRoute } from 'vue-router';
 import { useAlert } from 'dashboard/composables';
 import { usePolicy } from 'dashboard/composables/usePolicy';
@@ -195,10 +201,6 @@ const cepLookupNotFound = ref(false);
 // matriz_cnpj (a mesma chave que liga Company e Empresa do Portal, e que o
 // Portal sincroniza nos dois sentidos). As filiais de uma matriz saem daí.
 const route = useRoute();
-const cnpjKey = value =>
-  String(value || '')
-    .replace(/[^0-9A-Za-z]/g, '')
-    .toUpperCase();
 const accountCompanies = ref([]);
 const filialIds = ref([]);
 const addFilialValue = ref('');
@@ -316,7 +318,16 @@ const displayName = computed(
 const avatarSource = computed(
   () => avatarPreviewUrl.value || props.company?.avatarUrl || ''
 );
-const isFormInvalid = computed(() => !form.name.trim());
+// CPF/CNPJ é a chave de vínculo com o Portal: só é validado quando o agente o
+// altera (empresa antiga fora do padrão continua salvando as outras seções).
+const cnpjChanged = computed(
+  () =>
+    cnpjKey(customAttrs.cnpj) !== cnpjKey(props.company?.customAttributes?.cnpj)
+);
+const cnpjInvalid = computed(
+  () => cnpjChanged.value && !isValidCnpj(customAttrs.cnpj)
+);
+const isFormInvalid = computed(() => !form.name.trim() || cnpjInvalid.value);
 
 const arraysDiffer = (a, b) =>
   a.length !== b.length || a.some(item => !b.includes(item));
@@ -331,7 +342,7 @@ const hasChanges = computed(() => {
     observacoes.value !== (attrs.observacoes || '') ||
     contabilidadeObservacoes.value !==
       (attrs.contabilidade_observacoes || '') ||
-    customAttrs.cnpj !== (attrs.cnpj || '') ||
+    cnpjChanged.value ||
     customAttrs.cep !== (attrs.cep || '') ||
     customAttrs.matriz_cnpj !== (attrs.matriz_cnpj || '') ||
     arraysDiffer(filialIds.value, savedFilialIds.value) ||
@@ -494,15 +505,12 @@ async function lookupCep() {
   }
 }
 
-function maskCnpj(raw) {
-  return raw.replace(/\D/g, '').slice(0, 14);
-}
 function onCnpjInput(value) {
-  customAttrs.cnpj = maskCnpj(value);
+  customAttrs.cnpj = cnpjKey(value).slice(0, 14);
 }
 async function lookupCnpj() {
-  const digits = customAttrs.cnpj.replace(/\D/g, '');
-  if (digits.length !== 14) return;
+  if (!isNumericCnpj(customAttrs.cnpj)) return;
+  const digits = cnpjKey(customAttrs.cnpj);
   cnpjLookupLoading.value = true;
   cnpjLookupNotFound.value = false;
   try {
@@ -557,7 +565,9 @@ const handleUpdateCompany = async () => {
             String(customAttrs[field.key]).trim(),
           ])
         ),
-        cnpj: customAttrs.cnpj.trim(),
+        cnpj: cnpjChanged.value
+          ? formatCnpj(customAttrs.cnpj)
+          : customAttrs.cnpj.trim(),
         cep: customAttrs.cep.trim(),
         matriz_cnpj:
           customAttrs.tipo_empresa === 'filial'
@@ -573,7 +583,11 @@ const handleUpdateCompany = async () => {
       },
     });
     if (customAttrs.tipo_empresa !== 'filial')
-      await saveFiliais(customAttrs.cnpj.trim());
+      await saveFiliais(
+        cnpjChanged.value
+          ? formatCnpj(customAttrs.cnpj)
+          : customAttrs.cnpj.trim()
+      );
     if (!isCurrentCompany(companyId)) return false;
 
     syncForm(updated);
@@ -874,10 +888,7 @@ const contabilidadeItems = computed(() => [
                 <button
                   type="button"
                   class="absolute -translate-y-1/2 right-2 top-1/2 flex items-center justify-center w-6 h-6 p-0 border-0 bg-transparent text-n-slate-11 hover:text-n-slate-12 disabled:opacity-40"
-                  :disabled="
-                    isUpdating ||
-                    customAttrs.cnpj.replace(/\D/g, '').length !== 14
-                  "
+                  :disabled="isUpdating || !isNumericCnpj(customAttrs.cnpj)"
                   :title="t('COMPANIES.DETAIL.PORTAL_FIELDS.CNPJ_LOOKUP_TITLE')"
                   @click="lookupCnpj"
                 >
@@ -892,6 +903,9 @@ const contabilidadeItems = computed(() => [
                   />
                 </button>
               </div>
+              <p v-if="cnpjInvalid" class="text-label-small text-n-ruby-11">
+                {{ t('COMPANIES.CREATE.CNPJ_INVALID') }}
+              </p>
               <p
                 v-if="cnpjLookupNotFound"
                 class="text-label-small text-n-amber-11"

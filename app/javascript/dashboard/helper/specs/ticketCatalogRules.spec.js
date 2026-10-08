@@ -1,6 +1,7 @@
 import {
   activeInScope,
   allowedCategories,
+  applyServiceChange,
   filterPriorityOptions,
   justificationsForStatus,
 } from '../ticketCatalogRules';
@@ -72,5 +73,69 @@ describe('ticketCatalogRules', () => {
     expect(justificationsForStatus(justifications, null, 'publico')).toEqual(
       []
     );
+  });
+});
+
+describe('applyServiceChange', () => {
+  const catalog = [
+    { id: 1, name: 'Dúvida', active: true, ticket_scope: 'ambos' },
+    {
+      id: 2,
+      name: 'Erro',
+      active: true,
+      ticket_scope: 'ambos',
+      allowed_priorities: ['high', 'urgent'],
+    },
+    { id: 3, name: 'Interna', active: true, ticket_scope: 'interno' },
+  ];
+  const change = (service, currentTipo, scope = 'publico') =>
+    applyServiceChange({ service, currentTipo, categories: catalog, scope });
+
+  it('keeps the current type when the new service allows it', () => {
+    const service = { all_categories: false, category_ids: [1, 2] };
+    service.default_category_id = 1;
+
+    expect(change(service, 'Erro').tipo).toBe('Erro');
+  });
+
+  it('falls back to the default category of the service, then to none', () => {
+    const withDefault = {
+      all_categories: false,
+      category_ids: [1],
+      default_category_id: 1,
+    };
+    const withoutDefault = { all_categories: false, category_ids: [1] };
+
+    expect(change(withDefault, 'Erro').tipo).toBe('Dúvida');
+    expect(change(withoutDefault, 'Erro').tipo).toBe('');
+  });
+
+  it('ignores a default category that is not valid for the ticket scope', () => {
+    const service = {
+      all_categories: true,
+      category_ids: [],
+      default_category_id: 3,
+    };
+
+    expect(change(service, '').tipo).toBe('');
+    expect(change(service, '', 'interno').tipo).toBe('Interna');
+  });
+
+  it('keeps the current type when the service is cleared and it is valid', () => {
+    expect(change(null, 'Dúvida').tipo).toBe('Dúvida');
+  });
+
+  it('applies the default priority only when the resulting type allows it', () => {
+    const service = {
+      all_categories: true,
+      category_ids: [],
+      default_priority: 'low',
+    };
+
+    expect(change(service, 'Dúvida').priority).toBe('low');
+    expect(change(service, 'Erro').priority).toBeNull();
+    expect(
+      change({ ...service, default_priority: 'high' }, 'Erro').priority
+    ).toBe('high');
   });
 });

@@ -57,4 +57,40 @@ RSpec.describe Company, type: :model do
       end.to have_enqueued_job(Companies::SyncContactNamesJob).with(company_id: company.id)
     end
   end
+
+  # PATCH LOCAL (fork) - formato do CPF/CNPJ, só quando muda
+  describe 'cnpj format' do
+    let(:account) { create(:account) }
+
+    def company_with(cnpj)
+      account.companies.new(name: 'ACME', custom_attributes: { 'cnpj' => cnpj })
+    end
+
+    it 'accepts a CPF, a numeric CNPJ and an alphanumeric CNPJ, with or without punctuation' do
+      ['123.456.789-09', '12.345.678/0001-95', '12.ABC.345/01DE-35', '12abc34501de35'].each do |cnpj|
+        expect(company_with(cnpj)).to be_valid, cnpj
+      end
+    end
+
+    it 'rejects a wrong size or letters in the check digits' do
+      ['12345', '12.ABC.345/01DE-3X', '1234567890A'].each do |cnpj|
+        company = company_with(cnpj)
+
+        expect(company).not_to be_valid, cnpj
+        expect(company.errors[:base].first).to include('CPF')
+      end
+    end
+
+    it 'accepts a company without CPF/CNPJ' do
+      expect(account.companies.new(name: 'Sem documento')).to be_valid
+    end
+
+    it 'does not validate again when the CPF/CNPJ did not change' do
+      company = account.companies.create!(name: 'Antiga', custom_attributes: { 'cnpj' => '12.345.678/0001-95' })
+      company.update_columns(custom_attributes: { 'cnpj' => 'fora do padrao' }) # rubocop:disable Rails/SkipsModelValidations
+
+      expect(company.reload.update(name: 'Antiga Ltda')).to be(true)
+      expect(company.update(custom_attributes: { 'cnpj' => 'continua fora' })).to be(false)
+    end
+  end
 end

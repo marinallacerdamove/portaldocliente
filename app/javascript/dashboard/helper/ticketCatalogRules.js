@@ -17,13 +17,37 @@ export const allowedCategories = (categories, service, scope) =>
       service.category_ids.includes(category.id)
   );
 
-// allowed_priorities vazio = todas. "Nenhuma" (id null) fica sempre.
+// allowed_priorities vazio = todas. "Nenhuma" (id null ou vazio) fica sempre.
 export const filterPriorityOptions = (options, category) => {
   const allowed = category?.allowed_priorities || [];
   if (!allowed.length) return options;
   return options.filter(
-    option => option.id === null || allowed.includes(option.id)
+    option =>
+      option.id === null || option.id === '' || allowed.includes(option.id)
   );
+};
+
+// Ao trocar o serviço (na conversa e no Novo ticket interno): o tipo de
+// solicitação atual fica se o novo serviço o permite, senão vale o padrão do
+// serviço, senão nenhum. A prioridade padrão do serviço só vale se o tipo
+// resultante a permite. Devolve { tipo: nome ('' = nenhum), priority: id|null }.
+export const applyServiceChange = ({
+  service,
+  currentTipo,
+  categories,
+  scope,
+}) => {
+  const allowed = allowedCategories(categories, service, scope);
+  const category =
+    allowed.find(item => item.name === currentTipo) ||
+    allowed.find(item => item.id === service?.default_category_id);
+  const defaultPriority = service?.default_priority || null;
+  const priorityAllowed =
+    filterPriorityOptions([{ id: defaultPriority }], category).length > 0;
+  return {
+    tipo: category?.name || '',
+    priority: defaultPriority && priorityAllowed ? defaultPriority : null,
+  };
 };
 
 // Justificativas ativas do tipo de ticket ligadas ao status escolhido.

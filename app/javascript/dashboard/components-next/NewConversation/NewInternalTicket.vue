@@ -28,6 +28,8 @@ import {
 import {
   activeInScope,
   allowedCategories,
+  applyServiceChange,
+  filterPriorityOptions,
 } from 'dashboard/helper/ticketCatalogRules';
 import { conversationOrigin } from 'dashboard/composables/useConversationCustomFields';
 import {
@@ -108,7 +110,7 @@ const statusCobrancaOptions = computed(() =>
   fieldOptions('status_da_cobranca')
 );
 
-const urgenciaOptions = computed(() => [
+const urgenciaAll = computed(() => [
   { id: '', name: t('NEW_INTERNAL_TICKET_DIALOG.URGENCIA_OPTIONS.NONE') },
   {
     id: CONVERSATION_PRIORITY.URGENT,
@@ -166,7 +168,7 @@ const emptyForm = () => ({
   servico: NONE_OPTION.value,
   // Classificação/Tipo do serviço (campos adicionais), por chave do campo.
   classification: {},
-  urgencia: urgenciaOptions.value[0],
+  urgencia: urgenciaAll.value[0],
   prazoResolucao: '',
   agent: null,
   team: null,
@@ -214,15 +216,39 @@ const tipoOptions = computed(() => [
   ).map(category => ({ id: category.name, name: category.name })),
 ]);
 
-// Tipo que o serviço não permite cai pro padrão do serviço (ou Nenhum).
-const keepValidTipo = () => {
-  if (tipoOptions.value.some(option => option.id === formState.tipo.id)) return;
-  const defaultCategory = catalog.categories.find(
-    category => category.id === selectedService.value?.default_category_id
-  );
+// Tipo de solicitação com prioridades permitidas limita a prioridade, igual
+// "Ações da conversa".
+const selectedCategory = computed(() =>
+  catalog.categories.find(category => category.name === formState.tipo.id)
+);
+const urgenciaOptions = computed(() =>
+  filterPriorityOptions(urgenciaAll.value, selectedCategory.value)
+);
+const keepValidUrgencia = () => {
+  if (urgenciaOptions.value.some(({ id }) => id === formState.urgencia.id))
+    return;
+  [formState.urgencia] = urgenciaAll.value;
+};
+
+const onSelectTipo = option => {
+  formState.tipo = option;
+  keepValidUrgencia();
+};
+
+// Regra única de trocar serviço (applyServiceChange, a mesma da conversa); a
+// macro do serviço só roda numa conversa existente.
+const applyCatalogChange = ({ withPriority }) => {
+  const { tipo, priority } = applyServiceChange({
+    service: selectedService.value,
+    currentTipo: formState.tipo.id,
+    categories: catalog.categories,
+    scope: conversationTicketScope(formState.inbox),
+  });
   formState.tipo =
-    tipoOptions.value.find(option => option.id === defaultCategory?.name) ||
-    NONE_OPTION.value;
+    tipoOptions.value.find(option => option.id === tipo) || NONE_OPTION.value;
+  if (withPriority && priority)
+    formState.urgencia = urgenciaAll.value.find(({ id }) => id === priority);
+  keepValidUrgencia();
 };
 
 // Trocar a caixa pode mudar o tipo de ticket: serviço que não vale mais sai.
@@ -232,12 +258,12 @@ const onSelectInbox = inbox => {
     option => option.id === formState.servico.id
   );
   if (!stillValid) formState.servico = NONE_OPTION.value;
-  keepValidTipo();
+  applyCatalogChange({ withPriority: false });
 };
 
 const onSelectServico = option => {
   formState.servico = option;
-  keepValidTipo();
+  applyCatalogChange({ withPriority: true });
 };
 
 // Classificação/Tipo do serviço: os campos que as regras de exibição abrem pro
@@ -673,8 +699,7 @@ defineExpose({ open });
               :empty-state="t('NEW_INTERNAL_TICKET_DIALOG.NO_OPTIONS_FOUND')"
               @update:model-value="
                 value =>
-                  (formState.tipo =
-                    fromCombo(tipoOptions, value) || NONE_OPTION)
+                  onSelectTipo(fromCombo(tipoOptions, value) || NONE_OPTION)
               "
             />
           </div>

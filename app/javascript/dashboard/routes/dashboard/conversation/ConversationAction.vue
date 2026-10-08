@@ -32,6 +32,7 @@ import {
 import {
   activeInScope,
   allowedCategories,
+  applyServiceChange,
   filterPriorityOptions,
 } from 'dashboard/helper/ticketCatalogRules';
 import { useSaveConversationAttributes } from 'dashboard/composables/useSaveConversationAttributes';
@@ -453,41 +454,31 @@ export default {
       );
     },
 
-    // PATCH LOCAL (fork) - escolher o serviço grava o tipo de solicitação padrão dele
-    // (ou limpa a atual se o novo serviço não a permite), aplica a
-    // prioridade padrão e roda a macro ligada.
+    // PATCH LOCAL (fork) - escolher o serviço mantém o tipo de solicitação
+    // atual se o novo serviço o permite, senão grava o padrão dele (applyServiceChange),
+    // aplica a prioridade padrão e roda a macro ligada.
     async onClickAssignServico(selectedItem) {
       const isSame = this.assignedServico.id === selectedItem.id;
       const servico = isSame ? '' : selectedItem.id;
       const service = this.catalog.services.find(
         item => item.full_name === servico
       );
-      const defaultCategory =
-        service?.default_category_id &&
-        this.catalog.categories.find(
-          item => item.id === service.default_category_id
-        );
-      const currentTipo =
-        this.customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY];
-      const allowedNames = allowedCategories(
-        this.catalog.categories,
+      const { tipo, priority } = applyServiceChange({
         service,
-        this.ticketScope
-      ).map(item => item.name);
-      let categoria = currentTipo;
-      if (defaultCategory) categoria = defaultCategory.name;
-      else if (!allowedNames.includes(currentTipo)) categoria = '';
+        currentTipo: this.customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY],
+        categories: this.catalog.categories,
+        scope: this.ticketScope,
+      });
 
       const conversationId = this.currentChat.id;
       const saved = await this.saveCatalogAttributes({
         [SERVICO_ATTRIBUTE_KEY]: servico,
-        [TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY]: categoria,
+        [TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY]: tipo,
       });
       if (!saved || !service) return;
 
       const defaultPriority =
-        service.default_priority &&
-        this.priorityOptions.find(opt => opt.id === service.default_priority);
+        priority && this.priorityOptions.find(opt => opt.id === priority);
       if (defaultPriority) this.assignedPriority = defaultPriority;
       if (service.macro_id) this.runServicoMacro(service, conversationId);
     },

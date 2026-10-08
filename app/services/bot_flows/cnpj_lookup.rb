@@ -4,7 +4,12 @@
 # token e formato da resposta ficam fixos aqui - a tela só pede de onde
 # tirar o CNPJ, nada técnico.
 class BotFlows::CnpjLookup
-  CNPJ_REGEX = %r{\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}}
+  # CNPJ numérico como sempre, ou alfanumérico (12 letras/dígitos + 2 dígitos
+  # verificadores, reforma tributária) isolado de outras letras e dígitos, pra
+  # não pegar pedaço de palavra ("cnpj12345678000195" continua achando o numérico).
+  NUMERIC_CNPJ = %r{\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}}
+  ALPHANUMERIC_CNPJ = %r{(?<![0-9A-Za-z])[0-9A-Za-z]{2}\.?[0-9A-Za-z]{3}\.?[0-9A-Za-z]{3}/?[0-9A-Za-z]{4}-?\d{2}(?![0-9A-Za-z])}
+  CNPJ_REGEX = Regexp.union(NUMERIC_CNPJ, ALPHANUMERIC_CNPJ)
   RESULT_VARIABLE = 'empresa_nome'.freeze
 
   def initialize(node, vars, conversation)

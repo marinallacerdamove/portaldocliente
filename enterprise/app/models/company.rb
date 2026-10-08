@@ -45,6 +45,7 @@ class Company < ApplicationRecord
   # CPF/CNPJ (custom_attributes.cnpj) é a chave que liga uma empresa daqui a
   # uma do Portal, por isso não pode repetir dentro da mesma conta.
   validate :cnpj_unique_in_account
+  validate :cnpj_format, if: :cnpj_changed?
   after_create_commit :dispatch_create_event
   after_update_commit :dispatch_update_event, if: :portal_synced_attributes_changed?
   after_commit :sync_empresa_list_attribute, if: :empresa_list_affected?
@@ -52,6 +53,10 @@ class Company < ApplicationRecord
   # Só o que o Portal espelha - last_activity_at/contacts_count mudam a cada
   # mensagem de contato e não podem virar webhook.
   PORTAL_SYNCED_ATTRIBUTES = %w[name custom_attributes].freeze
+  # CPF (11 dígitos) ou CNPJ (12 letras/dígitos + 2 dígitos verificadores, da
+  # reforma tributária), pela chave sem pontuação. Mesma regra do Portal e de
+  # helper/cnpj.js.
+  CNPJ_FORMAT = /\A(\d{11}|[0-9A-Z]{12}\d{2})\z/
   CNPJ_KEY_SQL = "upper(regexp_replace(companies.custom_attributes->>'cnpj', '[^0-9A-Za-z]', '', 'g'))".freeze
 
   scope :ordered_by_name, -> { order(:name) }
@@ -127,6 +132,16 @@ class Company < ApplicationRecord
 
   def enqueue_contact_company_name_sync
     Companies::SyncContactNamesJob.perform_later(company_id: id)
+  end
+
+  # Só quando o CPF/CNPJ muda: empresa antiga fora do padrão segue salvando.
+  def cnpj_changed?
+    custom_attributes&.dig('cnpj') != (custom_attributes_was || {})['cnpj']
+  end
+
+  def cnpj_format
+    key = Company.cnpj_key(custom_attributes&.dig('cnpj'))
+    errors.add(:base, I18n.t('errors.companies.cnpj.invalid')) if key.present? && !key.match?(CNPJ_FORMAT)
   end
 
   def cnpj_unique_in_account

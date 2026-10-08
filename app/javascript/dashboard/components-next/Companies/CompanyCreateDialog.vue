@@ -7,6 +7,7 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
+import { cnpjKey, formatCnpj, isValidCnpj } from 'dashboard/helper/cnpj';
 
 defineProps({
   isLoading: { type: Boolean, default: false },
@@ -19,12 +20,7 @@ const dialogRef = ref(null);
 
 const form = reactive({ name: '', cnpj: '', domain: '', description: '' });
 
-// PATCH LOCAL (fork) - empresa daqui é espelhada no Portal do Cliente, que
-// exige CPF/CNPJ e usa ele como chave de vínculo. Mesmas regras do Portal
-// (Empresa#normalize_cnpj/cnpj_format): CPF 11 dígitos, CNPJ 14 caracteres
-// (12 alfanuméricos + 2 dígitos verificadores, reforma tributária).
-const cnpjKey = value =>
-  (value || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+// PATCH LOCAL (fork) - CPF/CNPJ obrigatório e válido (helper/cnpj.js).
 const normalizeName = value =>
   (value || '')
     .normalize('NFD')
@@ -32,21 +28,7 @@ const normalizeName = value =>
     .trim()
     .toLowerCase();
 
-const isCnpjValid = computed(() => {
-  const key = cnpjKey(form.cnpj);
-  if (key.length === 11) return /^\d{11}$/.test(key);
-  if (key.length === 14) return /^[0-9A-Z]{12}\d{2}$/.test(key);
-  return false;
-});
-
-const formatCnpj = value => {
-  const key = cnpjKey(value);
-  if (key.length === 14)
-    return `${key.slice(0, 2)}.${key.slice(2, 5)}.${key.slice(5, 8)}/${key.slice(8, 12)}-${key.slice(12)}`;
-  if (key.length === 11)
-    return `${key.slice(0, 3)}.${key.slice(3, 6)}.${key.slice(6, 9)}-${key.slice(9)}`;
-  return key;
-};
+const isCnpjValid = computed(() => isValidCnpj(form.cnpj));
 
 const cnpjError = ref('');
 const nameWarning = ref('');

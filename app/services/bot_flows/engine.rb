@@ -9,7 +9,7 @@ class BotFlows::Engine
   STATE_VARS_KEY = 'bot_flow_vars'.freeze
 
   PRESET_PATTERNS = {
-    'cnpj' => %r{\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}},
+    'cnpj' => BotFlows::CnpjLookup::CNPJ_REGEX,
     'cpf' => /\d{3}\.?\d{3}\.?\d{3}-?\d{2}/,
     'email' => URI::MailTo::EMAIL_REGEXP,
     'telefone' => /\(?\d{2}\)?\s?\d{4,5}-?\d{4}/

@@ -141,6 +141,7 @@ en:
         invalid: must be a valid domain name
       cnpj:
         taken: 'CPF/CNPJ already registered for company %{name}'
+        invalid: 'must be a CPF (11 digits) or a CNPJ (12 letters or digits and 2 check digits)'
       search:
         query_missing: Specify search string with parameter q
     messages:
