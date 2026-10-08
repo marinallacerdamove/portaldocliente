@@ -13,7 +13,7 @@ class Conversations::ChecklistActivityService
   end
 
   def perform
-    after = @conversation.custom_attributes&.dig('campos_adicionais') || {}
+    after = @conversation.custom_attributes&.dig(TicketContract::CUSTOM_FIELDS_KEY) || {}
     TicketCustomField.where(account_id: @conversation.account_id, field_type: 'checklist').find_each do |field|
       marked = Array(after[field.key]) - Array(@before[field.key])
       unmarked = Array(@before[field.key]) - Array(after[field.key])

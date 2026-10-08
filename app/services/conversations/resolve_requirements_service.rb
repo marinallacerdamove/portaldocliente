@@ -7,11 +7,7 @@
 # ResolveRequirementsGuard.
 class Conversations::ResolveRequirementsService
   # Ações da conversa cobradas quando a conta tem o atributo cadastrado.
-  REQUIRED_ACTION_ATTRIBUTE_KEYS = %w[empresa tipo_de_solicitao servico].freeze
-  CLOSE_REASON_ATTRIBUTE_KEY = 'motivo_encerramento'.freeze
-  CUSTOM_FIELDS_ATTRIBUTE_KEY = 'campos_adicionais'.freeze
-  STATUS_ATTRIBUTE_KEY = 'status_atendimento'.freeze
-  INTERNAL_TICKETS_INBOX_NAME = 'Tickets Internos'.freeze
+  REQUIRED_ACTION_ATTRIBUTE_KEYS = [TicketContract::COMPANY_KEY, TicketContract::CATEGORY_KEY, TicketContract::SERVICE_KEY].freeze
   # "Aberto via" do Movidesk pelo canal da caixa (conversationOrigin no front).
   CHANNEL_ORIGINS = {
     'Channel::Api' => 'cliente',
@@ -67,22 +63,22 @@ class Conversations::ResolveRequirementsService
   end
 
   def missing_close_reason
-    definition = definitions[CLOSE_REASON_ATTRIBUTE_KEY]
-    definition && blank?(@attributes[CLOSE_REASON_ATTRIBUTE_KEY]) ? [definition.attribute_display_name] : []
+    definition = definitions[TicketContract::CLOSE_REASON_KEY]
+    definition && blank?(@attributes[TicketContract::CLOSE_REASON_KEY]) ? [definition.attribute_display_name] : []
   end
 
   def custom_field_values
-    @attributes[CUSTOM_FIELDS_ATTRIBUTE_KEY] || {}
+    @attributes[TicketContract::CUSTOM_FIELDS_KEY] || {}
   end
 
   def context
     {
-      servico: @attributes['servico'],
-      tipo_de_solicitacao: @attributes['tipo_de_solicitao'],
-      status: @attributes[STATUS_ATTRIBUTE_KEY],
+      servico: @attributes[TicketContract::SERVICE_KEY],
+      tipo_de_solicitacao: @attributes[TicketContract::CATEGORY_KEY],
+      status: @attributes[TicketContract::STATUS_KEY],
       concluded: @conversation.resolved?,
       origem: origin,
-      empresa: @attributes['empresa'],
+      empresa: @attributes[TicketContract::COMPANY_KEY],
       equipe: @conversation.team&.name,
       responsavel: @conversation.assignee&.name,
       values: custom_field_values
@@ -91,6 +87,6 @@ class Conversations::ResolveRequirementsService
 
   def origin
     inbox = @conversation.inbox
-    inbox.name == INTERNAL_TICKETS_INBOX_NAME ? 'agente' : CHANNEL_ORIGINS[inbox.channel_type].to_s
+    inbox.name == TicketContract::INTERNAL_TICKETS_INBOX_NAME ? 'agente' : CHANNEL_ORIGINS[inbox.channel_type].to_s
   end
 end

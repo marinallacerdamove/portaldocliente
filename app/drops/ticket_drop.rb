@@ -3,27 +3,27 @@
 # do Portal (WhatsApp, ticket interno) usa o número da própria conversa.
 class TicketDrop < BaseDrop
   def numero
-    custom_attributes['ticket_id_externo'].presence || @obj.try(:display_id)
+    custom_attributes[TicketContract::EXTERNAL_TICKET_ID_KEY].presence || @obj.try(:display_id)
   end
 
   def assunto
-    custom_attributes['assunto']
+    custom_attributes[TicketContract::SUBJECT_KEY]
   end
 
   def servico
-    custom_attributes['servico']
+    custom_attributes[TicketContract::SERVICE_KEY]
   end
 
   def tipo_de_solicitacao
-    custom_attributes['tipo_de_solicitao']
+    custom_attributes[TicketContract::CATEGORY_KEY]
   end
 
   def empresa
-    custom_attributes['empresa']
+    custom_attributes[TicketContract::COMPANY_KEY]
   end
 
   def produto
-    custom_attributes['produto']
+    custom_attributes[TicketContract::PRODUCT_KEY]
   end
 
   # CPF/CNPJ da empresa do contato (Company#custom_attributes['cnpj']).

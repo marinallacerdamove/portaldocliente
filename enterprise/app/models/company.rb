@@ -75,7 +75,7 @@ class Company < ApplicationRecord
   # é sempre derivada das empresas da conta - nunca editada à mão, senão
   # volta a divergir do cadastro.
   def self.sync_empresa_list_attribute!(account)
-    definition = account.custom_attribute_definitions.conversation_attribute.find_by(attribute_key: 'empresa')
+    definition = account.custom_attribute_definitions.conversation_attribute.find_by(attribute_key: TicketContract::COMPANY_KEY)
     return unless definition
 
     names = account.companies.order(:name).pluck(:name).map(&:strip).uniq

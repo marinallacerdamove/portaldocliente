@@ -26,11 +26,11 @@ module Enterprise::Concerns::Conversation
   # podem ser trocados (ex.: empresa anterior do contato, preenchida sozinha).
   def assign_empresa(name, replaceable: [])
     name = name.to_s.strip
-    current = (custom_attributes || {})['empresa'].presence
+    current = (custom_attributes || {})[TicketContract::COMPANY_KEY].presence
     return false if name.blank? || current == name
     return false if current && replaceable.exclude?(current)
 
-    self.custom_attributes = (custom_attributes || {}).merge('empresa' => name)
+    self.custom_attributes = (custom_attributes || {}).merge(TicketContract::COMPANY_KEY => name)
     true
   end
 

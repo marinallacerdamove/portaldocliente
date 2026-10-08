@@ -10,7 +10,7 @@ module TicketFieldActions
     subject = render_variables(params[0]).squish
     return if subject.blank?
 
-    @conversation.update!(custom_attributes: @conversation.custom_attributes.merge('assunto' => subject))
+    @conversation.update!(custom_attributes: @conversation.custom_attributes.merge(TicketContract::SUBJECT_KEY => subject))
   end
 
   # [chave do atributo de conversa, valor]

@@ -11,6 +11,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import ConversationApi from 'dashboard/api/inbox/conversation';
 import { INBOX_TYPES } from 'dashboard/helper/inbox';
+import { ASSUNTO_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 
@@ -42,7 +43,8 @@ const targetTicketId = computed(
 );
 
 const ticketSubject = ticket =>
-  ticket.custom_attributes?.assunto || t('ADD_TO_TICKET_DIALOG.NO_SUBJECT');
+  ticket.custom_attributes?.[ASSUNTO_ATTRIBUTE_KEY] ||
+  t('ADD_TO_TICKET_DIALOG.NO_SUBJECT');
 
 const loadContactTickets = async contactId => {
   isLoading.value = true;

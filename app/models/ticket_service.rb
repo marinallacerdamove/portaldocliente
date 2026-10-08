@@ -5,7 +5,7 @@ class TicketService < ApplicationRecord
 
   PATH_SEPARATOR = ' › '.freeze
 
-  catalog_attribute 'servico', 'Serviço'
+  catalog_attribute TicketContract::SERVICE_KEY, 'Serviço'
 
   belongs_to :parent, class_name: 'TicketService', optional: true
   has_many :children, class_name: 'TicketService', foreign_key: :parent_id, inverse_of: :parent, dependent: :restrict_with_error

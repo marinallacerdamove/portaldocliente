@@ -12,9 +12,6 @@
 module TicketStatusSync
   extend ActiveSupport::Concern
 
-  STATUS_KEY = 'status_atendimento'.freeze
-  JUSTIFICATION_KEY = 'justificativa'.freeze
-  CLOSE_REASON_KEY = 'motivo_encerramento'.freeze
   # Status nativo -> tipo preferido quando o atual não combina.
   NATIVE_BASES = {
     'open' => %w[em_atendimento novo], 'pending' => %w[parado], 'snoozed' => %w[parado],
@@ -32,27 +29,27 @@ module TicketStatusSync
     return unless account&.ticket_statuses&.exists?
 
     if ticket_status_picked?
-      apply_ticket_status(custom_attributes[STATUS_KEY])
+      apply_ticket_status(custom_attributes[TicketContract::STATUS_KEY])
     elsif follow_native_status?
       follow_native_status
     end
   end
 
   def follow_native_status?
-    status_changed? || new_record? || custom_attributes.to_h[STATUS_KEY].blank?
+    status_changed? || new_record? || custom_attributes.to_h[TicketContract::STATUS_KEY].blank?
   end
 
   # Status escolhido (lista, automação, API) sem mexer no nativo no mesmo save.
   def ticket_status_picked?
-    value = custom_attributes.to_h[STATUS_KEY]
-    value.present? && value != custom_attributes_was.to_h[STATUS_KEY] && !status_changed?
+    value = custom_attributes.to_h[TicketContract::STATUS_KEY]
+    value.present? && value != custom_attributes_was.to_h[TicketContract::STATUS_KEY] && !status_changed?
   end
 
   def clear_close_reason_on_reopen
     return unless status_changed? && status_was == 'resolved'
-    return unless custom_attributes.to_h.key?(CLOSE_REASON_KEY)
+    return unless custom_attributes.to_h.key?(TicketContract::CLOSE_REASON_KEY)
 
-    self.custom_attributes = custom_attributes.except(CLOSE_REASON_KEY)
+    self.custom_attributes = custom_attributes.except(TicketContract::CLOSE_REASON_KEY)
   end
 
   def apply_ticket_status(name)
@@ -64,13 +61,13 @@ module TicketStatusSync
   end
 
   def follow_native_status
-    current = account.ticket_statuses.find_by(name: custom_attributes.to_h[STATUS_KEY])
+    current = account.ticket_statuses.find_by(name: custom_attributes.to_h[TicketContract::STATUS_KEY])
     return if current&.conversation_status == status && !new_record?
 
     replacement = default_ticket_status
     return unless replacement
 
-    self.custom_attributes = custom_attributes.to_h.merge(STATUS_KEY => replacement.name)
+    self.custom_attributes = custom_attributes.to_h.merge(TicketContract::STATUS_KEY => replacement.name)
     clear_invalid_justification(replacement)
   end
 
@@ -80,9 +77,9 @@ module TicketStatusSync
   end
 
   def clear_invalid_justification(ticket_status)
-    justification = custom_attributes.to_h[JUSTIFICATION_KEY]
+    justification = custom_attributes.to_h[TicketContract::JUSTIFICATION_KEY]
     return if justification.blank? || ticket_status.justifications.exists?(name: justification)
 
-    self.custom_attributes = custom_attributes.except(JUSTIFICATION_KEY)
+    self.custom_attributes = custom_attributes.except(TicketContract::JUSTIFICATION_KEY)
   end
 end

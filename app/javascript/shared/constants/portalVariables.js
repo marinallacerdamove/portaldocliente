@@ -1,6 +1,15 @@
 // PATCH LOCAL (fork) - variáveis do menu "Variáveis" (macros) e do {{ no
 // editor, com nome em português. Mesmas chaves que o backend resolve no envio
 // (Liquid: TicketDrop, PortalVariables, ContactDrop, UserDrop...).
+import {
+  ASSUNTO_ATTRIBUTE_KEY,
+  EMPRESA_ATTRIBUTE_KEY,
+  PRODUTO_ATTRIBUTE_KEY,
+  SERVICO_ATTRIBUTE_KEY,
+  TICKET_ID_EXTERNO_ATTRIBUTE_KEY,
+  TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
+} from 'dashboard/constants/ticketDetailAttributes';
+
 const TIME_ZONE = 'America/Sao_Paulo';
 
 export const PORTAL_VARIABLE_GROUPS = [
@@ -69,12 +78,13 @@ export const getPortalVariableValues = (conversation, company) => {
   const attributes = conversation?.custom_attributes || {};
   return {
     saudacao: greeting(),
-    'ticket.numero': attributes.ticket_id_externo || conversation?.id,
-    'ticket.assunto': attributes.assunto,
-    'ticket.servico': attributes.servico,
-    'ticket.tipo_de_solicitacao': attributes.tipo_de_solicitao,
-    'ticket.produto': attributes.produto,
-    'ticket.empresa': attributes.empresa,
+    'ticket.numero':
+      attributes[TICKET_ID_EXTERNO_ATTRIBUTE_KEY] || conversation?.id,
+    'ticket.assunto': attributes[ASSUNTO_ATTRIBUTE_KEY],
+    'ticket.servico': attributes[SERVICO_ATTRIBUTE_KEY],
+    'ticket.tipo_de_solicitacao': attributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY],
+    'ticket.produto': attributes[PRODUTO_ATTRIBUTE_KEY],
+    'ticket.empresa': attributes[EMPRESA_ATTRIBUTE_KEY],
     'ticket.cpf_cnpj': company?.customAttributes?.cnpj,
   };
 };

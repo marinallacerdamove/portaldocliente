@@ -2,7 +2,7 @@
 class TicketJustification < ApplicationRecord
   include TicketCatalogItem
 
-  catalog_attribute 'justificativa', 'Justificativa'
+  catalog_attribute TicketContract::JUSTIFICATION_KEY, 'Justificativa'
 
   has_many :ticket_status_justifications, dependent: :destroy
   has_many :ticket_statuses, through: :ticket_status_justifications

@@ -1,6 +1,15 @@
-// PATCH LOCAL (fork) - campos adicionais (regras de exibição) ficam todos em
+// PATCH LOCAL (fork) - chaves de custom_attributes da conversa, contrato com o
+// Portal do Cliente e com o servidor (TicketContract no Ruby, mesmos valores;
+// spec/fixtures/fork_parity/ticket_contract.json confere os dois lados).
+// Campos adicionais (regras de exibição) ficam todos em
 // custom_attributes.campos_adicionais e têm o próprio acordeão na lateral.
 import { CUSTOM_FIELDS_ATTRIBUTE_KEY } from 'dashboard/helper/ticketFieldRules';
+
+export const ASSUNTO_ATTRIBUTE_KEY = 'assunto';
+export const PRODUTO_ATTRIBUTE_KEY = 'produto';
+export const TICKET_ID_EXTERNO_ATTRIBUTE_KEY = 'ticket_id_externo';
+export const TICKET_PAI_ID_ATTRIBUTE_KEY = 'ticket_pai_id';
+export const TICKET_FILHOS_IDS_ATTRIBUTE_KEY = 'ticket_filhos_ids';
 
 // Conversation custom attribute keys que vêm do sync do Portal do Cliente,
 // mostrados na seção "Informações do Portal do Cliente" - reduzido a só o
@@ -9,7 +18,9 @@ import { CUSTOM_FIELDS_ATTRIBUTE_KEY } from 'dashboard/helper/ticketFieldRules';
 // 'ticket_id' fica de fora de propósito - já aparece sozinho no cabeçalho da
 // conversa (ConversationHeader.vue) como "#74"; listar de novo aqui duplicava
 // o mesmo número na tela.
-export const PORTAL_INFO_ATTRIBUTE_KEYS = Object.freeze(['ticket_id_externo']);
+export const PORTAL_INFO_ATTRIBUTE_KEYS = Object.freeze([
+  TICKET_ID_EXTERNO_ATTRIBUTE_KEY,
+]);
 
 // Campos que o sync do Portal ainda preenche mas que não têm mais home
 // nenhuma na sidebar - a informação já aparece em outro lugar (assunto é o
@@ -17,13 +28,14 @@ export const PORTAL_INFO_ATTRIBUTE_KEYS = Object.freeze(['ticket_id_externo']);
 // Serviço; sla_horas/prazo_resolucao e visivel_parceiro são derivados/
 // internos; motivo_encerramento tem o próprio fluxo nativo de "Resolver").
 // Só entram aqui pra sumir de "Informação da conversa" - nunca em includeKeys.
+export const MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY = 'motivo_encerramento';
 export const SUPERSEDED_PORTAL_ATTRIBUTE_KEYS = Object.freeze([
-  'assunto',
-  'produto',
+  ASSUNTO_ATTRIBUTE_KEY,
+  PRODUTO_ATTRIBUTE_KEY,
   'sla_horas',
   'prazo_resolucao',
   'visivel_parceiro',
-  'motivo_encerramento',
+  MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY,
 ]);
 
 // Rendered inline in ConversationAction.vue ("Ações da conversa"), alongside
@@ -37,13 +49,12 @@ export const EMPRESA_ATTRIBUTE_KEY = 'empresa';
 // também são seletores próprios em "Ações da conversa".
 export const STATUS_ATENDIMENTO_ATTRIBUTE_KEY = 'status_atendimento';
 export const JUSTIFICATIVA_ATTRIBUTE_KEY = 'justificativa';
-export const MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY = 'motivo_encerramento';
 
 // Rendered inline in ConversationAction.vue as the Ticket Pai/Filhos links -
 // raw values, never meant to appear as generic custom-attribute fields.
 export const TICKET_LINK_ATTRIBUTE_KEYS = Object.freeze([
-  'ticket_pai_id',
-  'ticket_filhos_ids',
+  TICKET_PAI_ID_ATTRIBUTE_KEY,
+  TICKET_FILHOS_IDS_ATTRIBUTE_KEY,
 ]);
 
 // Rendered no cabeçalho da conversa (ConversationHeader.vue), não na barra

@@ -15,9 +15,15 @@ import {
   ALLOWED_FILE_TYPES,
 } from 'shared/constants/messages';
 import {
+  INTERNAL_TICKETS_INBOX_NAME,
   useTicketCatalog,
   conversationTicketScope,
 } from 'dashboard/composables/useTicketCatalog';
+import {
+  ASSUNTO_ATTRIBUTE_KEY,
+  SERVICO_ATTRIBUTE_KEY,
+  TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
+} from 'dashboard/constants/ticketDetailAttributes';
 import {
   activeInScope,
   allowedCategories,
@@ -81,7 +87,7 @@ const { state: catalog, fetchList } = useTicketCatalog();
 // valor padrão ao abrir o formulário (ver emptyForm), preservando o
 // comportamento de sempre pra quem não mexer nesse campo.
 const defaultInbox = computed(() =>
-  inboxes.value.find(inbox => inbox.name === 'Tickets Internos')
+  inboxes.value.find(inbox => inbox.name === INTERNAL_TICKETS_INBOX_NAME)
 );
 
 // PATCH LOCAL (fork) - Liberações, Decisão PO e Status da Cobrança são campos
@@ -559,10 +565,11 @@ const onSubmit = async () => {
     // formulário apagava o resto. Mesmo padrão do TicketLinkDialog.
     const customAttributes = { ...(data.custom_attributes || {}) };
     if (formState.subject.trim())
-      customAttributes.assunto = formState.subject.trim();
-    if (formState.servico?.id) customAttributes.servico = formState.servico.id;
+      customAttributes[ASSUNTO_ATTRIBUTE_KEY] = formState.subject.trim();
+    if (formState.servico?.id)
+      customAttributes[SERVICO_ATTRIBUTE_KEY] = formState.servico.id;
     if (formState.tipo?.id)
-      customAttributes.tipo_de_solicitao = formState.tipo.id;
+      customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY] = formState.tipo.id;
     if (formState.prazoResolucao)
       customAttributes.prazo_resolucao = formState.prazoResolucao;
     // Só vai classificação de campo que ainda está aparecendo (trocar o

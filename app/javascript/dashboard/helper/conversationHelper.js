@@ -1,4 +1,5 @@
 import { isWhatsAppChannel } from 'dashboard/helper/inbox';
+import { ASSUNTO_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
 
 /**
  * Determines the last non-activity message between store and API messages.
@@ -76,7 +77,7 @@ export const getLastMessage = m => {
 // Sem assunto gravado, também cai no padrão.
 export const getConversationListSubject = (chat, inbox) => {
   if (isWhatsAppChannel(inbox?.channel_type, inbox?.medium)) return '';
-  return chat?.custom_attributes?.assunto?.trim() || '';
+  return chat?.custom_attributes?.[ASSUNTO_ATTRIBUTE_KEY]?.trim() || '';
 };
 
 /**

@@ -11,6 +11,7 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import TicketVisibilityToggle from 'dashboard/components-next/NewConversation/TicketVisibilityToggle.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { INTERNAL_TICKETS_INBOX_NAME } from 'dashboard/composables/useTicketCatalog';
 
 const { t } = useI18n();
 const store = useStore();
@@ -27,7 +28,7 @@ const inboxes = useMapGetter('inboxes/getInboxes');
 // original (que normalmente é Portal do Cliente) - senão dispara automação
 // de cliente por engano, igual aconteceu antes dessa correção.
 const targetInbox = computed(() =>
-  inboxes.value.find(inbox => inbox.name === 'Tickets Internos')
+  inboxes.value.find(inbox => inbox.name === INTERNAL_TICKETS_INBOX_NAME)
 );
 
 const dialogRef = ref(null);

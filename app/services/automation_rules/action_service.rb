@@ -90,7 +90,7 @@ class AutomationRules::ActionService < ActionService
   # O "texto da resposta" da macro vira a primeira nota do ticket filho.
   def create_child_ticket(params)
     macro = @account.macros.find_by(id: params[0])
-    inbox = @account.inboxes.find_by!(name: 'Tickets Internos')
+    inbox = @account.inboxes.find_by!(name: TicketContract::INTERNAL_TICKETS_INBOX_NAME)
     contact_inbox = ContactInboxBuilder.new(contact: @conversation.contact, inbox: inbox).perform
     child = ConversationBuilder.new(params: ActionController::Parameters.new({}), contact_inbox: contact_inbox).perform
     link_child_ticket(child)

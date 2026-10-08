@@ -1,6 +1,6 @@
 module ConversationCustomAttributesConcern
   def custom_attributes
-    checklist_before = @conversation.custom_attributes&.dig('campos_adicionais') || {}
+    checklist_before = @conversation.custom_attributes&.dig(TicketContract::CUSTOM_FIELDS_KEY) || {}
     attributes = params.permit(custom_attributes: {})[:custom_attributes]
     # When `merge` is truthy, only the keys sent are updated and the rest are kept, matching the contacts endpoint.
     # Replace stays the default so existing integrations are unaffected.

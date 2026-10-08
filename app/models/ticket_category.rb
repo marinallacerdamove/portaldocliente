@@ -4,7 +4,7 @@ class TicketCategory < ApplicationRecord
 
   PRIORITIES = %w[low medium high urgent].freeze
 
-  catalog_attribute 'tipo_de_solicitao', 'Tipo de solicitação'
+  catalog_attribute TicketContract::CATEGORY_KEY, 'Tipo de solicitação'
 
   has_many :ticket_service_categories, dependent: :destroy
   has_many :ticket_services, through: :ticket_service_categories

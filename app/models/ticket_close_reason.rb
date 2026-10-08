@@ -4,7 +4,7 @@
 class TicketCloseReason < ApplicationRecord
   include TicketCatalogItem
 
-  catalog_attribute 'motivo_encerramento', 'Motivo de encerramento'
+  catalog_attribute TicketContract::CLOSE_REASON_KEY, 'Motivo de encerramento'
 
   validates :name, uniqueness: { scope: :account_id }
 

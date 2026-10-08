@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 import wootConstants from 'dashboard/constants/globals';
+import { ASSUNTO_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -40,7 +41,9 @@ const contact = computed(
 const preview = computed(() => {
   if (!conversation.value) return '';
   return (
-    conversation.value.custom_attributes?.assunto || contact.value.name || ''
+    conversation.value.custom_attributes?.[ASSUNTO_ATTRIBUTE_KEY] ||
+    contact.value.name ||
+    ''
   );
 });
 

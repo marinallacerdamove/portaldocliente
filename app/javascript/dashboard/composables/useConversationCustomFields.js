@@ -23,7 +23,8 @@ import {
 } from 'dashboard/helper/ticketFieldRules';
 
 // "Aberto via" do Movidesk pelo canal da caixa. A caixa API é a do Portal.
-const CHANNEL_ORIGINS = {
+// Mesmo mapa de Conversations::ResolveRequirementsService::CHANNEL_ORIGINS.
+export const CHANNEL_ORIGINS = {
   'Channel::Api': 'cliente',
   'Channel::Whatsapp': 'whatsapp',
   'Channel::Email': 'email',

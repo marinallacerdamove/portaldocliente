@@ -1,0 +1,23 @@
+{
+  "attribute_keys": {
+    "SERVICE_KEY": "servico",
+    "CATEGORY_KEY": "tipo_de_solicitao",
+    "STATUS_KEY": "status_atendimento",
+    "JUSTIFICATION_KEY": "justificativa",
+    "CLOSE_REASON_KEY": "motivo_encerramento",
+    "CUSTOM_FIELDS_KEY": "campos_adicionais",
+    "COMPANY_KEY": "empresa",
+    "SUBJECT_KEY": "assunto",
+    "PRODUCT_KEY": "produto",
+    "EXTERNAL_TICKET_ID_KEY": "ticket_id_externo",
+    "PARENT_TICKET_KEY": "ticket_pai_id",
+    "CHILD_TICKETS_KEY": "ticket_filhos_ids"
+  },
+  "internal_tickets_inbox_name": "Tickets Internos",
+  "channel_origins": {
+    "Channel::Api": "cliente",
+    "Channel::Whatsapp": "whatsapp",
+    "Channel::Email": "email",
+    "Channel::WebWidget": "chat"
+  }
+}

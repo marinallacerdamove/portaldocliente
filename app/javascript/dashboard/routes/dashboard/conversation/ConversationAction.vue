@@ -17,8 +17,12 @@ import {
 } from 'dashboard/constants/ticketFieldLayout';
 import NextInput from 'dashboard/components-next/input/Input.vue';
 import {
+  ASSUNTO_ATTRIBUTE_KEY,
+  EMPRESA_ATTRIBUTE_KEY,
   PORTAL_INFO_ATTRIBUTE_KEYS,
   SERVICO_ATTRIBUTE_KEY,
+  TICKET_FILHOS_IDS_ATTRIBUTE_KEY,
+  TICKET_PAI_ID_ATTRIBUTE_KEY,
   TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
 } from 'dashboard/constants/ticketDetailAttributes';
 import {
@@ -167,7 +171,7 @@ export default {
     },
     empresaDefinition() {
       return this.getAttributesByModel('conversation_attribute').find(
-        attr => attr.attribute_key === 'empresa'
+        attr => attr.attribute_key === EMPRESA_ATTRIBUTE_KEY
       );
     },
     empresaOptions() {
@@ -177,7 +181,7 @@ export default {
       }));
     },
     empresaValue() {
-      return (this.currentChat.custom_attributes || {}).empresa || '';
+      return this.customAttributes[EMPRESA_ATTRIBUTE_KEY] || '';
     },
     hasAnAssignedTeam() {
       return !!this.currentChat?.meta?.team;
@@ -276,10 +280,10 @@ export default {
       );
     },
     ticketPaiId() {
-      return (this.currentChat.custom_attributes || {}).ticket_pai_id || null;
+      return this.customAttributes[TICKET_PAI_ID_ATTRIBUTE_KEY] || null;
     },
     ticketFilhosIds() {
-      const raw = (this.currentChat.custom_attributes || {}).ticket_filhos_ids;
+      const raw = this.customAttributes[TICKET_FILHOS_IDS_ATTRIBUTE_KEY];
       return raw ? raw.split(',').filter(Boolean) : [];
     },
     portalInfoAttributeKeys() {
@@ -311,7 +315,7 @@ export default {
   },
   watch: {
     'currentChat.id': function resetAssuntoDraft() {
-      this.assuntoDraft = this.customAttributes.assunto || '';
+      this.assuntoDraft = this.customAttributes[ASSUNTO_ATTRIBUTE_KEY] || '';
     },
     'currentChat.custom_attributes.assunto': {
       handler(value) {
@@ -329,13 +333,13 @@ export default {
     // assunto no Portal.
     saveAssunto() {
       const value = this.assuntoDraft.trim();
-      const current = this.customAttributes.assunto || '';
+      const current = this.customAttributes[ASSUNTO_ATTRIBUTE_KEY] || '';
       if (!value) {
         this.assuntoDraft = current;
         return;
       }
       if (value === current) return;
-      this.onUpdatePortalAttribute('assunto', value);
+      this.onUpdatePortalAttribute(ASSUNTO_ATTRIBUTE_KEY, value);
     },
     // PATCH LOCAL (fork) - ponte entre as listas {id, name} e o ComboBox
     // {value, label}. Escolher de novo o valor atual limpa o campo: o
@@ -488,6 +492,10 @@ export default {
       if (service.macro_id) this.runServicoMacro(service, conversationId);
     },
 
+    onSelectEmpresa(value) {
+      this.onUpdatePortalAttribute(EMPRESA_ATTRIBUTE_KEY, value);
+    },
+
     onClickAssignTipoDeSolicitacao(selectedItem) {
       const isSame = this.assignedTipoDeSolicitacao.id === selectedItem.id;
       this.saveCatalogAttributes({
@@ -546,7 +554,7 @@ export default {
         :placeholder="
           $t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
         "
-        @update:model-value="value => onUpdatePortalAttribute('empresa', value)"
+        @update:model-value="onSelectEmpresa"
       />
     </div>
     <div class="flex flex-col gap-1.5">

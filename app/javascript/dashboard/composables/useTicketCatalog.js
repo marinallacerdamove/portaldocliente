@@ -33,14 +33,8 @@ import {
   ticketFieldRulesAPI,
 } from 'dashboard/api/ticketCatalog';
 
-export const TICKET_CATALOG_ATTRIBUTE_KEYS = {
-  services: 'servico',
-  categories: 'tipo_de_solicitao',
-  statuses: 'status_atendimento',
-  justifications: 'justificativa',
-};
-
-// Caixa dos tickets internos (convenção do fork, ver NewInternalTicket.vue).
+// Caixa dos tickets internos, identificada pelo nome (TicketContract no Ruby):
+// não renomear pela tela.
 export const INTERNAL_TICKETS_INBOX_NAME = 'Tickets Internos';
 
 const APIS = {

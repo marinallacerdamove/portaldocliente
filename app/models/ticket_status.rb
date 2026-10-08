@@ -8,7 +8,7 @@ class TicketStatus < ApplicationRecord
     'resolvido' => 'resolved', 'fechado' => 'resolved', 'cancelado' => 'resolved'
   }.freeze
 
-  catalog_attribute 'status_atendimento', 'Status'
+  catalog_attribute TicketContract::STATUS_KEY, 'Status'
 
   has_many :ticket_status_justifications, dependent: :destroy
   has_many :justifications, through: :ticket_status_justifications, source: :ticket_justification
