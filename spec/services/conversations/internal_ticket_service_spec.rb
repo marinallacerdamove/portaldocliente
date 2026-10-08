@@ -29,6 +29,12 @@ RSpec.describe Conversations::InternalTicketService do
     expect(ticket.conversation_participants.pluck(:user_id)).to eq([agent.id])
   end
 
+  it 'keeps the chosen assignee even when he is not in the chosen team (the team follows him, as when assigning on screen)' do
+    ticket = create_ticket(team: create(:team, account: account), assignee: agent)
+
+    expect(ticket).to have_attributes(team: team, assignee: agent)
+  end
+
   it 'renders the protocol in the first message' do
     ticket = create_ticket(message: { content: 'Protocolo #{{conversation.display_id}}', private: true })
 
