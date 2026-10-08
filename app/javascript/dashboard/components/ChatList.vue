@@ -52,6 +52,7 @@ import {
 import { matchesFilters } from '../store/modules/conversations/helpers/filterHelpers';
 import { CONVERSATION_EVENTS } from '../helper/AnalyticsHelper/events';
 import { ASSIGNEE_TYPE_TAB_PERMISSIONS } from 'dashboard/constants/permissions.js';
+import { statusChangeErrorMessage } from 'dashboard/helper/statusChangeError';
 
 const props = defineProps({
   conversationInbox: { type: [String, Number], default: 0 },
@@ -743,9 +744,10 @@ function toggleConversationStatus(
     payload.customAttributes = customAttributes;
   }
 
-  store.dispatch('toggleStatus', payload).then(() => {
-    useAlert(t('CONVERSATION.CHANGE_STATUS'));
-  });
+  store
+    .dispatch('toggleStatus', payload)
+    .then(() => useAlert(t('CONVERSATION.CHANGE_STATUS')))
+    .catch(error => useAlert(statusChangeErrorMessage(error, t)));
 }
 
 function handleResolveConversation(conversationId, status, snoozedUntil) {

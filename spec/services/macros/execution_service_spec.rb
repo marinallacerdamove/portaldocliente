@@ -175,4 +175,48 @@ RSpec.describe Macros::ExecutionService, type: :service do
       service.send(:send_webhook_event, ['https://example.com/webhook'])
     end
   end
+
+  # PATCH LOCAL (fork) - Macros::ResolveRequirements: mesma trava do Resolver
+  describe 'resolve requirements' do
+    let(:resolving_status) { account.ticket_statuses.create!(name: 'Fechado', base: 'fechado') }
+
+    before do
+      create(:custom_attribute_definition, account: account, attribute_model: :conversation_attribute,
+                                           attribute_key: 'motivo_encerramento', attribute_display_name: 'Motivo de encerramento')
+      conversation.update!(assignee: user, priority: :medium)
+    end
+
+    it 'does not resolve while something the Resolver asks for is missing' do
+      service.send(:resolve_conversation, nil)
+      service.send(:change_status, ['resolved'])
+
+      expect(conversation.reload).to be_open
+    end
+
+    it 'does not pick a ticket status that resolves while something is missing' do
+      create(:custom_attribute_definition, account: account, attribute_model: :conversation_attribute, attribute_key: 'status_atendimento')
+
+      service.send(:set_custom_attribute, ['status_atendimento', resolving_status.name])
+
+      expect(conversation.reload).to be_open
+      expect(conversation.custom_attributes['status_atendimento']).not_to eq('Fechado')
+    end
+
+    it 'resolves once the requirements are filled, including by an earlier action of the macro' do
+      service.send(:set_custom_attribute, %w[motivo_encerramento Resolvido])
+      service.send(:resolve_conversation, nil)
+
+      expect(conversation.reload).to be_resolved
+    end
+
+    it 'leaves macros run by an automation rule alone' do
+      Current.executed_by = create(:automation_rule, account: account)
+
+      service.send(:resolve_conversation, nil)
+
+      expect(conversation.reload).to be_resolved
+    ensure
+      Current.reset
+    end
+  end
 end

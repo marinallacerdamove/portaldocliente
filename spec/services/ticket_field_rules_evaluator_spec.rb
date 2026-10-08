@@ -79,4 +79,24 @@ RSpec.describe TicketFieldRulesEvaluator do
     expect(described_class.missing_required(items, values, ['conclusao']).map { |item| item['field'].key }).to eq(['checklist_tintometrico'])
     expect(described_class.missing_required(items, values, ['abertura'])).to eq([])
   end
+
+  # Mesmo arquivo lido por helper/specs/ticketFieldRules.spec.js: os dois avaliadores
+  # (este e o da tela) têm que dar o mesmo resultado nos mesmos casos.
+  describe 'shared parity cases' do
+    let(:parity) { JSON.parse(Rails.root.join('spec/fixtures/fork_parity/ticket_field_rules_cases.json').read) }
+    let(:parity_fields) { parity['fields'].map { |item| field_stub.new(item['id'], item['key'], item['key'], item['active']) } }
+
+    it 'evaluates every case like the screen does' do
+      evaluator = described_class.new(rules: parity['rules'], fields: parity_fields)
+
+      parity['cases'].each do |example|
+        context = example['context'].symbolize_keys
+        items = evaluator.visible_items(context)
+        missing = described_class.missing_required(items, context[:values], ['conclusao'])
+
+        expect(items.map { |item| item['field'].key }).to eq(example['visible']), example['name']
+        expect(missing.map { |item| item['field'].key }).to eq(example['missing_on_conclusao']), example['name']
+      end
+    end
+  end
 end

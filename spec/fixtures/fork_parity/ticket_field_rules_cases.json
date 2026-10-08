@@ -1,0 +1,122 @@
+{
+  "fields": [
+    { "id": 1, "key": "classificacao", "active": true },
+    { "id": 2, "key": "checklist", "active": true },
+    { "id": 3, "key": "inativo", "active": false },
+    { "id": 4, "key": "causa", "active": true },
+    { "id": 5, "key": "por_status", "active": true }
+  ],
+  "rules": [
+    {
+      "active": true,
+      "conditions": [
+        { "group": "all", "attribute": "servico", "operator": "equal_to", "value": "Comercial" },
+        { "group": "any", "attribute": "tipo_de_solicitacao", "operator": "equal_to", "value": "Duvida" },
+        { "group": "any", "attribute": "tipo_de_solicitacao", "operator": "equal_to", "value": "Configuracao" }
+      ],
+      "fields": [
+        { "field_id": 1, "required_on": "conclusao" },
+        { "field_id": 3, "required_on": "conclusao" }
+      ]
+    },
+    {
+      "active": true,
+      "conditions": [{ "group": "all", "attribute": "campo", "operator": "equal_to", "value": "Tintometrico", "field_id": 1 }],
+      "fields": [{ "field_id": 2, "required_on": "conclusao" }]
+    },
+    {
+      "active": true,
+      "conditions": [{ "group": "all", "attribute": "empresa", "operator": "is_present" }],
+      "fields": [{ "field_id": 4, "required_on": "abertura" }]
+    },
+    {
+      "active": true,
+      "conditions": [{ "group": "all", "attribute": "equipe", "operator": "not_equal_to", "value": "Suporte" }],
+      "fields": [{ "field_id": 4, "required_on": "conclusao" }]
+    },
+    {
+      "active": true,
+      "conditions": [{ "group": "all", "attribute": "status", "operator": "equal_to", "value": "__nao_concluido" }],
+      "fields": [{ "field_id": 5, "required_on": "conclusao" }]
+    },
+    {
+      "active": false,
+      "conditions": [{ "group": "all", "attribute": "servico", "operator": "equal_to", "value": "Comercial" }],
+      "fields": [{ "field_id": 2, "required_on": "conclusao" }]
+    }
+  ],
+  "cases": [
+    {
+      "name": "service (all) and one type (any) match",
+      "context": { "servico": "Comercial", "tipo_de_solicitacao": "Duvida", "concluded": true, "equipe": "Suporte", "values": {} },
+      "visible": ["classificacao"],
+      "missing_on_conclusao": ["classificacao"]
+    },
+    {
+      "name": "no any condition matches",
+      "context": { "servico": "Comercial", "tipo_de_solicitacao": "Bug", "concluded": true, "equipe": "Suporte", "values": {} },
+      "visible": [],
+      "missing_on_conclusao": []
+    },
+    {
+      "name": "cascade opens the checklist from the classification value",
+      "context": { "servico": "Comercial", "tipo_de_solicitacao": "Configuracao", "concluded": true, "equipe": "Suporte", "values": { "classificacao": "Tintometrico" } },
+      "visible": ["classificacao", "checklist"],
+      "missing_on_conclusao": ["checklist"]
+    },
+    {
+      "name": "value of a hidden field does not keep the cascade open",
+      "context": { "servico": "Outro", "concluded": true, "equipe": "Suporte", "values": { "classificacao": "Tintometrico" } },
+      "visible": [],
+      "missing_on_conclusao": []
+    },
+    {
+      "name": "is_present on a context attribute",
+      "context": { "servico": "Outro", "empresa": "ACME", "concluded": true, "equipe": "Suporte", "values": {} },
+      "visible": ["causa"],
+      "missing_on_conclusao": []
+    },
+    {
+      "name": "not_equal_to matches when the attribute is absent",
+      "context": { "servico": "Outro", "concluded": true, "values": {} },
+      "visible": ["causa"],
+      "missing_on_conclusao": ["causa"]
+    },
+    {
+      "name": "whitespace-only values count as empty",
+      "context": { "servico": "Outro", "concluded": true, "values": { "causa": "   " } },
+      "visible": ["causa"],
+      "missing_on_conclusao": ["causa"]
+    },
+    {
+      "name": "filled value is not missing",
+      "context": { "servico": "Outro", "concluded": true, "values": { "causa": "Erro" } },
+      "visible": ["causa"],
+      "missing_on_conclusao": []
+    },
+    {
+      "name": "multi select: equal_to means the option is marked",
+      "context": { "servico": "Comercial", "tipo_de_solicitacao": "Duvida", "concluded": true, "equipe": "Suporte", "values": { "classificacao": ["Outro", "Tintometrico"] } },
+      "visible": ["classificacao", "checklist"],
+      "missing_on_conclusao": ["checklist"]
+    },
+    {
+      "name": "status not concluded matches only while the ticket is open",
+      "context": { "servico": "Outro", "concluded": false, "equipe": "Suporte", "values": {} },
+      "visible": ["por_status"],
+      "missing_on_conclusao": ["por_status"]
+    },
+    {
+      "name": "status not concluded does not match a concluded ticket",
+      "context": { "servico": "Outro", "concluded": true, "equipe": "Suporte", "values": {} },
+      "visible": [],
+      "missing_on_conclusao": []
+    },
+    {
+      "name": "field in more than one rule keeps the first configuration",
+      "context": { "servico": "Outro", "empresa": "ACME", "concluded": true, "values": {} },
+      "visible": ["causa"],
+      "missing_on_conclusao": []
+    }
+  ]
+}

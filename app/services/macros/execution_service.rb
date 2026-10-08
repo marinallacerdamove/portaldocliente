@@ -1,5 +1,6 @@
 class Macros::ExecutionService < ActionService
   include TicketFieldActions # PATCH LOCAL (fork)
+  include Macros::ResolveRequirements # PATCH LOCAL (fork) - depois de TicketFieldActions
 
   def initialize(macro, conversation, user)
     super(conversation)

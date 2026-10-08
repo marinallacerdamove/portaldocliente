@@ -2,11 +2,13 @@ import { flushPromises } from '@vue/test-utils';
 import { useAlert, useTrack } from 'dashboard/composables';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
+import { useResolveRequirements } from 'dashboard/composables/useResolveRequirements';
 import { useMacroExecution } from '../useMacroExecution';
 
 vi.mock('dashboard/composables/store');
 vi.mock('dashboard/composables');
 vi.mock('dashboard/composables/useConversationRequiredAttributes');
+vi.mock('dashboard/composables/useResolveRequirements');
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: key => key }),
 }));
@@ -23,11 +25,13 @@ const macroWith = actions => ({ id: 7, name: 'Test macro', actions });
 
 const dispatch = vi.fn();
 const checkMissingAttributes = vi.fn();
+const missingFor = vi.fn();
+const nothingMissing = { actions: [], customFields: [], closeReason: null };
 
 const mockConversation = (customAttributes = {}) => {
   useMapGetter.mockImplementation(getter =>
     getter === 'getConversationById'
-      ? { value: () => ({ custom_attributes: customAttributes }) }
+      ? { value: () => ({ id: 42, custom_attributes: customAttributes }) }
       : { value: null }
   );
 };
@@ -39,6 +43,7 @@ describe('useMacroExecution', () => {
       hasMissing: false,
       missing: [],
     });
+    missingFor.mockReset().mockResolvedValue(nothingMissing);
     useAlert.mockClear();
     useTrack.mockClear();
 
@@ -46,6 +51,7 @@ describe('useMacroExecution', () => {
     useConversationRequiredAttributes.mockReturnValue({
       checkMissingAttributes,
     });
+    useResolveRequirements.mockReturnValue({ missingFor });
     mockConversation();
   });
 
@@ -143,9 +149,9 @@ describe('useMacroExecution', () => {
     await submitPendingAttributes({ attributes: { priority: 'high' } });
     await flushPromises();
 
-    expect(dispatch).toHaveBeenNthCalledWith(1, 'updateCustomAttributes', {
+    expect(dispatch).toHaveBeenNthCalledWith(1, 'mergeCustomAttributes', {
       conversationId: CONVERSATION_ID,
-      customAttributes: { category: 'sales', priority: 'high' },
+      changes: { priority: 'high' },
     });
     expect(dispatch).toHaveBeenNthCalledWith(2, 'macros/execute', {
       macroId: 7,
@@ -206,5 +212,34 @@ describe('useMacroExecution', () => {
 
     expect(useAlert).toHaveBeenCalledWith('MACROS.ERROR');
     expect(executingMacroId.value).toBeNull();
+  });
+
+  describe('fork resolve requirements', () => {
+    it('runs a resolving macro and says what is missing to resolve', async () => {
+      missingFor.mockResolvedValue({
+        actions: [{ key: 'priority', label: 'Prioridade' }],
+        customFields: ['Causa'],
+        closeReason: { label: 'Motivo de encerramento' },
+      });
+      const { execute } = useMacroExecution();
+
+      execute(macroWith([resolveConversation]), CONVERSATION_ID);
+      await flushPromises();
+
+      expect(dispatch).toHaveBeenCalledWith('macros/execute', {
+        macroId: 7,
+        conversationIds: [CONVERSATION_ID],
+      });
+      expect(useAlert).toHaveBeenCalledWith('MACROS.EXECUTE.RESOLVE_BLOCKED');
+    });
+
+    it('does not look at the requirements for a macro that cannot resolve', async () => {
+      const { execute } = useMacroExecution();
+
+      execute(macroWith([addLabel]), CONVERSATION_ID);
+      await flushPromises();
+
+      expect(missingFor).not.toHaveBeenCalled();
+    });
   });
 });

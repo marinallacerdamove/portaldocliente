@@ -663,6 +663,43 @@ RSpec.describe 'Conversations API', type: :request do
 
           expect(response).to have_http_status(:unprocessable_entity)
         end
+
+        # rubocop:disable RSpec/NestedGroups
+        context 'when a ticket status that resolves is picked' do
+          before { account.ticket_statuses.create!(name: 'Fechado', base: 'fechado') }
+
+          def pick_closed_status(headers)
+            post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/custom_attributes",
+                 headers: headers, params: { custom_attributes: { status_atendimento: 'Fechado' }, merge: true }, as: :json
+          end
+
+          it 'recusa pela tela com o que falta, sem gravar nada' do
+            pick_closed_status(agent.create_new_auth_token)
+
+            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response.parsed_body['missing']).to include('Prioridade', 'Agente')
+            expect(blocked.reload.status).to eq('open')
+            expect(blocked.custom_attributes['status_atendimento']).not_to eq('Fechado')
+          end
+
+          it 'deixa a integração do Portal fechar pelo token' do
+            with_modified_env PORTAL_INTEGRATION_USER_EMAIL: administrator.email do
+              pick_closed_status({ api_access_token: administrator.access_token.token })
+            end
+
+            expect(blocked.reload.status).to eq('resolved')
+          end
+
+          it 'deixa gravar quando nada falta' do
+            blocked.update!(priority: :medium, assignee: agent)
+
+            pick_closed_status(agent.create_new_auth_token)
+
+            expect(response).to have_http_status(:success)
+            expect(blocked.reload.status).to eq('resolved')
+          end
+        end
+        # rubocop:enable RSpec/NestedGroups
       end
 
       it 'toggles the conversation status if status is empty' do

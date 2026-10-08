@@ -119,6 +119,7 @@
       "BUTTON_TOOLTIP": "Execute",
       "PREVIEW": "Preview Macro",
       "EXECUTED_SUCCESSFULLY": "Macro executed successfully",
+      "RESOLVE_BLOCKED": "Macro executed without resolving. Fill in before resolving: {fields}",
       "EXECUTED_WITHOUT_RESOLVING": "Macro executed. The conversation was not resolved because required attributes are missing.",
       "APPLIED_BY_SERVICE": "Macro \"{name}\" applied by the service"
     },

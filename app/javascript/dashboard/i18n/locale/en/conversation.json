@@ -361,6 +361,7 @@
     },
     "VISIBLE_TO_AGENTS": "Private Note: Only visible to you and your team",
     "CHANGE_STATUS": "Conversation status changed",
+    "RESOLVE_BLOCKED": "Fill in before resolving: {fields}",
     "RESOLVE_REQUIRED_ACTIONS": "Fill in Conversation actions before resolving: {fields}",
     "CHANGE_STATUS_FAILED": "Conversation status change failed",
     "CHANGE_AGENT": "Conversation Assignee changed",

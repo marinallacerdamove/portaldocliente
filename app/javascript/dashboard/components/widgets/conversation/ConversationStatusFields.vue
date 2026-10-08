@@ -21,9 +21,6 @@ import {
 } from 'dashboard/helper/ticketCatalogRules';
 import { useSaveConversationAttributes } from 'dashboard/composables/useSaveConversationAttributes';
 
-// Status do cadastro que resolvem a conversa (TicketStatus::CONVERSATION_STATUS).
-const CONCLUDING_STATUS_BASES = ['resolvido', 'fechado', 'cancelado'];
-
 const { t } = useI18n();
 const currentChat = useMapGetter('getSelectedChat');
 const getInbox = useMapGetter('inboxes/getInbox');
@@ -100,7 +97,7 @@ const onSelectStatus = selectedItem => {
   // Status que resolve uma conversa ainda aberta vai pelo próprio Resolver:
   // mesma trava de campos obrigatórios e mesma pergunta do motivo.
   if (
-    CONCLUDING_STATUS_BASES.includes(status?.base) &&
+    status?.conversation_status === 'resolved' &&
     currentChat.value.status !== 'resolved'
   ) {
     emitter.emit(CMD_RESOLVE_CONVERSATION, { attributes: changes });

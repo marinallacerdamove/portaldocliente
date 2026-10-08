@@ -9,7 +9,8 @@
 // - category: { id, name, active, ticket_scope, allowed_priorities (vazio =
 //   todas), position }
 // - status: { id, name, base ('novo'|'em_atendimento'|'parado'|'resolvido'|
-//   'fechado'|'cancelado'), active, ticket_scope, requires_justification, position }
+//   'fechado'|'cancelado'), conversation_status ('open'|'pending'|'resolved'),
+//   active, ticket_scope, requires_justification, position }
 // - justification: { id, name, active, ticket_scope, status_ids, position }
 // - closeReason: { id, name, active, position } (vai em motivo_encerramento)
 // - customField: { id, name, key, field_type ('text'|'textarea'|'list'|

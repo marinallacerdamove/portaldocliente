@@ -25,4 +25,24 @@ module ResolveRequirementsGuard
 
     Conversations::ResolveRequirementsService.new(conversation).missing
   end
+
+  # toggle_status: pedido de resolver (status 'resolved', ou alternar uma
+  # conversa aberta).
+  def resolve_blocked?
+    resolving = params[:status].present? ? params[:status] == 'resolved' : @conversation.open?
+    resolving && render_resolve_blocked(resolve_requirements_missing(@conversation))
+  end
+
+  # custom_attributes: status do cadastro que resolve (TicketStatusSync), com
+  # os atributos novos já atribuídos e ainda não gravados.
+  def ticket_status_resolve_blocked?
+    @conversation.resolving_by_ticket_status? && render_resolve_blocked(resolve_requirements_missing(@conversation))
+  end
+
+  def render_resolve_blocked(missing)
+    return false if missing.empty?
+
+    render json: { error: "Preencha antes de resolver: #{missing.join(', ')}", missing: missing }, status: :unprocessable_entity
+    true
+  end
 end

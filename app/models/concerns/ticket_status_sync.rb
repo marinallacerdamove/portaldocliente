@@ -22,6 +22,12 @@ module TicketStatusSync
     before_save :sync_ticket_status
   end
 
+  # O status do cadastro escolhido (ainda não gravado) vai resolver a conversa
+  # no próximo save - a trava do Resolver vale pra esse caminho também.
+  def resolving_by_ticket_status?
+    !resolved? && ticket_status_picked? && account.ticket_statuses.resolving.exists?(name: custom_attributes[TicketContract::STATUS_KEY])
+  end
+
   private
 
   def sync_ticket_status

@@ -8,6 +8,8 @@ module ConversationCustomAttributesConcern
     # PATCH LOCAL (fork) - `remove` (junto com merge): chaves apagadas na mesma gravação.
     attributes = attributes.except(*params.permit(remove: [])[:remove]) if params[:remove].present?
     @conversation.custom_attributes = attributes
+    return if ticket_status_resolve_blocked? # PATCH LOCAL (fork) - ResolveRequirementsGuard
+
     @conversation.save!
     log_checklist_activity(checklist_before)
   end

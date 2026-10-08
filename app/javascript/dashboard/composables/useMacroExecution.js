@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert, useTrack } from 'dashboard/composables';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
+import { useResolveRequirements } from 'dashboard/composables/useResolveRequirements';
 import { CONVERSATION_EVENTS } from 'dashboard/helper/AnalyticsHelper/events';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
@@ -45,6 +46,7 @@ export function useMacroExecution() {
   const store = useStore();
   const { t } = useI18n();
   const { checkMissingAttributes } = useConversationRequiredAttributes();
+  const { missingFor } = useResolveRequirements();
 
   const conversationById = useMapGetter('getConversationById');
 
@@ -54,18 +56,44 @@ export function useMacroExecution() {
   const customAttributesFor = conversationId =>
     conversationById.value(conversationId)?.custom_attributes || {};
 
-  const runMacro = async (
-    { macro, conversationId, silent },
-    skippedResolve = false
-  ) => {
+  // PATCH LOCAL (fork) - o servidor não resolve com o que o botão Resolver
+  // cobra faltando (Macros::ResolveRequirements): a macro roda sem resolver e
+  // a tela diz o que falta.
+  const missingToResolve = async ({ macro, conversationId }) => {
+    const conversation = conversationById.value(conversationId);
+    if (!conversation || !resolvesConversation(macro)) return [];
+    const { actions, customFields, closeReason } = await missingFor(
+      conversation,
+      {
+        priority: t('CONVERSATION.PRIORITY.TITLE'),
+        assignee: t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL'),
+        team: t('CONVERSATION_SIDEBAR.TEAM_LABEL'),
+      }
+    );
+    return [
+      ...actions.map(item => item.label),
+      ...customFields,
+      ...(closeReason ? [closeReason.label] : []),
+    ];
+  };
+
+  const runMacro = async (execution, skippedResolve = false) => {
+    const { macro, conversationId, silent } = execution;
     try {
       executingMacroId.value = macro.id;
+      const blocked = skippedResolve ? [] : await missingToResolve(execution);
       await store.dispatch('macros/execute', {
         macroId: macro.id,
         conversationIds: [conversationId],
       });
       useTrack(CONVERSATION_EVENTS.EXECUTED_A_MACRO);
       if (silent) return;
+      if (blocked.length) {
+        useAlert(
+          t('MACROS.EXECUTE.RESOLVE_BLOCKED', { fields: blocked.join(', ') })
+        );
+        return;
+      }
       useAlert(
         skippedResolve
           ? t('MACROS.EXECUTE.EXECUTED_WITHOUT_RESOLVING')
@@ -107,12 +135,9 @@ export function useMacroExecution() {
     pendingExecution.value = null;
 
     try {
-      await store.dispatch('updateCustomAttributes', {
+      await store.dispatch('mergeCustomAttributes', {
         conversationId: execution.conversationId,
-        customAttributes: {
-          ...customAttributesFor(execution.conversationId),
-          ...attributes,
-        },
+        changes: attributes,
       });
     } catch (error) {
       useAlert(t('CUSTOM_ATTRIBUTES.FORM.UPDATE.ERROR'));

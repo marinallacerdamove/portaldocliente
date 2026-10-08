@@ -254,19 +254,16 @@ const actions = {
   },
 
   toggleStatus: async (
-    { commit },
+    { commit, dispatch },
     { conversationId, status, snoozedUntil = null, customAttributes = null }
   ) => {
+    // eslint-disable-next-line no-useless-catch
     try {
       // Update custom attributes first if provided
       if (customAttributes) {
-        await ConversationApi.updateCustomAttributes({
+        await dispatch('mergeCustomAttributes', {
           conversationId,
-          customAttributes,
-        });
-        commit(types.UPDATE_CONVERSATION_CUSTOM_ATTRIBUTES, {
-          conversationId,
-          customAttributes,
+          changes: customAttributes,
         });
       }
 
@@ -288,7 +285,9 @@ const actions = {
         snoozedUntil: updatedSnoozedUntil,
       });
     } catch (error) {
-      // Handle error
+      // PATCH LOCAL (fork) - o servidor recusa resolver sem o que o Resolver
+      // cobra (422 com `missing`): quem chama mostra o motivo.
+      throw error;
     }
   },
 

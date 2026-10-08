@@ -9,6 +9,7 @@ import { findSnoozeTime } from 'dashboard/helper/snoozeHelpers';
 import { CMD_SNOOZE_CONVERSATION } from 'dashboard/helper/commandbar/events';
 import wootConstants from 'dashboard/constants/globals';
 import CustomSnoozeModal from 'dashboard/components/CustomSnoozeModal.vue';
+import { statusChangeErrorMessage } from 'dashboard/helper/statusChangeError';
 
 const store = useStore();
 const getters = useStoreGetters();
@@ -19,13 +20,17 @@ const selectedChat = computed(() => getters.getSelectedChat.value);
 const contextMenuChatId = computed(() => getters.getContextMenuChatId.value);
 
 const toggleStatus = async (status, snoozedUntil) => {
-  await store.dispatch('toggleStatus', {
-    conversationId: selectedChat.value?.id || contextMenuChatId.value,
-    status,
-    snoozedUntil,
-  });
+  try {
+    await store.dispatch('toggleStatus', {
+      conversationId: selectedChat.value?.id || contextMenuChatId.value,
+      status,
+      snoozedUntil,
+    });
+    useAlert(t('CONVERSATION.CHANGE_STATUS'));
+  } catch (error) {
+    useAlert(statusChangeErrorMessage(error, t));
+  }
   store.dispatch('setContextMenuChatId', null);
-  useAlert(t('CONVERSATION.CHANGE_STATUS'));
 };
 
 const onCmdSnoozeConversation = snoozeType => {

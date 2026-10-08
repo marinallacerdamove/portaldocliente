@@ -3,6 +3,7 @@ import {
   visibleCustomFields,
   STATUS_NOT_CONCLUDED,
 } from '../ticketFieldRules';
+import parity from '../../../../../spec/fixtures/fork_parity/ticket_field_rules_cases.json';
 
 const field = (id, key, extra = {}) => ({
   id,
@@ -226,5 +227,32 @@ describe('missingRequiredFields', () => {
       'checklist_tintometrico',
     ]);
     expect(missingRequiredFields(items, values, ['abertura'])).toEqual([]);
+  });
+});
+
+// Mesmo arquivo lido por spec/services/ticket_field_rules_evaluator_spec.rb: os
+// dois avaliadores (este e o do servidor) têm que dar o mesmo resultado nos
+// mesmos casos.
+describe('shared parity cases', () => {
+  it('evaluates every case like the server does', () => {
+    parity.cases.forEach(example => {
+      const items = visibleCustomFields({
+        rules: parity.rules,
+        fields: parity.fields,
+        context: example.context,
+      });
+      const missing = missingRequiredFields(items, example.context.values, [
+        'conclusao',
+      ]);
+
+      expect(
+        items.map(item => item.field.key),
+        example.name
+      ).toEqual(example.visible);
+      expect(
+        missing.map(item => item.field.key),
+        example.name
+      ).toEqual(example.missing_on_conclusao);
+    });
   });
 });

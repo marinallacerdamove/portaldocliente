@@ -16,11 +16,13 @@ class TicketStatus < ApplicationRecord
   validates :name, uniqueness: { scope: :account_id }
   validates :base, inclusion: { in: CONVERSATION_STATUS.keys }
 
+  scope :resolving, -> { where(base: CONVERSATION_STATUS.filter_map { |base, status| base if status == 'resolved' }) }
+
   def conversation_status
     CONVERSATION_STATUS.fetch(base)
   end
 
   def as_json(*)
-    slice(:id, :name, :base, :active, :ticket_scope, :requires_justification, :position)
+    slice(:id, :name, :base, :active, :ticket_scope, :requires_justification, :position).merge(conversation_status: conversation_status)
   end
 end

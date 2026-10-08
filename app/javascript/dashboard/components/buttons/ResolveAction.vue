@@ -3,17 +3,12 @@ import { ref, computed } from 'vue';
 import { useAlert } from 'dashboard/composables';
 import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import {
-  useStore,
-  useStoreGetters,
-  useMapGetter,
-} from 'dashboard/composables/store';
+import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useEmitter } from 'dashboard/composables/emitter';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
-import { MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY } from 'dashboard/constants/ticketDetailAttributes';
-import { useConversationCustomFields } from 'dashboard/composables/useConversationCustomFields';
-import { missingConversationActions } from 'dashboard/helper/conversationRequiredActions';
+import { useResolveRequirements } from 'dashboard/composables/useResolveRequirements';
+import { statusChangeErrorMessage } from 'dashboard/helper/statusChangeError';
 
 import WootDropdownItem from 'shared/components/ui/dropdown/DropdownItem.vue';
 import WootDropdownMenu from 'shared/components/ui/dropdown/DropdownMenu.vue';
@@ -32,29 +27,7 @@ const getters = useStoreGetters();
 const { t } = useI18n();
 const { checkMissingAttributes } = useConversationRequiredAttributes();
 
-// PATCH LOCAL (fork) - o motivo de encerramento é pedido sempre ao resolver
-// (o Portal depende dele nos relatórios), sem depender do recurso pago de
-// atributos obrigatórios do Chatwoot, que fica desligado sem plano.
-const conversationAttributes = useMapGetter(
-  'attributes/getConversationAttributes'
-);
-const closeReasonAttribute = computed(() => {
-  const attribute = (conversationAttributes.value || []).find(
-    item => item.attributeKey === MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY
-  );
-  if (!attribute) return null;
-  return {
-    ...attribute,
-    value: attribute.attributeKey,
-    label: attribute.attributeDisplayName,
-    type: attribute.attributeDisplayType,
-    attributeValues: attribute.attributeValues,
-  };
-});
-
-// PATCH LOCAL (fork) - Empresa, Tipo de solicitação, Serviço, Prioridade,
-// Agente e Time ("Ações da conversa") precisam estar preenchidos pra resolver.
-const teams = useMapGetter('teams/getTeams');
+const { missingFor } = useResolveRequirements();
 
 const arrowDownButtonRef = ref(null);
 const isLoading = ref(false);
@@ -68,11 +41,6 @@ const closeDropdown = () => toggleDropdown(false);
 const openDropdown = () => toggleDropdown(true);
 
 const currentChat = computed(() => getters.getSelectedChat.value);
-// PATCH LOCAL (fork) - campo adicional obrigatório "na conclusão" (regras de
-// exibição) trava o Resolver até ser preenchido na lateral da conversa.
-const { missingOnResolve, load: loadCustomFields } =
-  useConversationCustomFields(currentChat);
-
 const isOpen = computed(
   () => currentChat.value.status === wootConstants.STATUS_TYPE.OPEN
 );
@@ -133,25 +101,21 @@ const toggleStatus = (status, snoozedUntil, customAttributes = null) => {
     payload.customAttributes = customAttributes;
   }
 
-  store.dispatch('toggleStatus', payload).then(() => {
-    useAlert(t('CONVERSATION.CHANGE_STATUS'));
-    isLoading.value = false;
-  });
+  store
+    .dispatch('toggleStatus', payload)
+    .then(() => useAlert(t('CONVERSATION.CHANGE_STATUS')))
+    .catch(error => useAlert(statusChangeErrorMessage(error, t)))
+    .finally(() => {
+      isLoading.value = false;
+    });
 };
 
 const handleResolveWithAttributes = ({ attributes, context }) => {
   if (context) {
-    const currentCustomAttributes = currentChat.value.custom_attributes || {};
-    const mergedAttributes = {
-      ...currentCustomAttributes,
+    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED, context.snoozedUntil, {
       ...pendingExtraAttributes.value,
       ...attributes,
-    };
-    toggleStatus(
-      wootConstants.STATUS_TYPE.RESOLVED,
-      context.snoozedUntil,
-      mergedAttributes
-    );
+    });
   }
 };
 
@@ -161,39 +125,32 @@ const onCmdOpenConversation = () => {
 
 const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
   pendingExtraAttributes.value = attributes;
-  const missingActions = missingConversationActions(currentChat.value, {
-    attributes: conversationAttributes.value || [],
-    hasTeams: (teams.value || []).length > 0,
-    nativeLabels: {
-      priority: t('CONVERSATION.PRIORITY.TITLE'),
-      assignee: t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL'),
-      team: t('CONVERSATION_SIDEBAR.TEAM_LABEL'),
-    },
+  const requirements = await missingFor(currentChat.value, {
+    priority: t('CONVERSATION.PRIORITY.TITLE'),
+    assignee: t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL'),
+    team: t('CONVERSATION_SIDEBAR.TEAM_LABEL'),
   });
-  if (missingActions.length) {
+  if (requirements.actions.length) {
     useAlert(
       t('CONVERSATION.RESOLVE_REQUIRED_ACTIONS', {
-        fields: missingActions.map(item => item.label).join(', '),
+        fields: requirements.actions.map(item => item.label).join(', '),
       })
     );
     return;
   }
-  await loadCustomFields();
-  if (missingOnResolve.value.length) {
+  if (requirements.customFields.length) {
     useAlert(
       t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.MISSING_ON_RESOLVE', {
-        fields: missingOnResolve.value.map(item => item.field.name).join(', '),
+        fields: requirements.customFields.join(', '),
       })
     );
     return;
   }
   const currentCustomAttributes = currentChat.value.custom_attributes || {};
   const { missing } = checkMissingAttributes(currentCustomAttributes);
-  const closeReason = closeReasonAttribute.value;
-  const closeReasonValue = currentCustomAttributes[closeReason?.value];
+  const { closeReason } = requirements;
   if (
     closeReason &&
-    (closeReasonValue == null || String(closeReasonValue).trim() === '') &&
     !missing.some(attribute => attribute.value === closeReason.value)
   ) {
     missing.push(closeReason);
@@ -210,10 +167,7 @@ const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
       conversationContext
     );
   } else if (Object.keys(attributes).length) {
-    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED, null, {
-      ...currentCustomAttributes,
-      ...attributes,
-    });
+    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED, null, attributes);
   } else {
     toggleStatus(wootConstants.STATUS_TYPE.RESOLVED);
   }

@@ -403,6 +403,38 @@ describe('#actions', () => {
         ],
       ]);
     });
+
+    // PATCH LOCAL (fork) - 422 do Resolver chega em quem chamou
+    it('rejects with the server answer so the caller can show what is missing', async () => {
+      const error = { response: { status: 422, data: { missing: ['Time'] } } };
+      axios.post.mockRejectedValue(error);
+
+      await expect(
+        actions.toggleStatus(
+          { commit, dispatch },
+          { conversationId: 1, status: 'resolved' }
+        )
+      ).rejects.toBe(error);
+      expect(commit).not.toHaveBeenCalled();
+    });
+
+    it('saves the extra attributes by merge before changing the status', async () => {
+      axios.post.mockResolvedValue({ data: { payload: {} } });
+
+      await actions.toggleStatus(
+        { commit, dispatch },
+        {
+          conversationId: 1,
+          status: 'resolved',
+          customAttributes: { motivo_encerramento: 'Resolvido' },
+        }
+      );
+
+      expect(dispatch).toHaveBeenCalledWith('mergeCustomAttributes', {
+        conversationId: 1,
+        changes: { motivo_encerramento: 'Resolvido' },
+      });
+    });
   });
 
   describe('#assignTeam', () => {
