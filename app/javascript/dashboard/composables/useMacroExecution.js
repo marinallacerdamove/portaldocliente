@@ -78,7 +78,7 @@ export function useMacroExecution() {
   };
 
   const runMacro = async (execution, skippedResolve = false) => {
-    const { macro, conversationId, silent } = execution;
+    const { macro, conversationId, silent, successMessage } = execution;
     try {
       executingMacroId.value = macro.id;
       const blocked = skippedResolve ? [] : await missingToResolve(execution);
@@ -87,11 +87,14 @@ export function useMacroExecution() {
         conversationIds: [conversationId],
       });
       useTrack(CONVERSATION_EVENTS.EXECUTED_A_MACRO);
-      if (silent) return;
       if (blocked.length) {
         useAlert(
           t('MACROS.EXECUTE.RESOLVE_BLOCKED', { fields: blocked.join(', ') })
         );
+        return;
+      }
+      if (silent) {
+        if (successMessage) useAlert(successMessage);
         return;
       }
       useAlert(
@@ -106,10 +109,15 @@ export function useMacroExecution() {
     }
   };
 
-  // PATCH LOCAL (fork) - `silent`: quem chama mostra o próprio aviso (macro
-  // disparada pelo serviço). Erro continua avisando.
-  const execute = (macro, conversationId, { silent = false } = {}) => {
-    const execution = { macro, conversationId, silent };
+  // PATCH LOCAL (fork) - `silent`: sem o aviso padrão (macro disparada pelo
+  // serviço); `successMessage` é o aviso dela, dado depois da execução. Erro e
+  // resolver travado continuam avisando.
+  const execute = (
+    macro,
+    conversationId,
+    { silent = false, successMessage = '' } = {}
+  ) => {
+    const execution = { macro, conversationId, silent, successMessage };
 
     fillReplyEditor(macro);
     if (!hasServerActions(macro)) return null;

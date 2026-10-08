@@ -5,17 +5,13 @@ import {
   DuplicateContactException,
   ExceptionWithMessage,
 } from 'shared/helpers/CustomErrors';
-import { useAdmin } from 'dashboard/composables/useAdmin';
+import ContactActionsBar from './ContactActionsBar.vue';
 import ContactInfoRow from './ContactInfoRow.vue';
 import PortalContactRegistration from './PortalContactRegistration.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import SocialIcons from './SocialIcons.vue';
 import EditContact from './EditContact.vue';
-import ContactMergeModal from 'dashboard/modules/contact/ContactMergeModal.vue';
-import ContactDeleteModal from 'dashboard/modules/contact/ContactDeleteModal.vue';
-import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
-import VoiceCallButton from 'dashboard/components-next/Contacts/VoiceCallButton.vue';
 import InlineInput from 'dashboard/components-next/inline-input/InlineInput.vue';
 import { useCompaniesStore } from 'dashboard/stores/companies';
 import CompanyAPI from 'dashboard/api/companies';
@@ -29,11 +25,8 @@ export default {
     ContactInfoRow,
     EditContact,
     Avatar,
-    ComposeConversation,
+    ContactActionsBar,
     SocialIcons,
-    ContactMergeModal,
-    ContactDeleteModal,
-    VoiceCallButton,
     InlineInput,
   },
   props: {
@@ -48,14 +41,12 @@ export default {
   },
   emits: ['panelClose'],
   setup(props) {
-    const { isAdmin } = useAdmin();
     const companiesStore = useCompaniesStore();
     const { linkedCompanies } = useLinkedCompanies(
       () => props.contact.company_id,
       () => props.contact.custom_attributes?.empresas_vinculadas
     );
     return {
-      isAdmin,
       companiesStore,
       linkedCompanies,
     };
@@ -71,7 +62,6 @@ export default {
   },
   computed: {
     ...mapGetters({
-      uiFlags: 'contacts/getUIFlags',
       currentChat: 'getSelectedChat',
     }),
     // Company nativa do Chatwoot (criada/vinculada automaticamente pelo
@@ -94,6 +84,12 @@ export default {
       return this.companyId
         ? this.companiesStore.getRecord(this.companyId)
         : null;
+    },
+    // O cadastro no Portal usa a empresa do CONTATO (não a do ticket).
+    contactCompanyName() {
+      return this.contact.company_id
+        ? this.companiesStore.getRecord(this.contact.company_id)?.name || ''
+        : '';
     },
     companyDocument() {
       return this.company?.customAttributes?.cnpj || '';
@@ -168,6 +164,12 @@ export default {
     companyId: {
       handler(id) {
         if (id) this.companiesStore.show(id);
+      },
+      immediate: true,
+    },
+    'contact.company_id': {
+      handler(id) {
+        if (id && id !== this.companyId) this.companiesStore.show(id);
       },
       immediate: true,
     },
@@ -314,66 +316,12 @@ export default {
           class="self-start"
           @click="$router.push(companyProfileLink)"
         />
-        <div class="flex items-center gap-2">
-          <ComposeConversation :contact-id="String(contact.id)">
-            <template #trigger>
-              <NextButton
-                v-tooltip.top-end="$t('CONTACT_PANEL.NEW_MESSAGE')"
-                icon="i-ph-chat-circle-dots"
-                slate
-                faded
-                sm
-              />
-            </template>
-          </ComposeConversation>
-          <VoiceCallButton
-            :phone="contact.phone_number"
-            :contact-id="contact.id"
-            :conversation-id="currentChat?.id"
-            icon="i-lucide-phone"
-            sm
-            faded
-            slate
-            :tooltip-label="$t('CONTACT_PANEL.CALL')"
-          />
-          <NextButton
-            v-tooltip.top-end="$t('EDIT_CONTACT.BUTTON_LABEL')"
-            icon="i-ph-pencil-simple"
-            slate
-            faded
-            sm
-            @click="toggleEditModal"
-          />
-          <ContactMergeModal :primary-contact="contact">
-            <template #trigger>
-              <NextButton
-                v-tooltip.top-end="$t('CONTACT_PANEL.MERGE_CONTACT')"
-                icon="i-ph-arrows-merge"
-                slate
-                faded
-                sm
-                :disabled="uiFlags.isMerging"
-              />
-            </template>
-          </ContactMergeModal>
-          <ContactDeleteModal
-            v-if="isAdmin"
-            :contact="contact"
-            @deleted="$emit('panelClose')"
-          >
-            <template #trigger>
-              <NextButton
-                v-tooltip.top-end="$t('DELETE_CONTACT.BUTTON_LABEL')"
-                icon="i-ph-trash"
-                slate
-                faded
-                sm
-                ruby
-                :disabled="uiFlags.isDeleting"
-              />
-            </template>
-          </ContactDeleteModal>
-        </div>
+        <ContactActionsBar
+          :contact="contact"
+          :conversation-id="currentChat?.id"
+          @edit="toggleEditModal"
+          @deleted="$emit('panelClose')"
+        />
       </div>
       <div
         v-else
@@ -421,66 +369,12 @@ export default {
             @click="startEditingName"
           />
         </div>
-        <div class="flex items-center gap-2">
-          <ComposeConversation :contact-id="String(contact.id)">
-            <template #trigger>
-              <NextButton
-                v-tooltip.top-end="$t('CONTACT_PANEL.NEW_MESSAGE')"
-                icon="i-ph-chat-circle-dots"
-                slate
-                faded
-                sm
-              />
-            </template>
-          </ComposeConversation>
-          <VoiceCallButton
-            :phone="contact.phone_number"
-            :contact-id="contact.id"
-            :conversation-id="currentChat?.id"
-            icon="i-lucide-phone"
-            sm
-            faded
-            slate
-            :tooltip-label="$t('CONTACT_PANEL.CALL')"
-          />
-          <NextButton
-            v-tooltip.top-end="$t('EDIT_CONTACT.BUTTON_LABEL')"
-            icon="i-ph-pencil-simple"
-            slate
-            faded
-            sm
-            @click="toggleEditModal"
-          />
-          <ContactMergeModal :primary-contact="contact">
-            <template #trigger>
-              <NextButton
-                v-tooltip.top-end="$t('CONTACT_PANEL.MERGE_CONTACT')"
-                icon="i-ph-arrows-merge"
-                slate
-                faded
-                sm
-                :disabled="uiFlags.isMerging"
-              />
-            </template>
-          </ContactMergeModal>
-          <ContactDeleteModal
-            v-if="isAdmin"
-            :contact="contact"
-            @deleted="$emit('panelClose')"
-          >
-            <template #trigger>
-              <NextButton
-                v-tooltip.top-end="$t('DELETE_CONTACT.BUTTON_LABEL')"
-                icon="i-ph-trash"
-                slate
-                faded
-                sm
-                ruby
-                :disabled="uiFlags.isDeleting"
-              />
-            </template>
-          </ContactDeleteModal>
-        </div>
+        <ContactActionsBar
+          :contact="contact"
+          :conversation-id="currentChat?.id"
+          @edit="toggleEditModal"
+          @deleted="$emit('panelClose')"
+        />
       </div>
 
       <div>
@@ -558,7 +452,7 @@ export default {
             v-if="currentChat?.id"
             :contact="contact"
             :conversation-id="currentChat.id"
-            :company-name="company?.name || ''"
+            :company-name="contactCompanyName"
           />
         </div>
       </div>

@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useAlert } from 'dashboard/composables';
 import CompanyAPI from 'dashboard/api/companies';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
@@ -110,6 +111,9 @@ const handleConfirm = async () => {
         });
         return;
       }
+    } catch {
+      useAlert(t('COMPANIES.CREATE.MESSAGES.ERROR'));
+      return;
     } finally {
       isChecking.value = false;
     }

@@ -89,6 +89,7 @@ const registry = useVariableRegistry({
     <component
       :is="panelComponent"
       v-else-if="panelComponent"
+      :key="node.id"
       :model-value="node.data"
       :entries="registry.catalog.value"
       :recent-ids="registry.recentIds.value"

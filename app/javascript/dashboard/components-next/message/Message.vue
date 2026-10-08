@@ -609,6 +609,9 @@ provideMessageContext({
   isBotOrAgentMessage,
   shouldGroupWithNext,
   isEditing,
+  isAdmin,
+  isOwnMessage,
+  isMessageDeleted,
 });
 </script>
 

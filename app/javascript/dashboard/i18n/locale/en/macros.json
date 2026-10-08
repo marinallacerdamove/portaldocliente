@@ -119,6 +119,7 @@
       "BUTTON_TOOLTIP": "Execute",
       "PREVIEW": "Preview Macro",
       "EXECUTED_SUCCESSFULLY": "Macro executed successfully",
+      "SERVICE_MACRO_NOT_FOUND": "The macro set on this service was not found, so it was not applied",
       "RESOLVE_BLOCKED": "Macro executed without resolving. Fill in before resolving: {fields}",
       "EXECUTED_WITHOUT_RESOLVING": "Macro executed. The conversation was not resolved because required attributes are missing.",
       "APPLIED_BY_SERVICE": "Macro \"{name}\" applied by the service"

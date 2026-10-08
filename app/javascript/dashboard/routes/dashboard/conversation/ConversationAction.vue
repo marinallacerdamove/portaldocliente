@@ -437,21 +437,27 @@ export default {
     // conversa aplica a macro ligada a ele (service.macro_id). Se ela resolve
     // a conversa e falta atributo obrigatório, roda sem resolver.
     async runServicoMacro(service, conversationId) {
-      if (!this.$store.getters['macros/getMacros'].length) {
+      const findMacro = () =>
+        this.$store.getters['macros/getMacros'].find(
+          item => item.id === service.macro_id
+        );
+      let macro = findMacro();
+      if (!macro) {
         await this.$store.dispatch('macros/get');
+        macro = findMacro();
       }
-      const macro = this.$store.getters['macros/getMacros'].find(
-        item => item.id === service.macro_id
-      );
-      if (!macro) return;
+      if (!macro) {
+        useAlert(this.$t('MACROS.EXECUTE.SERVICE_MACRO_NOT_FOUND'));
+        return;
+      }
 
       const pending = this.executeMacro(macro, conversationId, {
         silent: true,
+        successMessage: this.$t('MACROS.EXECUTE.APPLIED_BY_SERVICE', {
+          name: macro.name,
+        }),
       });
       if (pending) this.dismissPendingAttributes();
-      useAlert(
-        this.$t('MACROS.EXECUTE.APPLIED_BY_SERVICE', { name: macro.name })
-      );
     },
 
     // PATCH LOCAL (fork) - escolher o serviço mantém o tipo de solicitação

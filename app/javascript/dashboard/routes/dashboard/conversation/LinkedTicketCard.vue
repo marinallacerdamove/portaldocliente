@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
@@ -24,11 +24,15 @@ const conversation = computed(() =>
   conversationGetter.value(props.conversationId)
 );
 
-onMounted(() => {
-  if (!conversation.value) {
-    store.dispatch('getConversation', props.conversationId);
-  }
-});
+// O card é reaproveitado quando o agente troca de conversa: busca a que não
+// está no store também quando o ticket vinculado muda.
+watch(
+  () => props.conversationId,
+  id => {
+    if (!conversationGetter.value(id)) store.dispatch('getConversation', id);
+  },
+  { immediate: true }
+);
 
 const contact = computed(
   () => contactGetter.value(conversation.value?.meta?.sender?.id) || {}

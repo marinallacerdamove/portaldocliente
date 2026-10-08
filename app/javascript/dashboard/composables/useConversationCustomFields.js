@@ -14,6 +14,7 @@ import {
   STATUS_ATENDIMENTO_ATTRIBUTE_KEY,
   TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
 } from 'dashboard/constants/ticketDetailAttributes';
+import { saveCustomFields } from 'dashboard/composables/customFieldsWriter';
 import wootConstants from 'dashboard/constants/globals';
 import {
   CUSTOM_FIELDS_ATTRIBUTE_KEY,
@@ -81,15 +82,13 @@ export function useConversationCustomFields(conversation) {
   const load = () =>
     Promise.all([fetchList('customFields'), fetchList('fieldRules')]);
 
-  // campos_adicionais é um hash só: vai inteiro, as outras chaves não.
+  // campos_adicionais é um hash só: vai inteiro, as outras chaves não, e as
+  // gravações em sequência não se atropelam (customFieldsWriter).
   const saveValue = (key, value) => {
     const next = { ...values.value };
     if (isEmptyValue(value)) delete next[key];
     else next[key] = value;
-    return store.dispatch('mergeCustomAttributes', {
-      conversationId: conversation.value.id,
-      changes: { [CUSTOM_FIELDS_ATTRIBUTE_KEY]: next },
-    });
+    return saveCustomFields(store, conversation.value.id, next);
   };
 
   return { items, values, missingOnResolve, load, saveValue };

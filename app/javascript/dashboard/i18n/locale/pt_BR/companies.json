@@ -197,6 +197,7 @@
           "SAVE": "Atualizar empresa"
         },
         "MESSAGES": {
+          "LOAD_COMPANIES_ERROR": "Não foi possível carregar as outras empresas da conta, então matriz e filiais podem estar faltando",
           "UPDATE_SUCCESS": "Empresa atualizada.",
           "UPDATE_ERROR": "Não foi possível atualizar a empresa."
         },

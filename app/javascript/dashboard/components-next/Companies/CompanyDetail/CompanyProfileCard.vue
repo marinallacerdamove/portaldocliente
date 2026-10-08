@@ -205,14 +205,23 @@ const accountCompanies = ref([]);
 const filialIds = ref([]);
 const addFilialValue = ref('');
 
-// Poucas empresas por conta: carrega todas as páginas.
-const loadAccountCompanies = async (page = 1, loaded = []) => {
-  const { data } = await CompanyAPI.get({ page });
-  const all = [...loaded, ...data.payload];
-  if (data.payload.length && all.length < data.meta.total_count)
-    return loadAccountCompanies(page + 1, all);
-  accountCompanies.value = all;
-  return all;
+// Matriz/filial precisa da lista toda: a primeira página diz quantas há e as
+// outras vêm juntas, não uma depois da outra.
+const loadAccountCompanies = async () => {
+  const { data: first } = await CompanyAPI.get({ page: 1 });
+  const pageCount = first.payload.length
+    ? Math.ceil(first.meta.total_count / first.payload.length)
+    : 1;
+  const rest = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_, index) =>
+      CompanyAPI.get({ page: index + 2 })
+    )
+  );
+  accountCompanies.value = [
+    ...first.payload,
+    ...rest.flatMap(({ data }) => data.payload),
+  ];
+  return accountCompanies.value;
 };
 
 const otherCompanies = computed(() =>
@@ -303,7 +312,9 @@ const saveFiliais = async cnpj => {
   await loadAccountCompanies();
 };
 
-loadAccountCompanies().catch(() => {});
+loadAccountCompanies().catch(() => {
+  useAlert(t('COMPANIES.DETAIL.PROFILE.MESSAGES.LOAD_COMPANIES_ERROR'));
+});
 
 const uiFlags = computed(() => companiesStore.getUIFlags);
 const isUpdating = computed(() => uiFlags.value.updatingItem);

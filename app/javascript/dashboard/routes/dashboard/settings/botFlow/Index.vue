@@ -158,8 +158,8 @@ const confirmDeletion = async () => {
           <div class="flex items-center justify-end gap-3">
             <Switch
               v-if="isAdmin"
-              v-model="flow.active"
               v-tooltip.top="t('BOT_FLOW.LIST.TOGGLE_ACTIVE')"
+              :model-value="flow.active"
               @change="toggleActive(flow)"
             />
             <router-link

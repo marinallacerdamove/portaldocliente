@@ -22,6 +22,8 @@ const { t } = useI18n();
 watch(
   () => modelValue.value.variable_label,
   label => {
+    // Bloco antigo sem rótulo não perde o identificador só por ser selecionado.
+    if (label === undefined) return;
     modelValue.value.variable_name = slugifyVariableName(label);
   }
 );

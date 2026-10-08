@@ -244,7 +244,6 @@ export default {
         ];
       }
 
-
       if (
         this.isATwilioChannel &&
         this.inbox.phone_number &&

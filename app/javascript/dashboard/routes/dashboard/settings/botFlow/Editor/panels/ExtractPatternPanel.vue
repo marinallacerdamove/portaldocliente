@@ -38,6 +38,8 @@ const patternModel = computed({
 watch(
   () => modelValue.value.target_variable_label,
   label => {
+    // Bloco antigo sem rótulo não perde o identificador só por ser selecionado.
+    if (label === undefined) return;
     modelValue.value.target_variable = slugifyVariableName(label);
   }
 );

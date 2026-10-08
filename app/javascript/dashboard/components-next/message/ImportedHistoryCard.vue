@@ -25,6 +25,9 @@ const {
   private: isPrivateMessage,
   createdAt,
   conversationId,
+  isAdmin,
+  isOwnMessage,
+  isMessageDeleted,
 } = useMessageContext();
 
 // `accent` fica na borda esquerda pro cliente e direita pra agente/nota
@@ -102,9 +105,13 @@ const isEmpty = computed(() => !content.value && !hasAttachments.value);
 
 // Igual ao resto do Chatwoot (ver TextBubble): só mensagem de saída
 // (agente/nota interna) pode ser editada - reescrever o que o cliente
-// escreveu não faz sentido e quebraria a fidelidade do histórico.
+// escreveu não faz sentido e quebraria a fidelidade do histórico - e só pelo
+// administrador ou pelo autor (MessagePolicy#update?), sem mensagem excluída.
 const isEditable = computed(
-  () => role.value !== IMPORTED_TICKET_HISTORY_ROLES.CUSTOMER
+  () =>
+    role.value !== IMPORTED_TICKET_HISTORY_ROLES.CUSTOMER &&
+    (isAdmin.value || isOwnMessage.value) &&
+    !isMessageDeleted.value
 );
 
 // Editar não abre mais a barra de formatação inline no card - move o

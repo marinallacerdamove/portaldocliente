@@ -44,14 +44,24 @@ const { items, values, load, saveValue } =
   useConversationCustomFields(currentChat);
 
 // Rascunho dos campos de texto/data até sair do campo.
+// Troca de conversa recomeça dos valores salvos; atualização em tempo real da
+// mesma conversa só troca o rascunho dos campos que mudaram de verdade (o que
+// o agente ainda digita em outro campo não some).
 const drafts = ref({});
 watch(
-  () => [currentChat.value?.id, values.value],
+  () => currentChat.value?.id,
   () => {
     drafts.value = { ...values.value };
   },
   { immediate: true }
 );
+watch(values, (next, previous) => {
+  Object.keys({ ...next, ...previous }).forEach(key => {
+    if (JSON.stringify(next[key]) !== JSON.stringify(previous?.[key])) {
+      drafts.value[key] = next[key];
+    }
+  });
+});
 
 const groupItems = computed(() => itemsInGroup(items.value, props.group));
 const editableItems = computed(() =>

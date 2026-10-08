@@ -130,6 +130,7 @@
           "SAVE": "Update company"
         },
         "MESSAGES": {
+          "LOAD_COMPANIES_ERROR": "Could not load the other companies of the account, so parent and branch companies may be missing",
           "UPDATE_SUCCESS": "Company updated.",
           "UPDATE_ERROR": "Could not update the company."
         },
