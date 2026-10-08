@@ -49,9 +49,11 @@ class Conversations::InternalTicketService
     contact_inbox = ContactInboxBuilder.new(contact: @contact, inbox: @inbox).perform
     conversation = Conversation.create!(
       account_id: @inbox.account_id, inbox_id: @inbox.id, contact_id: @contact.id, contact_inbox_id: contact_inbox.id,
-      team: @params[:team], assignee: @params[:assignee], priority: @params[:priority].presence,
-      custom_attributes: (@params[:custom_attributes] || {}).to_h
+      team: @params[:team], priority: @params[:priority].presence, custom_attributes: (@params[:custom_attributes] || {}).to_h
     )
+    # Depois do time, como na atribuição pela tela: o responsável escolhido fica
+    # mesmo que o time dele seja outro (criar já com os dois o descartaria).
+    conversation.update!(assignee: @params[:assignee]) if @params[:assignee]
     conversation.reload
   end
 
