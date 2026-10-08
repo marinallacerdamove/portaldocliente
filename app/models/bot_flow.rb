@@ -40,6 +40,10 @@ class BotFlow < ApplicationRecord
     'cnpj_lookup' => ['source_variable'],
     'receita_cnpj_lookup' => ['source_variable']
   }.freeze
+  # Únicas ações que o nó "Ação do Chatwoot" pode executar (as que o
+  # ChatwootActionPanel.vue oferece, ver BOT_FLOW_CHATWOOT_ACTIONS). O nome vai
+  # pra public_send no BotFlows::Engine, então nada fora desta lista.
+  CHATWOOT_ACTIONS = %w[assign_team add_label set_custom_attribute resolve_conversation].freeze
 
   validates :name, presence: true
   validates :account_id, presence: true
@@ -73,7 +77,14 @@ class BotFlow < ApplicationRecord
 
       missing = NODE_REQUIRED_FIELDS[type] - node.keys
       errors.add(:nodes, "node #{index}: missing #{missing.join(', ')}") if missing.any?
+      validate_chatwoot_action(node, index) if type == 'chatwoot_action'
     end
+  end
+
+  def validate_chatwoot_action(node, index)
+    return if CHATWOOT_ACTIONS.include?(node['action_name'])
+
+    errors.add(:nodes, "node #{index}: action '#{node['action_name']}' not supported")
   end
 
   def json_edges_format

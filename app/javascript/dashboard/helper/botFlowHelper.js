@@ -11,6 +11,15 @@ export const BOT_FLOW_NODE_TYPES = {
   RECEITA_CNPJ_LOOKUP: 'receita_cnpj_lookup',
 };
 
+// Ações do nó "Ação do Chatwoot". O servidor só aceita estas
+// (BotFlow::CHATWOOT_ACTIONS): ação nova entra nas duas listas.
+export const BOT_FLOW_CHATWOOT_ACTIONS = Object.freeze([
+  'assign_team',
+  'add_label',
+  'set_custom_attribute',
+  'resolve_conversation',
+]);
+
 export const BOT_FLOW_ADDABLE_NODE_TYPES = [
   BOT_FLOW_NODE_TYPES.SEND_MESSAGE,
   BOT_FLOW_NODE_TYPES.MENU,

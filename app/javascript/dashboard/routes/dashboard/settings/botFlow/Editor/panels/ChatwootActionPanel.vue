@@ -7,6 +7,7 @@ import SingleSelect from 'dashboard/components-next/filter/inputs/SingleSelect.v
 import MultiSelect from 'dashboard/components-next/filter/inputs/MultiSelect.vue';
 import NextInput from 'dashboard/components-next/input/Input.vue';
 import InspectorSection from '../components/InspectorSection.vue';
+import { BOT_FLOW_CHATWOOT_ACTIONS } from 'dashboard/helper/botFlowHelper';
 
 const modelValue = defineModel({ type: Object, required: true });
 const { t } = useI18n();
@@ -21,12 +22,7 @@ onMounted(() => {
 });
 
 const actionOptions = computed(() =>
-  [
-    'assign_team',
-    'add_label',
-    'set_custom_attribute',
-    'resolve_conversation',
-  ].map(id => ({
+  BOT_FLOW_CHATWOOT_ACTIONS.map(id => ({
     id,
     name: t(
       `BOT_FLOW.EDITOR.PANEL.CHATWOOT_ACTION.ACTIONS.${id.toUpperCase()}`

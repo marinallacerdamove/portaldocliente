@@ -158,7 +158,10 @@ class BotFlows::Engine
     nil
   end
 
+  # Fluxo gravado antes da validação do model também não chama nada fora da lista.
   def run_chatwoot_action(node)
+    return unless BotFlow::CHATWOOT_ACTIONS.include?(node['action_name'])
+
     BotFlows::ActionExecutor.new(@conversation).public_send(node['action_name'], node['action_params'])
   end
 
