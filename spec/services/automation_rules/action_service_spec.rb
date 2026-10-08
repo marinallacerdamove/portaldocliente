@@ -217,5 +217,21 @@ RSpec.describe AutomationRules::ActionService do
         expect(conversation.reload.assignee).to eq(agent)
       end
     end
+
+    # PATCH LOCAL (fork) - gatilho "Criar novo ticket filho" do Movidesk
+    describe '#perform with create_child_ticket action' do
+      let!(:internal_inbox) { create(:inbox, account: account, name: TicketContract::INTERNAL_TICKETS_INBOX_NAME) }
+
+      before { rule.update!(actions: [{ action_name: 'create_child_ticket', action_params: [nil] }]) }
+
+      it 'creates a linked child ticket in the internal tickets inbox' do
+        described_class.new(rule, account, conversation).perform
+
+        child = internal_inbox.conversations.last
+        expect(child.contact).to eq(conversation.contact)
+        expect(child.custom_attributes['ticket_pai_id']).to eq(conversation.display_id.to_s)
+        expect(conversation.reload.custom_attributes['ticket_filhos_ids']).to eq(child.display_id.to_s)
+      end
+    end
   end
 end

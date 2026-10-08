@@ -177,6 +177,7 @@ Rails.application.routes.draw do
           namespace :channels do
             resource :twilio_channel, only: [:create]
           end
+          resources :internal_tickets, only: [:create] # PATCH LOCAL (fork) - ticket criado numa chamada só
           resources :conversations, only: [:index, :create, :show, :update, :destroy] do
             collection do
               get :meta
@@ -197,6 +198,7 @@ Rails.application.routes.draw do
               resource :direct_uploads, only: [:create]
               # PATCH LOCAL (fork) - "Cadastrar contato" (Portal/Chatwoot)
               resource :portal_contact_registration, only: [:create]
+              resource :ticket_link, only: [:create] # PATCH LOCAL (fork) - vínculo pai/filho
               resource :draft_messages, only: [:show, :update, :destroy]
             end
             member do

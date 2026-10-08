@@ -81,16 +81,14 @@ export function useConversationCustomFields(conversation) {
   const load = () =>
     Promise.all([fetchList('customFields'), fetchList('fieldRules')]);
 
+  // campos_adicionais é um hash só: vai inteiro, as outras chaves não.
   const saveValue = (key, value) => {
     const next = { ...values.value };
     if (isEmptyValue(value)) delete next[key];
     else next[key] = value;
-    return store.dispatch('updateCustomAttributes', {
+    return store.dispatch('mergeCustomAttributes', {
       conversationId: conversation.value.id,
-      customAttributes: {
-        ...attributes.value,
-        [CUSTOM_FIELDS_ATTRIBUTE_KEY]: next,
-      },
+      changes: { [CUSTOM_FIELDS_ATTRIBUTE_KEY]: next },
     });
   };
 

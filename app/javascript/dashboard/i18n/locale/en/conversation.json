@@ -579,6 +579,11 @@
     "CLOSE_BUTTON": "Close",
     "LINK_SUCCESS": "Link created!",
     "LINK_ERROR": "Error linking the ticket.",
+    "LINK_ERRORS": {
+      "SELF": "Link error: a ticket cannot be linked to itself.",
+      "CYCLE": "Link refused: it would make a ticket its own ancestor."
+    },
+    "NO_INTERNAL_INBOX": "The \"Tickets Internos\" inbox does not exist in this account, so the ticket cannot be created.",
     "CREATE_SUCCESS": {
       "PARENT": "Parent ticket created!",
       "CHILD": "Child ticket created!"

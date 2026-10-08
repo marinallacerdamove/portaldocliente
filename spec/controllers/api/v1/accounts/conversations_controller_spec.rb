@@ -1362,6 +1362,18 @@ RSpec.describe 'Conversations API', type: :request do
         expect(conversation.reload.custom_attributes).to eq({ 'existing_key' => 'keep', 'user_id' => 1001 })
       end
 
+      # PATCH LOCAL (fork) - remove junto com merge
+      it 'removes the listed keys in the same merge' do
+        conversation.update!(custom_attributes: { existing_key: 'keep', servico: 'Antigo', user_id: 1 })
+
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/custom_attributes",
+             headers: agent.create_new_auth_token,
+             params: { custom_attributes: { user_id: 1001 }, merge: true, remove: ['servico'] },
+             as: :json
+
+        expect(conversation.reload.custom_attributes).to eq({ 'existing_key' => 'keep', 'user_id' => 1001 })
+      end
+
       it 'replaces custom attributes by default' do
         conversation.update!(custom_attributes: { existing_key: 'gone' })
 

@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
-import ConversationApi from 'dashboard/api/conversations';
+import TicketsAPI from 'dashboard/api/tickets';
 import MultiselectDropdown from 'shared/components/ui/MultiselectDropdown.vue';
 import ContactDetailsItem from './ContactDetailsItem.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
@@ -12,6 +12,16 @@ import Dialog from 'dashboard/components-next/dialog/Dialog.vue';
 import TicketVisibilityToggle from 'dashboard/components-next/NewConversation/TicketVisibilityToggle.vue';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import { INTERNAL_TICKETS_INBOX_NAME } from 'dashboard/composables/useTicketCatalog';
+import {
+  ASSUNTO_ATTRIBUTE_KEY,
+  TICKET_ID_EXTERNO_ATTRIBUTE_KEY,
+} from 'dashboard/constants/ticketDetailAttributes';
+
+// Motivo do 422 do vínculo (Conversations::TicketLinkService::InvalidLink).
+const LINK_ERRORS = {
+  self: 'TICKET_LINK_DIALOG.LINK_ERRORS.SELF',
+  cycle: 'TICKET_LINK_DIALOG.LINK_ERRORS.CYCLE',
+};
 
 const { t } = useI18n();
 const store = useStore();
@@ -47,7 +57,8 @@ const canCreateInternalTicket = computed(
   () =>
     !!internalTicketTeam.value &&
     !!internalTicketMessage.value.trim() &&
-    !!targetInbox.value
+    !!targetInbox.value &&
+    !isCreatingInternalTicket.value
 );
 const showCreateForm = computed(
   () => linkMode.value === 'newChild' || linkMode.value === 'newParent'
@@ -118,55 +129,21 @@ const searchExistingTicket = async () => {
   }
 };
 
-const linkExistingTicket = async pickedSummary => {
-  const current = currentChat.value;
+// O servidor grava as duas pontas juntas e tira o ticket do pai antigo
+// (Conversations::TicketLinkService); vínculo que faria ciclo volta com erro.
+const linkExistingTicket = async picked => {
   isLinkingExisting.value = true;
   try {
-    // Search results don't include custom_attributes — fetch the full
-    // record first so we don't clobber whatever it already has set.
-    const { data: picked } = await ConversationApi.show(pickedSummary.id);
-
-    if (linkMode.value === 'existingChild') {
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: picked.id,
-        customAttributes: {
-          ...(picked.custom_attributes || {}),
-          ticket_pai_id: String(current.id),
-        },
-      });
-      const existing = (current.custom_attributes || {}).ticket_filhos_ids;
-      const ids = existing ? existing.split(',') : [];
-      if (!ids.includes(String(picked.id))) ids.push(String(picked.id));
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: current.id,
-        customAttributes: {
-          ...(current.custom_attributes || {}),
-          ticket_filhos_ids: ids.join(','),
-        },
-      });
-    } else {
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: current.id,
-        customAttributes: {
-          ...(current.custom_attributes || {}),
-          ticket_pai_id: String(picked.id),
-        },
-      });
-      const existing = (picked.custom_attributes || {}).ticket_filhos_ids;
-      const ids = existing ? existing.split(',') : [];
-      if (!ids.includes(String(current.id))) ids.push(String(current.id));
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: picked.id,
-        customAttributes: {
-          ...(picked.custom_attributes || {}),
-          ticket_filhos_ids: ids.join(','),
-        },
-      });
-    }
+    await store.dispatch('linkTicket', {
+      conversationId: currentChat.value.id,
+      relation: linkMode.value === 'existingParent' ? 'parent' : 'child',
+      ticketId: picked.id,
+    });
     useAlert(t('TICKET_LINK_DIALOG.LINK_SUCCESS'));
     close();
   } catch (error) {
-    useAlert(t('TICKET_LINK_DIALOG.LINK_ERROR'));
+    const reason = LINK_ERRORS[error.response?.data?.error];
+    useAlert(t(reason || 'TICKET_LINK_DIALOG.LINK_ERROR'));
   } finally {
     isLinkingExisting.value = false;
   }
@@ -174,10 +151,12 @@ const linkExistingTicket = async pickedSummary => {
 
 const SUBJECT_MAX_LENGTH = 150;
 
+// Ticket, time, responsável, assunto, vínculo e o aviso na conversa original
+// numa chamada só (Conversations::InternalTicketService): falhou, nada fica
+// criado e dá pra tentar de novo sem duplicar.
 const onCreateInternalTicket = async () => {
   const targetTeam = internalTicketTeam.value;
-  if (!targetTeam || !internalTicketMessage.value.trim() || !targetInbox.value)
-    return;
+  if (!canCreateInternalTicket.value) return;
 
   const conv = currentChat.value;
   const accountId = route.params.accountId;
@@ -192,8 +171,10 @@ const onCreateInternalTicket = async () => {
       : firstLine;
   // Número do Portal quando a conversa já tem ticket lá - o id da conversa
   // não é o mesmo do ticket.
-  const { ticket_id_externo: protocolo, ticket_id: portalTicketId } =
-    conv.custom_attributes || {};
+  const {
+    [TICKET_ID_EXTERNO_ATTRIBUTE_KEY]: protocolo,
+    ticket_id: portalTicketId,
+  } = conv.custom_attributes || {};
   const originReference = portalTicketId
     ? `do ticket #${portalTicketId} do Portal (conversa #${conv.id})`
     : `da conversa #${conv.id}`;
@@ -213,68 +194,18 @@ const onCreateInternalTicket = async () => {
 
   isCreatingInternalTicket.value = true;
   try {
-    const data = await store.dispatch('contactConversations/create', {
-      params: {
-        inboxId: targetInbox.value.id,
-        contactId: conv.meta.sender.id,
-        message: { content, private: !visibleToClient.value },
+    const { data } = await TicketsAPI.createInternalTicket({
+      inbox_id: targetInbox.value.id,
+      contact_id: conv.meta.sender.id,
+      team_id: targetTeam.id,
+      assignee_id: internalTicketAgent.value?.id,
+      custom_attributes: { [ASSUNTO_ATTRIBUTE_KEY]: assunto },
+      message: { content, private: !visibleToClient.value },
+      link: {
+        conversation_id: conv.id,
+        relation: isParentMode ? 'parent' : 'child',
+        announce: true,
       },
-    });
-
-    await store.dispatch('assignTeam', {
-      conversationId: data.id,
-      teamId: targetTeam.id,
-    });
-
-    if (internalTicketAgent.value) {
-      await store.dispatch('assignAgent', {
-        conversationId: data.id,
-        agentId: internalTicketAgent.value.id,
-      });
-    }
-
-    if (isParentMode) {
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: conv.id,
-        customAttributes: {
-          ...(conv.custom_attributes || {}),
-          ticket_pai_id: String(data.id),
-        },
-      });
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: data.id,
-        customAttributes: {
-          ...(data.custom_attributes || {}),
-          ticket_filhos_ids: String(conv.id),
-          assunto,
-        },
-      });
-    } else {
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: data.id,
-        customAttributes: {
-          ...(data.custom_attributes || {}),
-          ticket_pai_id: String(conv.id),
-          assunto,
-        },
-      });
-
-      const existingChildren = (conv.custom_attributes || {}).ticket_filhos_ids;
-      const childIds = existingChildren ? existingChildren.split(',') : [];
-      childIds.push(String(data.id));
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: conv.id,
-        customAttributes: {
-          ...(conv.custom_attributes || {}),
-          ticket_filhos_ids: childIds.join(','),
-        },
-      });
-    }
-
-    await store.dispatch('createPendingMessageAndSend', {
-      conversationId: conv.id,
-      message: `Ticket ${relationLabel} criado para o time ${targetTeam.name}: ${window.location.origin}/app/accounts/${accountId}/conversations/${data.id}`,
-      private: true,
     });
 
     useAlert(
@@ -371,6 +302,9 @@ defineExpose({ open });
         :label="$t('TICKET_LINK_DIALOG.CREATE_BUTTON')"
         @click="onCreateInternalTicket"
       />
+      <p v-if="!targetInbox" class="text-xs text-n-ruby-11">
+        {{ $t('TICKET_LINK_DIALOG.NO_INTERNAL_INBOX') }}
+      </p>
     </div>
 
     <div v-else-if="showExistingSearch" class="flex flex-col gap-2 w-full">

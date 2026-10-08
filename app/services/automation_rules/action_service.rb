@@ -85,26 +85,22 @@ class AutomationRules::ActionService < ActionService
   end
 
   # PATCH LOCAL (fork) - "Criar novo ticket filho" do Movidesk: conversa nova
-  # na caixa Tickets Internos, mesmo contato, vinculada como filha (mesmos
-  # custom_attributes que o TicketLinkDialog grava) e com a macro aplicada.
-  # O "texto da resposta" da macro vira a primeira nota do ticket filho.
+  # na caixa Tickets Internos, mesmo contato, vinculada como filha
+  # (Conversations::InternalTicketService, o mesmo do TicketLinkDialog) e com
+  # a macro aplicada. O "texto da resposta" da macro vira a primeira nota do
+  # ticket filho.
   def create_child_ticket(params)
     macro = @account.macros.find_by(id: params[0])
     inbox = @account.inboxes.find_by!(name: TicketContract::INTERNAL_TICKETS_INBOX_NAME)
-    contact_inbox = ContactInboxBuilder.new(contact: @conversation.contact, inbox: inbox).perform
-    child = ConversationBuilder.new(params: ActionController::Parameters.new({}), contact_inbox: contact_inbox).perform
-    link_child_ticket(child)
+    child = Conversations::InternalTicketService.new(
+      inbox: inbox, contact: @conversation.contact, user: nil,
+      params: { link: { conversation: @conversation, relation: 'child' } }
+    ).perform
     return unless macro
 
     user = @conversation.assignee || @account.administrators.first
     fill_child_description(child, macro, user)
     Macros::ExecutionService.new(macro, child, user).perform
-  end
-
-  def link_child_ticket(child)
-    child.update!(custom_attributes: child.custom_attributes.merge('ticket_pai_id' => @conversation.display_id.to_s))
-    children = @conversation.custom_attributes['ticket_filhos_ids'].to_s.split(',') << child.display_id.to_s
-    @conversation.update!(custom_attributes: @conversation.custom_attributes.merge('ticket_filhos_ids' => children.uniq.join(',')))
   end
 
   def fill_child_description(child, macro, user)

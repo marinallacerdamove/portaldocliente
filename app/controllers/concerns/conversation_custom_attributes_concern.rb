@@ -5,6 +5,8 @@ module ConversationCustomAttributesConcern
     # When `merge` is truthy, only the keys sent are updated and the rest are kept, matching the contacts endpoint.
     # Replace stays the default so existing integrations are unaffected.
     attributes = @conversation.custom_attributes.merge(attributes || {}) if ActiveModel::Type::Boolean.new.cast(params[:merge])
+    # PATCH LOCAL (fork) - `remove` (junto com merge): chaves apagadas na mesma gravação.
+    attributes = attributes.except(*params.permit(remove: [])[:remove]) if params[:remove].present?
     @conversation.custom_attributes = attributes
     @conversation.save!
     log_checklist_activity(checklist_before)

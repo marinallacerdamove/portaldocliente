@@ -533,6 +533,11 @@
     "CLOSE_BUTTON": "Fechar",
     "LINK_SUCCESS": "Vínculo criado!",
     "LINK_ERROR": "Erro ao vincular o ticket.",
+    "LINK_ERRORS": {
+      "SELF": "Um ticket não pode ser vinculado a ele mesmo.",
+      "CYCLE": "Vínculo recusado: o ticket viraria pai de quem já é pai dele."
+    },
+    "NO_INTERNAL_INBOX": "A caixa \"Tickets Internos\" não existe nesta conta, então o ticket não pode ser criado.",
     "CREATE_SUCCESS": {
       "PARENT": "Ticket pai criado!",
       "CHILD": "Ticket filho criado!"

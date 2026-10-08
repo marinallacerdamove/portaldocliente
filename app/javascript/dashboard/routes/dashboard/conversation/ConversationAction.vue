@@ -339,7 +339,7 @@ export default {
         return;
       }
       if (value === current) return;
-      this.onUpdatePortalAttribute(ASSUNTO_ATTRIBUTE_KEY, value);
+      this.saveCatalogAttributes({ [ASSUNTO_ATTRIBUTE_KEY]: value });
     },
     // PATCH LOCAL (fork) - ponte entre as listas {id, name} e o ComboBox
     // {value, label}. Escolher de novo o valor atual limpa o campo: o
@@ -493,7 +493,7 @@ export default {
     },
 
     onSelectEmpresa(value) {
-      this.onUpdatePortalAttribute(EMPRESA_ATTRIBUTE_KEY, value);
+      this.saveCatalogAttributes({ [EMPRESA_ATTRIBUTE_KEY]: value });
     },
 
     onClickAssignTipoDeSolicitacao(selectedItem) {
@@ -501,25 +501,6 @@ export default {
       this.saveCatalogAttributes({
         [TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY]: isSame ? '' : selectedItem.id,
       });
-    },
-
-    // Handler genérico reaproveitado por Tipo de solicitação e Empresa -
-    // seguem o mesmo formato de update de custom attribute de conversa.
-    async onUpdatePortalAttribute(key, value) {
-      const conversationId = this.currentChat.id;
-      const updatedAttributes = {
-        ...(this.currentChat.custom_attributes || {}),
-        [key]: value,
-      };
-      try {
-        await this.$store.dispatch('updateCustomAttributes', {
-          conversationId,
-          customAttributes: updatedAttributes,
-        });
-        useAlert(this.$t('CUSTOM_ATTRIBUTES.FORM.UPDATE.SUCCESS'));
-      } catch (error) {
-        useAlert(this.$t('CUSTOM_ATTRIBUTES.FORM.UPDATE.ERROR'));
-      }
     },
   },
 };

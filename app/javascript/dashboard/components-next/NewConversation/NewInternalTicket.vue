@@ -1,11 +1,12 @@
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import { debounce } from '@chatwoot/utils';
 import FileUpload from 'vue-upload-component';
 import { useFileUpload } from 'dashboard/composables/useFileUpload';
+import TicketsAPI from 'dashboard/api/tickets';
 import {
   createContactSearcher,
   prepareAttachmentPayload,
@@ -281,24 +282,28 @@ const onMessageInput = () => {
   formState.message = messageEditorRef.value?.innerHTML || '';
 };
 
+// O Chatwoot guarda e mostra mensagem como markdown, não HTML: vai o texto do
+// editor (innerText já troca <div>/<br> por quebra de linha e ignora o
+// preview <img> das imagens coladas, que viajam como anexo).
+const messageEditorText = () =>
+  (messageEditorRef.value?.innerText || '').replace(/\u00a0/g, ' ').trim();
+
 // Preview local (blob:) da imagem colada, inserido no ponto do cursor pra
 // dar a mesma sensação do editor do Portal - "a imagem fica no corpo da
-// mensagem" enquanto escreve. A URL blob: só existe nesta aba, então essa
-// tag <img> é removida do texto no onSubmit (stripPastePreviews); o arquivo
-// de verdade sempre viaja como anexo real (onFileUpload abaixo), que é quem
-// garante que a imagem apareça de fato pra quem for ver o ticket depois.
+// mensagem" enquanto escreve. A URL blob: só existe nesta aba e fica fora do
+// texto enviado (messageEditorText); o arquivo de verdade sempre viaja como
+// anexo real (onFileUpload abaixo), que é quem garante que a imagem apareça
+// de fato pra quem for ver o ticket depois.
 const pasteAttachmentId = ref(0);
 const pastedImagePreviews = [];
-const PASTE_PREVIEW_ATTR = 'data-paste-preview-key';
 
-function insertImageAtCursor(url, key) {
+function insertImageAtCursor(url) {
   const editor = messageEditorRef.value;
   if (!editor) return;
   editor.focus();
 
   const img = document.createElement('img');
   img.src = url;
-  img.setAttribute(PASTE_PREVIEW_ATTR, key);
   img.className = 'max-w-full max-h-64 rounded-md my-1 align-middle';
 
   const selection = window.getSelection();
@@ -336,7 +341,7 @@ const onPasteMessage = e => {
     if (file.type.startsWith('image/')) {
       const previewUrl = URL.createObjectURL(file);
       pastedImagePreviews.push({ key: id, url: previewUrl });
-      insertImageAtCursor(previewUrl, id);
+      insertImageAtCursor(previewUrl);
       onMessageInput();
     }
 
@@ -349,12 +354,6 @@ const onPasteMessage = e => {
     });
   });
 };
-
-const stripPastePreviews = html =>
-  html.replace(
-    new RegExp(`<img[^>]*${PASTE_PREVIEW_ATTR}="[^"]*"[^>]*>`, 'g'),
-    ''
-  );
 
 onMounted(() => {
   store.dispatch('agents/get');
@@ -424,14 +423,11 @@ const reset = () => {
   sourceConversationId.value = null;
 };
 
-// prefill vem de fora (ex.: seleção de mensagens no Message.vue) já resolvido
-// - contato no mesmo formato camelCase que selectContact() espera. Quando
-// vem de uma seleção de mensagens (prefill.selectedMessages), o editor de
-// mensagem fica vazio de propósito - essas mensagens não vão pro texto
-// livre, são copiadas uma a uma pelo backend depois que o ticket é criado
-// (ver onSubmit); o campo de texto livre sobra como nota opcional do agente
-// que está criando o ticket, se ele quiser escrever algo além do que foi
-// importado.
+// prefill vem da seleção de mensagens (MessagesView.vue) já resolvido -
+// contato no mesmo formato camelCase que selectContact() espera. As
+// mensagens selecionadas não vão pro texto livre: o backend copia uma a uma
+// junto com a criação do ticket (ver onSubmit); o campo de texto livre sobra
+// como nota opcional do agente que está criando o ticket.
 const open = (prefill = null) => {
   reset();
   dialogRef.value?.open();
@@ -442,19 +438,9 @@ const open = (prefill = null) => {
     formState.contact = prefill.contact;
     query.value = prefill.contact.name || '';
   }
-  if (prefill.subject) formState.subject = prefill.subject;
   if (prefill.selectedMessages?.length) {
     selectedMessages.value = prefill.selectedMessages;
     sourceConversationId.value = prefill.sourceConversationId || null;
-    return;
-  }
-  if (prefill.message) {
-    formState.message = prefill.message;
-    nextTick(() => {
-      if (messageEditorRef.value) {
-        messageEditorRef.value.innerHTML = prefill.message;
-      }
-    });
   }
 };
 
@@ -466,16 +452,14 @@ const close = () => {
 // que vira a PRIMEIRA mensagem do ticket quando ele nasce de uma seleção de
 // mensagens - dá cara de "ticket" (tipo Movidesk) em vez de parecer uma nota
 // solta. Markdown (não HTML) porque é assim que toda mensagem nativa do
-// Chatwoot é guardada/renderizada - reaproveita o mesmo pipeline de
-// formatação que já sabe exibir **negrito** corretamente, sem escapar nada.
-// displayId só existe depois que a conversa é criada (por isso onSubmit
-// escreve esse bloco 1x sem ele, pra satisfazer o "precisa ter conteúdo" da
-// criação, e reescreve 1x com ele logo em seguida via editMessage).
-const buildTicketSummary = displayId => {
+// Chatwoot é guardada/renderizada. O número só existe quando o servidor cria
+// a conversa: vai como variável ({{conversation.display_id}}), resolvida na
+// gravação da mensagem.
+const buildTicketSummary = note => {
   const lines = [];
   if (formState.subject.trim())
     lines.push(`**Assunto:** ${formState.subject.trim()}`);
-  if (displayId) lines.push(`**Protocolo:** #${displayId}`);
+  lines.push('**Protocolo:** #{{conversation.display_id}}');
   const company = formState.contact?.additionalAttributes?.companyName;
   if (company) lines.push(`**Empresa:** ${company}`);
   if (formState.tipo?.id)
@@ -486,131 +470,82 @@ const buildTicketSummary = displayId => {
     lines.push(`**Prioridade:** ${formState.urgencia.name}`);
   if (formState.team) lines.push(`**Equipe:** ${formState.team.name}`);
   if (formState.agent) lines.push(`**Responsável:** ${formState.agent.name}`);
-
-  const note = stripPastePreviews(formState.message).trim();
   if (note) lines.push('', `**Nota:**\n${note}`);
 
   return lines.join('\n');
 };
 
+const buildCustomAttributes = () => {
+  const customAttributes = {};
+  if (formState.subject.trim())
+    customAttributes[ASSUNTO_ATTRIBUTE_KEY] = formState.subject.trim();
+  if (formState.servico?.id)
+    customAttributes[SERVICO_ATTRIBUTE_KEY] = formState.servico.id;
+  if (formState.tipo?.id)
+    customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY] = formState.tipo.id;
+  if (formState.prazoResolucao)
+    customAttributes.prazo_resolucao = formState.prazoResolucao;
+  // Só vai classificação de campo que ainda está aparecendo (trocar o
+  // serviço esconde as antigas).
+  const customFieldValues = Object.fromEntries(
+    classificationItems.value
+      .filter(({ field }) => formState.classification[field.key])
+      .map(({ field }) => [field.key, formState.classification[field.key]])
+  );
+  const qaDevValues = {
+    liberacoes: formState.liberacoes?.id,
+    issue_jira: formState.issueJira.trim(),
+    decisao_po: formState.decisaoPo?.id,
+    status_da_cobranca: formState.statusCobranca?.id,
+    data_entrega: formState.dataEntrega,
+    data_de_atualizacao_do_sistema: formState.dataAtualizacaoSistema,
+  };
+  Object.entries(qaDevValues).forEach(([key, value]) => {
+    if (value) customFieldValues[key] = value;
+  });
+  if (Object.keys(customFieldValues).length)
+    customAttributes[CUSTOM_FIELDS_ATTRIBUTE_KEY] = customFieldValues;
+  // Vínculo com a conversa de origem, pra quem for ler o ticket depois
+  // conseguir voltar pra conversa nativa sem precisar procurar.
+  if (selectedMessages.value.length && sourceConversationId.value) {
+    customAttributes.ticket_interno_origem_conversation_id =
+      sourceConversationId.value;
+  }
+  return customAttributes;
+};
+
+// Tudo numa chamada só (Conversations::InternalTicketService): falhou, nada
+// fica criado e o agente pode salvar de novo sem duplicar o ticket.
 const onSubmit = async () => {
   if (!canSubmit.value) return;
   isSubmitting.value = true;
 
   const isFromSelection = selectedMessages.value.length > 0;
-
-  let initialContent;
-  if (isFromSelection) {
-    initialContent = buildTicketSummary(null);
-  } else {
-    const contentLines = [];
-    if (formState.subject.trim()) contentLines.push(formState.subject.trim());
-    // O preview <img src="blob:..."> só existe nesta aba - a imagem de verdade
-    // já viaja como anexo (attachedFiles), então o texto enviado não deve
-    // carregar essa referência local sem sentido pra quem for ler o ticket.
-    contentLines.push(stripPastePreviews(formState.message).trim());
-    initialContent = contentLines.join('\n\n');
-  }
+  const note = messageEditorText();
+  const content = isFromSelection
+    ? buildTicketSummary(note)
+    : [formState.subject.trim(), note].filter(Boolean).join('\n\n');
 
   try {
-    const data = await store.dispatch('contactConversations/create', {
-      params: {
-        inboxId: formState.inbox.id,
-        contactId: formState.contact.id,
-        message: {
-          content: initialContent,
-          private: !formState.visibleToClient,
-        },
-        files: prepareAttachmentPayload(attachedFiles.value, false),
+    const { data } = await TicketsAPI.createInternalTicket(
+      {
+        inbox_id: formState.inbox.id,
+        contact_id: formState.contact.id,
+        team_id: formState.team.id,
+        assignee_id: formState.agent?.id,
+        priority: formState.urgencia?.id || undefined,
+        custom_attributes: buildCustomAttributes(),
+        message: { content, private: !formState.visibleToClient },
+        copy: isFromSelection
+          ? {
+              source_conversation_id: sourceConversationId.value,
+              message_ids: selectedMessages.value.map(message => message.id),
+            }
+          : undefined,
+        watcher_ids: formState.ccAgentIds,
       },
-    });
-
-    if (isFromSelection) {
-      const summaryMessageId = data.messages?.[0]?.id;
-      if (summaryMessageId) {
-        await store.dispatch('editMessage', {
-          conversationId: data.id,
-          messageId: summaryMessageId,
-          content: buildTicketSummary(data.id),
-        });
-      }
-      await store.dispatch('copyMessages', {
-        conversationId: data.id,
-        sourceConversationId: sourceConversationId.value,
-        messageIds: selectedMessages.value.map(message => message.id),
-      });
-    }
-
-    await store.dispatch('assignTeam', {
-      conversationId: data.id,
-      teamId: formState.team.id,
-    });
-
-    if (formState.agent) {
-      await store.dispatch('assignAgent', {
-        conversationId: data.id,
-        agentId: formState.agent.id,
-      });
-    }
-
-    if (formState.urgencia?.id) {
-      await store.dispatch('assignPriority', {
-        conversationId: data.id,
-        priority: formState.urgencia.id,
-      });
-    }
-
-    // Parte do que a criação já gravou (ex.: "empresa" vinda da empresa do
-    // contato): o endpoint substitui o hash inteiro, e mandar só os campos do
-    // formulário apagava o resto. Mesmo padrão do TicketLinkDialog.
-    const customAttributes = { ...(data.custom_attributes || {}) };
-    if (formState.subject.trim())
-      customAttributes[ASSUNTO_ATTRIBUTE_KEY] = formState.subject.trim();
-    if (formState.servico?.id)
-      customAttributes[SERVICO_ATTRIBUTE_KEY] = formState.servico.id;
-    if (formState.tipo?.id)
-      customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY] = formState.tipo.id;
-    if (formState.prazoResolucao)
-      customAttributes.prazo_resolucao = formState.prazoResolucao;
-    // Só vai classificação de campo que ainda está aparecendo (trocar o
-    // serviço esconde as antigas).
-    const customFieldValues = Object.fromEntries(
-      classificationItems.value
-        .filter(({ field }) => formState.classification[field.key])
-        .map(({ field }) => [field.key, formState.classification[field.key]])
+      prepareAttachmentPayload(attachedFiles.value, false)
     );
-    const qaDevValues = {
-      liberacoes: formState.liberacoes?.id,
-      issue_jira: formState.issueJira.trim(),
-      decisao_po: formState.decisaoPo?.id,
-      status_da_cobranca: formState.statusCobranca?.id,
-      data_entrega: formState.dataEntrega,
-      data_de_atualizacao_do_sistema: formState.dataAtualizacaoSistema,
-    };
-    Object.entries(qaDevValues).forEach(([key, value]) => {
-      if (value) customFieldValues[key] = value;
-    });
-    if (Object.keys(customFieldValues).length)
-      customAttributes[CUSTOM_FIELDS_ATTRIBUTE_KEY] = customFieldValues;
-    // Vínculo com a conversa de origem, pra quem for ler o ticket depois
-    // conseguir voltar pra conversa nativa sem precisar procurar.
-    if (isFromSelection && sourceConversationId.value) {
-      customAttributes.ticket_interno_origem_conversation_id =
-        sourceConversationId.value;
-    }
-    if (Object.keys(customAttributes).length) {
-      await store.dispatch('updateCustomAttributes', {
-        conversationId: data.id,
-        customAttributes,
-      });
-    }
-
-    if (formState.ccAgentIds.length) {
-      await store.dispatch('conversationWatchers/update', {
-        conversationId: data.id,
-        userIds: formState.ccAgentIds,
-      });
-    }
 
     useAlert(t('NEW_INTERNAL_TICKET_DIALOG.CREATE_SUCCESS'), {
       type: 'link',
