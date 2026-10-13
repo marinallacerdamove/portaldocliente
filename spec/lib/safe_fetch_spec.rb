@@ -279,6 +279,81 @@ RSpec.describe SafeFetch do
       end
     end
 
+    context 'with SAFE_FETCH_ALLOWED_PRIVATE_HOSTS (internal hosts by name, not the whole private network)' do
+      let(:allowed_env) { { 'SAFE_FETCH_ALLOWED_PRIVATE_HOSTS' => 'portal-web, Outro-Interno' } }
+      let(:png_response) do
+        { status: 200, body: File.new(Rails.root.join('spec/assets/avatar.png')), headers: { 'Content-Type' => 'image/png' } }
+      end
+
+      it 'reaches a listed internal host that resolves to a private address' do
+        allow(Resolv).to receive(:getaddresses).with('portal-web').and_return(['172.20.0.5'])
+        stub_request(:get, 'http://portal-web:3000/image.png').to_return(png_response)
+
+        with_modified_env(allowed_env) do
+          expect { described_class.fetch('http://portal-web:3000/image.png') { nil } }.not_to raise_error
+        end
+      end
+
+      it 'matches the name exactly and ignores case' do
+        allow(Resolv).to receive(:getaddresses).with('OUTRO-interno').and_return(['172.20.0.6'])
+        stub_request(:get, 'http://outro-interno/image.png').to_return(png_response)
+
+        with_modified_env(allowed_env) do
+          expect { described_class.fetch('http://OUTRO-interno/image.png') { nil } }.not_to raise_error
+        end
+      end
+
+      it 'still blocks private hosts that are not listed, including look-alike names' do
+        allow(Resolv).to receive(:getaddresses).with('portal-web.evil.example.com').and_return(['10.0.0.9'])
+        allow(Resolv).to receive(:getaddresses).with('postgres-chatwoot').and_return(['172.21.0.2'])
+
+        with_modified_env(allowed_env) do
+          %w[http://portal-web.evil.example.com/x http://postgres-chatwoot:5432/x].each do |blocked|
+            expect { described_class.fetch(blocked) { nil } }.to raise_error(SafeFetch::UnsafeUrlError)
+          end
+        end
+      end
+
+      it 'still blocks the cloud metadata address, loopback and private IP literals' do
+        with_modified_env(allowed_env) do
+          %w[http://169.254.169.254/latest/meta-data/ http://127.0.0.1/x http://10.0.0.1/x http://192.168.0.85/x].each do |blocked|
+            expect { described_class.fetch(blocked) { nil } }.to raise_error(SafeFetch::UnsafeUrlError)
+          end
+        end
+      end
+
+      it 'does not follow a redirect from a listed host to an unlisted one' do
+        allow(Resolv).to receive(:getaddresses).with('portal-web').and_return(['172.20.0.5'])
+        stub_request(:get, 'http://portal-web:3000/redirect').to_return(status: 302,
+                                                                        headers: { 'Location' => 'http://169.254.169.254/latest/meta-data/' })
+        stub_request(:get, 'http://169.254.169.254/latest/meta-data/').to_return(png_response)
+
+        with_modified_env(allowed_env) do
+          expect { described_class.fetch('http://portal-web:3000/redirect') { nil } }.to raise_error(SafeFetch::UnsafeUrlError)
+        end
+        expect(WebMock).not_to have_requested(:get, 'http://169.254.169.254/latest/meta-data/')
+      end
+
+      it 'follows a redirect between two listed hosts' do
+        allow(Resolv).to receive(:getaddresses).with('portal-web').and_return(['172.20.0.5'])
+        allow(Resolv).to receive(:getaddresses).with('outro-interno').and_return(['172.20.0.6'])
+        stub_request(:get, 'http://portal-web:3000/redirect').to_return(status: 302, headers: { 'Location' => 'http://outro-interno/image.png' })
+        stub_request(:get, 'http://outro-interno/image.png').to_return(png_response)
+
+        with_modified_env(allowed_env) do
+          expect { described_class.fetch('http://portal-web:3000/redirect') { nil } }.not_to raise_error
+        end
+      end
+
+      it 'is off when the variable is empty' do
+        allow(Resolv).to receive(:getaddresses).with('portal-web').and_return(['172.20.0.5'])
+
+        with_modified_env('SAFE_FETCH_ALLOWED_PRIVATE_HOSTS' => '') do
+          expect { described_class.fetch('http://portal-web:3000/image.png') { nil } }.to raise_error(SafeFetch::UnsafeUrlError)
+        end
+      end
+    end
+
     context 'with content-type allowlist' do
       it 'rejects text/html responses' do
         stub_request(:get, url).to_return(

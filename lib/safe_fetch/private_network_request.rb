@@ -15,6 +15,7 @@ class SafeFetch::PrivateNetworkRequest
       response, next_url = fetch_once(uri, resolved_addresses(uri.hostname).sample.to_s, original_uri, &)
       return response if next_url.nil?
 
+      ensure_redirect_allowed!(next_url)
       url = next_url
     end
 
@@ -24,6 +25,17 @@ class SafeFetch::PrivateNetworkRequest
   private
 
   attr_reader :options
+
+  # PATCH LOCAL (fork) - no modo de lista (SAFE_FETCH_ALLOWED_PRIVATE_HOSTS) um host interno
+  # permitido não pode redirecionar para fora da lista: o redirecionamento seria seguido sem filtro.
+  def ensure_redirect_allowed!(next_url)
+    return if SafeFetch.allow_private_network?
+
+    host = URI(next_url).hostname
+    return if SafeFetch.private_host_allowed?(host)
+
+    raise SsrfFilter::PrivateIPAddress, "redirect from an allowed private host to '#{host}' is not allowed"
+  end
 
   def validate_scheme!(uri)
     return if SsrfFilter::DEFAULT_SCHEME_WHITELIST.include?(uri.scheme)

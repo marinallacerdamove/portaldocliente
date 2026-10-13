@@ -36,4 +36,14 @@ module SafeFetch
   def self.allow_private_network?
     ActiveModel::Type::Boolean.new.cast(ENV.fetch('SAFE_FETCH_ALLOW_PRIVATE_NETWORK', false))
   end
+
+  # PATCH LOCAL (fork) - SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true libera TODA a rede privada (inclusive
+  # o endereço de metadados da nuvem) para qualquer URL que um admin ou agente informe (webhook,
+  # avatar por URL, upload por URL, nó "Chamar webhook" do bot). Em produção na nuvem o Chatwoot só
+  # precisa chegar ao Portal: SAFE_FETCH_ALLOWED_PRIVATE_HOSTS lista, por nome exato (separados por
+  # vírgula), os únicos hosts internos permitidos; todo o resto continua passando pelo SsrfFilter.
+  def self.private_host_allowed?(host)
+    allowed = ENV.fetch('SAFE_FETCH_ALLOWED_PRIVATE_HOSTS', '').split(',').filter_map { |name| name.strip.downcase.presence }
+    allowed.include?(host.to_s.downcase)
+  end
 end
