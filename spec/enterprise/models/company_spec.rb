@@ -93,4 +93,117 @@ RSpec.describe Company, type: :model do
       expect(company.update(custom_attributes: { 'cnpj' => 'continua fora' })).to be(false)
     end
   end
+
+  # PATCH LOCAL (fork) - CPF/CNPJ é a chave de ligação com o Portal
+  describe 'cnpj uniqueness per account' do
+    let(:account) { create(:account) }
+
+    before { account.companies.create!(name: 'ACME', custom_attributes: { 'cnpj' => '12.345.678/0001-95' }) }
+
+    it 'rejects the same key written with other punctuation, in the same account' do
+      duplicate = account.companies.new(name: 'Outra', custom_attributes: { 'cnpj' => '12345678000195' })
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:base].first).to include('ACME')
+    end
+
+    it 'ignores letter case of an alphanumeric CNPJ' do
+      account.companies.create!(name: 'Alfa', custom_attributes: { 'cnpj' => '12.ABC.345/01DE-35' })
+
+      expect(account.companies.new(name: 'Alfa 2', custom_attributes: { 'cnpj' => '12abc34501de35' })).not_to be_valid
+    end
+
+    it 'allows the same key in another account' do
+      other_account = create(:account)
+
+      expect(other_account.companies.new(name: 'ACME', custom_attributes: { 'cnpj' => '12.345.678/0001-95' })).to be_valid
+    end
+
+    it 'lets the company itself be saved again' do
+      company = account.companies.find_by(name: 'ACME')
+
+      expect(company.update(description: 'nova descricao')).to be(true)
+    end
+
+    it 'allows any number of companies without CPF/CNPJ' do
+      account.companies.create!(name: 'Sem 1')
+
+      expect(account.companies.new(name: 'Sem 2')).to be_valid
+    end
+  end
+
+  describe 'Portal sync events' do
+    let(:account) { create(:account) }
+    let(:dispatcher) { Rails.configuration.dispatcher }
+
+    before { allow(dispatcher).to receive(:dispatch) }
+
+    it 'dispatches company.created on create' do
+      company = account.companies.create!(name: 'ACME')
+
+      expect(dispatcher).to have_received(:dispatch).with(Events::Types::COMPANY_CREATED, anything, company: company)
+    end
+
+    it 'dispatches company.updated when name or custom attributes change' do
+      company = account.companies.create!(name: 'ACME')
+
+      company.update!(name: 'ACME Ltda')
+      company.update!(custom_attributes: { 'segmento' => 'varejo' })
+
+      expect(dispatcher).to have_received(:dispatch).with(Events::Types::COMPANY_UPDATED, anything, hash_including(company: company)).twice
+    end
+
+    it 'does not dispatch company.updated for attributes the Portal does not mirror' do
+      company = account.companies.create!(name: 'ACME')
+
+      company.update!(description: 'texto', domain: 'acme.com', last_activity_at: Time.zone.now)
+
+      expect(dispatcher).not_to have_received(:dispatch).with(Events::Types::COMPANY_UPDATED, anything, anything)
+    end
+  end
+
+  describe '.sync_empresa_list_attribute!' do
+    let(:account) { create(:account) }
+    let!(:definition) do
+      create(:custom_attribute_definition, account: account, attribute_model: :conversation_attribute,
+                                           attribute_key: 'empresa', attribute_display_type: :list, attribute_values: [])
+    end
+
+    it 'lists the account companies by name, stripped, unique and sorted' do
+      account.companies.create!(name: 'Beta')
+      account.companies.create!(name: 'Alfa ')
+      account.companies.create!(name: 'Alfa')
+
+      described_class.sync_empresa_list_attribute!(account)
+
+      expect(definition.reload.attribute_values).to eq(%w[Alfa Beta])
+    end
+
+    it 'follows company creation, rename and removal on its own' do
+      company = account.companies.create!(name: 'Beta')
+      expect(definition.reload.attribute_values).to eq(['Beta'])
+
+      company.update!(name: 'Zeta')
+      expect(definition.reload.attribute_values).to eq(['Zeta'])
+
+      company.destroy!
+      expect(definition.reload.attribute_values).to eq([])
+    end
+
+    it 'does nothing when the account has no "empresa" conversation attribute' do
+      definition.destroy!
+      other = create(:account)
+      other.companies.create!(name: 'Alfa')
+
+      expect { described_class.sync_empresa_list_attribute!(other) }.not_to raise_error
+    end
+
+    it 'does not touch the list of another account' do
+      other = create(:account)
+      other.companies.create!(name: 'De outra conta')
+      described_class.sync_empresa_list_attribute!(account)
+
+      expect(definition.reload.attribute_values).to eq([])
+    end
+  end
 end
