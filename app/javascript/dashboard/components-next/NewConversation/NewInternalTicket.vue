@@ -593,6 +593,7 @@ defineExpose({ open });
   <slot name="trigger" :open="open" />
   <Dialog
     ref="dialogRef"
+    show-close-button
     :title="t('NEW_INTERNAL_TICKET_DIALOG.TITLE')"
     :description="t('NEW_INTERNAL_TICKET_DIALOG.DESCRIPTION')"
     width="full"

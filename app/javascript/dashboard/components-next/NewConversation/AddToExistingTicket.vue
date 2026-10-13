@@ -118,6 +118,7 @@ defineExpose({ open });
 <template>
   <Dialog
     ref="dialogRef"
+    show-close-button
     :title="t('ADD_TO_TICKET_DIALOG.TITLE')"
     :description="
       t('ADD_TO_TICKET_DIALOG.DESCRIPTION', { count: messageIds.length })

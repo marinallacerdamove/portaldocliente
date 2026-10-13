@@ -111,6 +111,7 @@ const submit = async () => {
       />
       <Dialog
         ref="dialogRef"
+        show-close-button
         :title="$t('PORTAL_CONTACT_REGISTRATION.TITLE')"
         :description="$t('PORTAL_CONTACT_REGISTRATION.DESCRIPTION')"
         :confirm-button-label="$t('PORTAL_CONTACT_REGISTRATION.CONFIRM')"

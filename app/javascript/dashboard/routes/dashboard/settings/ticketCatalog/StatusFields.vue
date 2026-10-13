@@ -4,7 +4,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
-import SelectInput from 'dashboard/components-next/select/Select.vue';
+import SelectInput from 'dashboard/components-next/select/LabeledSelect.vue';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import { STATUS_BASES } from './constants';
 
@@ -31,7 +31,6 @@ const baseOptions = computed(() =>
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-1 sm:max-w-md">
         <SelectInput
-          id="status-base"
           v-model="record.base"
           :label="t('TICKET_CATALOG.STATUSES.FORM.BASE_LABEL')"
           :options="baseOptions"

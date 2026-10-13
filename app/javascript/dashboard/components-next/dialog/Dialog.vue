@@ -51,6 +51,7 @@ const props = defineProps({
   width: {
     type: String,
     default: 'lg',
+    // PATCH LOCAL (fork) - 'full' (95vw) usado pelo "Criar ticket" interno.
     validator: value =>
       ['full', '3xl', '2xl', 'xl', 'lg', 'md', 'sm'].includes(value),
   },
@@ -58,6 +59,13 @@ const props = defineProps({
     type: String,
     default: 'center',
     validator: value => ['center', 'top'].includes(value),
+  },
+  // PATCH LOCAL (fork) - botão X no canto, opt-in (o padrão é o do upstream,
+  // sem X). Usado nos diálogos do Portal, que são longos e não tinham outro
+  // jeito de fechar além de Cancelar ou clicar fora.
+  showCloseButton: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -131,11 +139,13 @@ defineExpose({ open, close });
       <OnClickOutside @trigger="handleClickOutside">
         <form
           ref="dialogContentRef"
-          class="relative flex flex-col w-full h-auto gap-6 p-6 overflow-visible text-start align-middle transition-all duration-300 ease-in-out transform bg-n-alpha-3 backdrop-blur-[100px] shadow-xl rounded-xl"
+          class="flex flex-col w-full h-auto gap-6 p-6 overflow-visible text-start align-middle transition-all duration-300 ease-in-out transform bg-n-alpha-3 backdrop-blur-[100px] shadow-xl rounded-xl"
+          :class="{ relative: showCloseButton }"
           @submit.prevent="confirm"
           @click.stop
         >
           <Button
+            v-if="showCloseButton"
             icon="i-lucide-x"
             variant="ghost"
             color="slate"
@@ -145,7 +155,11 @@ defineExpose({ open, close });
             class="absolute top-3 ltr:right-3 rtl:left-3 !w-7 !h-7"
             @click="close"
           />
-          <div v-if="title || description" class="flex flex-col gap-2 pr-8">
+          <div
+            v-if="title || description"
+            class="flex flex-col gap-2"
+            :class="{ 'pr-8': showCloseButton }"
+          >
             <h3 class="text-base font-medium leading-6 text-n-slate-12">
               {{ title }}
             </h3>

@@ -6,7 +6,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import SelectInput from 'dashboard/components-next/select/Select.vue';
+import SelectInput from 'dashboard/components-next/select/LabeledSelect.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import { OPTION_FIELD_TYPES } from 'dashboard/helper/ticketFieldRules';
 import { FIELD_TYPES } from './constants';
@@ -47,7 +47,6 @@ const optionsText = computed({
     <div class="flex flex-col gap-4">
       <div class="grid gap-4 sm:grid-cols-2">
         <SelectInput
-          id="custom-field-type"
           v-model="record.field_type"
           :label="t('TICKET_CATALOG.CUSTOM_FIELDS.FORM.TYPE_LABEL')"
           :options="typeOptions"

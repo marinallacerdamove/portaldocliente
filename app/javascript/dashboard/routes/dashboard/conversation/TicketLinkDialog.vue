@@ -235,6 +235,7 @@ defineExpose({ open });
 <template>
   <Dialog
     ref="dialogRef"
+    show-close-button
     :title="linkFormTitle"
     width="sm"
     :show-confirm-button="false"

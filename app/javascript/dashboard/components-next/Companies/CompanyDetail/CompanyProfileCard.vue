@@ -16,7 +16,7 @@ import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import Select from 'dashboard/components-next/select/Select.vue';
+import Select from 'dashboard/components-next/select/LabeledSelect.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import { useCompaniesStore } from 'dashboard/stores/companies';

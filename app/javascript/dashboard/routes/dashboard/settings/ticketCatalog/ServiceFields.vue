@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useTicketCatalog } from 'dashboard/composables/useTicketCatalog';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
-import SelectInput from 'dashboard/components-next/select/Select.vue';
+import SelectInput from 'dashboard/components-next/select/LabeledSelect.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import ToggleChips from './ToggleChips.vue';
@@ -112,7 +112,6 @@ const macroOptions = computed(() => [
     </template>
     <div class="flex flex-col gap-4">
       <SelectInput
-        id="service-parent"
         v-model="parentId"
         :label="t('TICKET_CATALOG.SERVICES.FORM.PARENT_LABEL')"
         :options="parentOptions"
@@ -170,13 +169,11 @@ const macroOptions = computed(() => [
       </div>
       <div class="grid gap-4 sm:grid-cols-2">
         <SelectInput
-          id="service-default-category"
           v-model="defaultCategoryId"
           :label="t('TICKET_CATALOG.SERVICES.FORM.DEFAULT_CATEGORY_LABEL')"
           :options="defaultCategoryOptions"
         />
         <SelectInput
-          id="service-default-priority"
           v-model="defaultPriority"
           :label="t('TICKET_CATALOG.SERVICES.FORM.DEFAULT_PRIORITY_LABEL')"
           :options="priorityOptions"
@@ -184,7 +181,6 @@ const macroOptions = computed(() => [
       </div>
       <div class="flex flex-col gap-1 sm:max-w-md">
         <SelectInput
-          id="service-macro"
           v-model="macroId"
           :label="t('TICKET_CATALOG.SERVICES.FORM.MACRO_LABEL')"
           :options="macroOptions"

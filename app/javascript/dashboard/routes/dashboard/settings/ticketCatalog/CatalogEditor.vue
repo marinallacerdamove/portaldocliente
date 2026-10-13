@@ -13,7 +13,7 @@ import { useTicketCatalog } from 'dashboard/composables/useTicketCatalog';
 import Button from 'dashboard/components-next/button/Button.vue';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import SelectInput from 'dashboard/components-next/select/Select.vue';
+import SelectInput from 'dashboard/components-next/select/LabeledSelect.vue';
 import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import ServiceFields from './ServiceFields.vue';
 import CategoryFields from './CategoryFields.vue';
@@ -223,7 +223,6 @@ const submit = async () => {
               />
               <div v-if="hasScope" class="flex flex-col gap-1">
                 <SelectInput
-                  id="catalog-ticket-scope"
                   v-model="record.ticket_scope"
                   :label="t('TICKET_CATALOG.FORM.TICKET_SCOPE_LABEL')"
                   :options="scopeOptions"

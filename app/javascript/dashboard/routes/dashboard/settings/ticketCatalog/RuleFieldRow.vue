@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import SelectInput from 'dashboard/components-next/select/Select.vue';
+import SelectInput from 'dashboard/components-next/select/LabeledSelect.vue';
 import { REQUIRED_ON } from 'dashboard/helper/ticketFieldRules';
 
 defineProps({

@@ -11,7 +11,7 @@ import { useTicketCatalog } from 'dashboard/composables/useTicketCatalog';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import SelectInput from 'dashboard/components-next/select/Select.vue';
+import SelectInput from 'dashboard/components-next/select/LabeledSelect.vue';
 import {
   CONDITION_ATTRIBUTES,
   CONDITION_OPERATORS,
