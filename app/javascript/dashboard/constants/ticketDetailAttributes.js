@@ -10,6 +10,7 @@ export const PRODUTO_ATTRIBUTE_KEY = 'produto';
 export const TICKET_ID_EXTERNO_ATTRIBUTE_KEY = 'ticket_id_externo';
 export const TICKET_PAI_ID_ATTRIBUTE_KEY = 'ticket_pai_id';
 export const TICKET_FILHOS_IDS_ATTRIBUTE_KEY = 'ticket_filhos_ids';
+export const VISIVEL_PARCEIRO_ATTRIBUTE_KEY = 'visivel_parceiro';
 
 // Conversation custom attribute keys que vêm do sync do Portal do Cliente,
 // mostrados na seção "Informações do Portal do Cliente" - reduzido a só o
@@ -34,7 +35,7 @@ export const SUPERSEDED_PORTAL_ATTRIBUTE_KEYS = Object.freeze([
   PRODUTO_ATTRIBUTE_KEY,
   'sla_horas',
   'prazo_resolucao',
-  'visivel_parceiro',
+  VISIVEL_PARCEIRO_ATTRIBUTE_KEY,
   MOTIVO_ENCERRAMENTO_ATTRIBUTE_KEY,
 ]);
 

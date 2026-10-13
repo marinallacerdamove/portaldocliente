@@ -96,7 +96,12 @@ class Conversations::ResolveRequirementsService
     }
   end
 
+  # Ticket interno aberto pelo Portal cai na caixa API (origem "cliente" pelo
+  # canal), mas o Portal grava visivel_parceiro=false e o chama de "agente".
+  # Mesma regra de conversationOrigin no front.
   def origin
+    return 'agente' if [false, 'false'].include?(@attributes[TicketContract::PARTNER_VISIBLE_KEY])
+
     inbox = @conversation.inbox
     inbox.name == TicketContract::INTERNAL_TICKETS_INBOX_NAME ? 'agente' : CHANNEL_ORIGINS[inbox.channel_type].to_s
   end

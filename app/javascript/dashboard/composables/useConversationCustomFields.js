@@ -13,6 +13,7 @@ import {
   SERVICO_ATTRIBUTE_KEY,
   STATUS_ATENDIMENTO_ATTRIBUTE_KEY,
   TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
+  VISIVEL_PARCEIRO_ATTRIBUTE_KEY,
 } from 'dashboard/constants/ticketDetailAttributes';
 import { saveCustomFields } from 'dashboard/composables/customFieldsWriter';
 import wootConstants from 'dashboard/constants/globals';
@@ -32,10 +33,16 @@ export const CHANNEL_ORIGINS = {
   'Channel::WebWidget': 'chat',
 };
 
-export const conversationOrigin = inbox =>
-  inbox?.name === INTERNAL_TICKETS_INBOX_NAME
+// Ticket interno aberto pelo Portal cai na caixa API (origem "cliente" pelo
+// canal), mas o Portal grava visivel_parceiro=false e o chama de "agente".
+// Mesma regra de Conversations::ResolveRequirementsService#origin.
+export const conversationOrigin = (inbox, attributes = {}) => {
+  const partnerVisible = attributes?.[VISIVEL_PARCEIRO_ATTRIBUTE_KEY];
+  if (partnerVisible === false || partnerVisible === 'false') return 'agente';
+  return inbox?.name === INTERNAL_TICKETS_INBOX_NAME
     ? 'agente'
     : CHANNEL_ORIGINS[inbox?.channel_type] || '';
+};
 
 export function useConversationCustomFields(conversation) {
   const store = useStore();
@@ -61,7 +68,10 @@ export function useConversationCustomFields(conversation) {
           attributes.value[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY],
         status: attributes.value[STATUS_ATENDIMENTO_ATTRIBUTE_KEY],
         concluded: chat.status === wootConstants.STATUS_TYPE.RESOLVED,
-        origem: conversationOrigin(getInbox.value(chat.inbox_id)),
+        origem: conversationOrigin(
+          getInbox.value(chat.inbox_id),
+          attributes.value
+        ),
         empresa: attributes.value[EMPRESA_ATTRIBUTE_KEY],
         equipe: chat.meta?.team?.name,
         responsavel: chat.meta?.assignee?.name,

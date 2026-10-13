@@ -43,6 +43,37 @@ RSpec.describe Conversations::ResolveRequirementsService do
     expect(missing).to eq([])
   end
 
+  describe 'origem usada nas regras de exibição' do
+    let(:field) { TicketCustomField.create!(account: account, name: 'Causa', field_type: 'text') }
+
+    before do
+      TicketFieldRule.create!(account: account, name: 'Só agente',
+                              conditions: [{ group: 'all', attribute: 'origem', operator: 'equal_to', value: 'agente' }],
+                              fields: [{ field_id: field.id, required_on: 'conclusao' }])
+    end
+
+    it 'não é agente numa conversa de caixa comum sem visivel_parceiro' do
+      expect(missing).to eq([])
+    end
+
+    it 'é agente quando o Portal marca visivel_parceiro como false (booleano ou texto)' do
+      [false, 'false'].each do |value|
+        conversation.update!(custom_attributes: conversation.custom_attributes.merge('visivel_parceiro' => value))
+        expect(missing).to eq(['Causa'])
+      end
+    end
+
+    it 'continua pela caixa quando visivel_parceiro é true ou ausente' do
+      conversation.update!(custom_attributes: conversation.custom_attributes.merge('visivel_parceiro' => true))
+      expect(missing).to eq([])
+    end
+
+    it 'é agente na caixa Tickets Internos' do
+      conversation.update!(inbox: create(:inbox, account: account, name: TicketContract::INTERNAL_TICKETS_INBOX_NAME))
+      expect(missing).to eq(['Causa'])
+    end
+  end
+
   it 'gives the same answer with the account data computed once by the caller' do
     create(:custom_attribute_definition, account: account, attribute_model: :conversation_attribute,
                                          attribute_key: 'tipo_de_solicitao', attribute_display_name: 'Tipo de solicitação')

@@ -11,7 +11,8 @@
     "PRODUCT_KEY": "produto",
     "EXTERNAL_TICKET_ID_KEY": "ticket_id_externo",
     "PARENT_TICKET_KEY": "ticket_pai_id",
-    "CHILD_TICKETS_KEY": "ticket_filhos_ids"
+    "CHILD_TICKETS_KEY": "ticket_filhos_ids",
+    "PARTNER_VISIBLE_KEY": "visivel_parceiro"
   },
   "internal_tickets_inbox_name": "Tickets Internos",
   "channel_origins": {

@@ -21,6 +21,7 @@ describe('ticket contract parity with the server', () => {
       EXTERNAL_TICKET_ID_KEY: keys.TICKET_ID_EXTERNO_ATTRIBUTE_KEY,
       PARENT_TICKET_KEY: keys.TICKET_PAI_ID_ATTRIBUTE_KEY,
       CHILD_TICKETS_KEY: keys.TICKET_FILHOS_IDS_ATTRIBUTE_KEY,
+      PARTNER_VISIBLE_KEY: keys.VISIVEL_PARCEIRO_ATTRIBUTE_KEY,
     }).toEqual(contract.attribute_keys);
   });
 

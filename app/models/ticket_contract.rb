@@ -16,6 +16,8 @@ module TicketContract
   EXTERNAL_TICKET_ID_KEY = 'ticket_id_externo'.freeze
   PARENT_TICKET_KEY = 'ticket_pai_id'.freeze
   CHILD_TICKETS_KEY = 'ticket_filhos_ids'.freeze
+  # Gravada pelo Portal (= !is_internal): false marca ticket interno, "agente" na origem.
+  PARTNER_VISIBLE_KEY = 'visivel_parceiro'.freeze
 
   # Caixa dos tickets internos, identificada pelo nome: não renomear pela tela.
   INTERNAL_TICKETS_INBOX_NAME = 'Tickets Internos'.freeze
