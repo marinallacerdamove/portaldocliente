@@ -24,7 +24,7 @@
 # - 'report_manage': Can manage reports.
 # - 'knowledge_base_manage': Can manage knowledge base portals.
 # - 'financeiro_manage': PATCH LOCAL (fork) - vê/edita os campos de
-#   Contrato/Financeiro da Empresa (aba "Financeiro" no CompanyProfileCard).
+#   Contrato/Financeiro da Empresa (aba "Financeiro" no CompanyPortalProfileCard).
 #   Substitui a gambiarra anterior que reaproveitava report_manage pra isso -
 #   agora é enforced no backend (CompanyPolicy#financeiro_manage?), não só
 #   escondido no frontend.

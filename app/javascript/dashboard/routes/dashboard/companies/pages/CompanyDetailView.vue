@@ -12,7 +12,7 @@ import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import CompanyContactsSidebar from 'dashboard/components-next/Companies/CompanyDetail/CompanyContactsSidebar.vue';
 import CompanyHistorySidebar from 'dashboard/components-next/Companies/CompanyDetail/CompanyHistorySidebar.vue';
 import CompanyNotesSidebar from 'dashboard/components-next/Companies/CompanyDetail/CompanyNotesSidebar.vue';
-import CompanyProfileCard from 'dashboard/components-next/Companies/CompanyDetail/CompanyProfileCard.vue';
+import CompanyPortalProfileCard from 'dashboard/components-next/Companies/CompanyDetail/CompanyPortalProfileCard.vue';
 import ConfirmCompanyDeleteDialog from 'dashboard/components-next/Companies/CompanyDetail/ConfirmCompanyDeleteDialog.vue';
 import { useCompaniesStore } from 'dashboard/stores/companies';
 
@@ -231,7 +231,10 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-else class="flex flex-col gap-6">
-      <CompanyProfileCard :company="company" :is-loading="isFetchingCompany" />
+      <CompanyPortalProfileCard
+        :company="company"
+        :is-loading="isFetchingCompany"
+      />
 
       <Policy :permissions="['administrator']">
         <section
