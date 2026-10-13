@@ -25,7 +25,10 @@ class BotFlows::CnpjLookup
     webhook_node = {
       'url' => "#{ENV.fetch('PORTAL_INTERNAL_API_URL', '')}/api/internal/empresa_by_cnpj?cnpj=#{CGI.escape(cnpj)}",
       'method' => 'get',
-      'headers' => { 'X-Internal-Token' => ENV.fetch('PORTAL_INTERNAL_API_TOKEN', '') },
+      'headers' => {
+        'X-Internal-Token' => ENV.fetch('PORTAL_INTERNAL_API_TOKEN', ''),
+        'X-Chatwoot-Account-Id' => @conversation.account_id.to_s
+      },
       'success_check' => { 'field' => 'found', 'equals' => true },
       'response_mappings' => [{ 'json_path' => 'nome', 'variable_name' => RESULT_VARIABLE }]
     }
