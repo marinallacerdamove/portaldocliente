@@ -13,7 +13,7 @@ class TicketStatus < ApplicationRecord
   has_many :ticket_status_justifications, dependent: :destroy
   has_many :justifications, through: :ticket_status_justifications, source: :ticket_justification
 
-  validates :name, uniqueness: { scope: :account_id }
+  unique_catalog_name
   validates :base, inclusion: { in: CONVERSATION_STATUS.keys }
 
   scope :resolving, -> { where(base: CONVERSATION_STATUS.filter_map { |base, status| base if status == 'resolved' }) }
@@ -23,6 +23,6 @@ class TicketStatus < ApplicationRecord
   end
 
   def as_json(*)
-    slice(:id, :name, :base, :active, :ticket_scope, :requires_justification, :position).merge(conversation_status: conversation_status)
+    slice(:id, :code, :name, :base, :active, :ticket_scope, :requires_justification, :position).merge(conversation_status: conversation_status)
   end
 end

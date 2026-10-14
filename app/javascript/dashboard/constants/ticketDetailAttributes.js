@@ -12,6 +12,17 @@ export const TICKET_PAI_ID_ATTRIBUTE_KEY = 'ticket_pai_id';
 export const TICKET_FILHOS_IDS_ATTRIBUTE_KEY = 'ticket_filhos_ids';
 export const VISIVEL_PARCEIRO_ATTRIBUTE_KEY = 'visivel_parceiro';
 
+// Código de negócio do item do cadastro escolhido na conversa (chaves ocultas,
+// o servidor mantém junto do nome: TicketCatalogCodes).
+export const SERVICO_CODIGO_ATTRIBUTE_KEY = 'servico_codigo';
+export const TIPO_DE_SOLICITACAO_CODIGO_ATTRIBUTE_KEY =
+  'tipo_de_solicitao_codigo';
+export const STATUS_ATENDIMENTO_CODIGO_ATTRIBUTE_KEY =
+  'status_atendimento_codigo';
+export const JUSTIFICATIVA_CODIGO_ATTRIBUTE_KEY = 'justificativa_codigo';
+export const MOTIVO_ENCERRAMENTO_CODIGO_ATTRIBUTE_KEY =
+  'motivo_encerramento_codigo';
+
 // Conversation custom attribute keys que vêm do sync do Portal do Cliente,
 // mostrados na seção "Informações do Portal do Cliente" - reduzido a só o
 // protocolo (os campos de classificação do ticket viraram campo de verdade

@@ -14,7 +14,7 @@ class TicketService < ApplicationRecord
   has_many :ticket_service_categories, dependent: :destroy
   has_many :categories, through: :ticket_service_categories, source: :ticket_category
 
-  validates :name, uniqueness: { scope: %i[account_id parent_id] }
+  unique_catalog_name scope: %i[account_id parent_id]
   validates :default_priority, inclusion: { in: TicketCategory::PRIORITIES }, allow_blank: true
   validate :parent_in_account_without_cycle
   validate :macro_shared
@@ -30,13 +30,36 @@ class TicketService < ApplicationRecord
     full_name
   end
 
+  # Serviço guardado na conversa é o caminho completo: acha pelo último nome e confere o caminho.
+  def self.for_attribute_value(value)
+    where(name: value.to_s.split(PATH_SEPARATOR).last).detect { |service| service.full_name == value }
+  end
+
   def as_json(*)
-    slice(:id, :parent_id, :name, :description, :active, :ticket_scope, :visible_to_clients, :allow_finish,
+    slice(:id, :code, :parent_id, :name, :description, :active, :ticket_scope, :visible_to_clients, :allow_finish,
           :all_categories, :default_category_id, :default_priority, :macro_id, :position)
       .merge(full_name: full_name, category_ids: ticket_service_categories.map(&:ticket_category_id))
   end
 
   private
+
+  # Renomear ou mover um serviço muda o caminho de toda a subárvore: [[id, caminho antigo, caminho novo]].
+  def catalog_rename_entries
+    old_parent = TicketService.find_by(id: parent_id_before_last_save)
+    old_path = [*old_parent&.full_name, name_before_last_save].join(PATH_SEPARATOR)
+    new_path = full_name
+    children_by_parent = TicketService.where(account_id: account_id).pluck(:id, :parent_id, :name).group_by(&:second)
+    entries = [[id, old_path, new_path]]
+    queue = [[id, old_path, new_path]]
+    while (parent_entry = queue.shift)
+      children_by_parent.fetch(parent_entry.first, []).each do |child_id, _parent_id, child_name|
+        child_entry = [child_id, [parent_entry.second, child_name].join(PATH_SEPARATOR), [parent_entry.third, child_name].join(PATH_SEPARATOR)]
+        entries << child_entry
+        queue << child_entry
+      end
+    end
+    entries
+  end
 
   def parent_in_account_without_cycle
     return unless parent

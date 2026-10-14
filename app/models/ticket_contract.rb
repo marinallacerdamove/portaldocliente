@@ -9,6 +9,14 @@ module TicketContract
   STATUS_KEY = 'status_atendimento'.freeze
   JUSTIFICATION_KEY = 'justificativa'.freeze
   CLOSE_REASON_KEY = 'motivo_encerramento'.freeze
+  # Código de negócio do item do cadastro escolhido (o Portal é o dono). Chaves
+  # ocultas, sem definição de atributo: a conversa guarda nome E código, e o
+  # código sobrevive a renomear o item (ver TicketCatalogCodes).
+  SERVICE_CODE_KEY = 'servico_codigo'.freeze
+  CATEGORY_CODE_KEY = 'tipo_de_solicitao_codigo'.freeze
+  STATUS_CODE_KEY = 'status_atendimento_codigo'.freeze
+  JUSTIFICATION_CODE_KEY = 'justificativa_codigo'.freeze
+  CLOSE_REASON_CODE_KEY = 'motivo_encerramento_codigo'.freeze
   CUSTOM_FIELDS_KEY = 'campos_adicionais'.freeze
   COMPANY_KEY = 'empresa'.freeze
   SUBJECT_KEY = 'assunto'.freeze
@@ -18,6 +26,15 @@ module TicketContract
   CHILD_TICKETS_KEY = 'ticket_filhos_ids'.freeze
   # Gravada pelo Portal (= !is_internal): false marca ticket interno, "agente" na origem.
   PARTNER_VISIBLE_KEY = 'visivel_parceiro'.freeze
+
+  # Chave do nome -> chave do código, na ordem dos cadastros.
+  CODE_KEYS = {
+    SERVICE_KEY => SERVICE_CODE_KEY,
+    CATEGORY_KEY => CATEGORY_CODE_KEY,
+    STATUS_KEY => STATUS_CODE_KEY,
+    JUSTIFICATION_KEY => JUSTIFICATION_CODE_KEY,
+    CLOSE_REASON_KEY => CLOSE_REASON_CODE_KEY
+  }.freeze
 
   # Caixa dos tickets internos, identificada pelo nome: não renomear pela tela.
   INTERNAL_TICKETS_INBOX_NAME = 'Tickets Internos'.freeze

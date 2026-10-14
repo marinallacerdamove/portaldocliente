@@ -6,9 +6,9 @@ class TicketCloseReason < ApplicationRecord
 
   catalog_attribute TicketContract::CLOSE_REASON_KEY, 'Motivo de encerramento'
 
-  validates :name, uniqueness: { scope: :account_id }
+  unique_catalog_name
 
   def as_json(*)
-    slice(:id, :name, :active, :ticket_scope, :position)
+    slice(:id, :code, :name, :active, :ticket_scope, :position)
   end
 end

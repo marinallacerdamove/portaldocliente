@@ -9,13 +9,13 @@ class TicketCategory < ApplicationRecord
   has_many :ticket_service_categories, dependent: :destroy
   has_many :ticket_services, through: :ticket_service_categories
 
-  validates :name, uniqueness: { scope: :account_id }
+  unique_catalog_name
   validate :priorities_known
 
   before_validation { self.allowed_priorities = Array(allowed_priorities).compact_blank.uniq }
 
   def as_json(*)
-    slice(:id, :name, :active, :ticket_scope, :allowed_priorities, :position)
+    slice(:id, :code, :name, :active, :ticket_scope, :allowed_priorities, :position)
   end
 
   private
