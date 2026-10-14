@@ -31,7 +31,8 @@ export const FIELD_TYPES = [
 export const ACTIVE_FILTERS = ['active', 'inactive', 'all'];
 
 // i18n: chave em TICKET_CATALOG; routeBase: prefixo dos nomes de rota;
-// hasScope: tem "Tipo de ticket" (campos e regras não têm, como no Movidesk).
+// hasScope: tem "Tipo de ticket" (campos e regras não têm, como no Movidesk);
+// hasCode: tem código de negócio dado pelo Portal (campos e regras não têm).
 export const CATALOG_KINDS = {
   services: {
     i18nKey: 'SERVICES',
@@ -70,6 +71,7 @@ export const CATALOG_KINDS = {
     path: 'ticket_custom_fields',
     icon: 'i-lucide-text-cursor-input',
     hasScope: false,
+    hasCode: false,
   },
   fieldRules: {
     i18nKey: 'FIELD_RULES',
@@ -77,6 +79,7 @@ export const CATALOG_KINDS = {
     path: 'ticket_field_rules',
     icon: 'i-lucide-list-checks',
     hasScope: false,
+    hasCode: false,
   },
 };
 

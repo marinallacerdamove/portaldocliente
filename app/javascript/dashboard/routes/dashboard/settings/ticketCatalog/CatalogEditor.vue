@@ -23,6 +23,7 @@ import CustomFieldFields from './CustomFieldFields.vue';
 import FieldRuleFields from './FieldRuleFields.vue';
 import {
   catalogPayload,
+  displayCatalogCode,
   editableCatalogRecord,
   newCatalogRecord,
 } from './catalogHelper';
@@ -64,7 +65,7 @@ const { t } = useI18n();
 const { isAdmin } = useAdmin();
 const { state, fetchList, saveRecord } = useTicketCatalog();
 
-const { i18nKey, hasScope = true } = CATALOG_KINDS[props.kind];
+const { i18nKey, hasScope = true, hasCode = true } = CATALOG_KINDS[props.kind];
 const record = ref(null);
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -232,6 +233,20 @@ const submit = async () => {
                 </p>
               </div>
             </div>
+            <Input
+              v-if="hasCode && isEdit"
+              id="catalog-code"
+              class="sm:max-w-xs"
+              :model-value="
+                displayCatalogCode(
+                  record,
+                  t('TICKET_CATALOG.FORM.CODE_PENDING')
+                )
+              "
+              :label="t('TICKET_CATALOG.FORM.CODE_LABEL')"
+              :message="t('TICKET_CATALOG.FORM.CODE_HINT')"
+              disabled
+            />
             <SettingsToggleSection
               v-model="record.active"
               :header="t('TICKET_CATALOG.FORM.ACTIVE_LABEL')"

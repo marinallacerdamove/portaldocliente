@@ -42,6 +42,11 @@ export const serviceSubtreeIds = (services, serviceId) => {
   return subtree;
 };
 
+// Código de negócio do item (dado só pelo Portal, nunca editado aqui): enquanto
+// o Portal não mandou, mostra o texto de espera.
+export const displayCatalogCode = (record, pendingLabel) =>
+  record.code || pendingLabel;
+
 const COMMON_DEFAULTS = { name: '', active: true };
 
 const KIND_DEFAULTS = {

@@ -18,7 +18,7 @@ import {
 } from 'dashboard/components-next/table';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
 import SettingsLayout from '../SettingsLayout.vue';
-import { buildServiceTree } from './catalogHelper';
+import { buildServiceTree, displayCatalogCode } from './catalogHelper';
 import { ACTIVE_FILTERS, CATALOG_KINDS, catalogRouteName } from './constants';
 
 const props = defineProps({
@@ -157,7 +157,17 @@ const EXTRA_COLUMNS = {
   ],
 };
 
-const extraColumns = EXTRA_COLUMNS[props.kind];
+// O código vem logo depois do nome, nos cadastros que o têm.
+const CODE_COLUMN = {
+  header: 'TICKET_CATALOG.LIST.TABLE_HEADER.CODE',
+  value: record =>
+    displayCatalogCode(record, t('TICKET_CATALOG.FORM.CODE_PENDING')),
+};
+
+const extraColumns = [
+  ...(CATALOG_KINDS[props.kind].hasCode === false ? [] : [CODE_COLUMN]),
+  ...EXTRA_COLUMNS[props.kind],
+];
 
 const tableHeaders = computed(() => [
   t('TICKET_CATALOG.LIST.TABLE_HEADER.NAME'),

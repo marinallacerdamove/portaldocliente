@@ -2,9 +2,11 @@
 import {
   buildServiceTree,
   catalogPayload,
+  displayCatalogCode,
   editableCatalogRecord,
   serviceSubtreeIds,
 } from '../catalogHelper';
+import { CATALOG_KINDS } from '../constants';
 
 const services = [
   { id: 3, parent_id: 1, name: 'NF-e' },
@@ -65,5 +67,40 @@ describe('editableCatalogRecord', () => {
     expect(record.description).toBe('');
     expect(record.parent_id).toBeNull();
     expect(record.category_ids).toEqual([]);
+  });
+});
+
+describe('catalog code', () => {
+  it('shows the code the Portal gave, or the waiting text while it is null', () => {
+    expect(displayCatalogCode({ code: 'SRV-0042' }, 'Aguardando')).toBe(
+      'SRV-0042'
+    );
+    expect(displayCatalogCode({ code: null }, 'Aguardando')).toBe('Aguardando');
+    expect(displayCatalogCode({}, 'Aguardando')).toBe('Aguardando');
+  });
+
+  it('never sends the code to the admin API', () => {
+    const record = editableCatalogRecord('statuses', {
+      id: 3,
+      name: 'Novo',
+      code: 'STS-0003',
+    });
+
+    expect(record.code).toBe('STS-0003');
+    expect(catalogPayload('statuses', record)).not.toHaveProperty('code');
+  });
+
+  it('has a code only on the five catalogs the Portal numbers', () => {
+    const withCode = Object.entries(CATALOG_KINDS)
+      .filter(([, kind]) => kind.hasCode !== false)
+      .map(([name]) => name);
+
+    expect(withCode).toEqual([
+      'services',
+      'categories',
+      'statuses',
+      'justifications',
+      'closeReasons',
+    ]);
   });
 });

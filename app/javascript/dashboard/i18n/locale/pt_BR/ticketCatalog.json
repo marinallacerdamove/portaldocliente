@@ -41,6 +41,7 @@
       },
       "TABLE_HEADER": {
         "NAME": "Nome",
+        "CODE": "Código",
         "TICKET_SCOPE": "Tipo de ticket",
         "ACTIVE": "Situação",
         "ACTIONS": "Ações"
@@ -61,6 +62,9 @@
       "NAME_LABEL": "Nome",
       "NAME_PLACEHOLDER": "Digite o nome",
       "NAME_REQUIRED": "Informe o nome",
+      "CODE_LABEL": "Código",
+      "CODE_PENDING": "Aguardando Portal",
+      "CODE_HINT": "Definido pelo Portal do Cliente; não pode ser alterado aqui",
       "TICKET_SCOPE_LABEL": "Tipo de ticket",
       "TICKET_SCOPE_HINT": "Em quais tickets este item aparece para escolha",
       "ACTIVE_LABEL": "Ativo",

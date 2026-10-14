@@ -41,6 +41,7 @@
       },
       "TABLE_HEADER": {
         "NAME": "Name",
+        "CODE": "Code",
         "TICKET_SCOPE": "Ticket type",
         "ACTIVE": "Status",
         "ACTIONS": "Actions"
@@ -61,6 +62,9 @@
       "NAME_LABEL": "Name",
       "NAME_PLACEHOLDER": "Enter the name",
       "NAME_REQUIRED": "Name is required",
+      "CODE_LABEL": "Code",
+      "CODE_PENDING": "Waiting for the Portal",
+      "CODE_HINT": "Given by the Customer Portal; it cannot be changed here",
       "TICKET_SCOPE_LABEL": "Ticket type",
       "TICKET_SCOPE_HINT": "Which tickets offer this item as an option",
       "ACTIVE_LABEL": "Active",
