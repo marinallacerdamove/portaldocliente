@@ -1,0 +1,181 @@
+{
+  "_comment": "Contrato do cadastro de atendimento entre o Portal do Cliente (dono) e o fork do Chatwoot. 'put_requests': corpo que o Portal manda em PUT /api/v1/accounts/:account_id/ticket_catalog_sync/:catalog (formato de Integration::CatalogSync.payload_for + code + remote_id), os itens que ja existem no fork (por catalog/id/code/name) e o que o fork deve responder e guardar. 'webhooks': item como esta no fork (record, com referencias por codigo), os changed_keys e o corpo exato do webhook ticket_catalog_updated que o Portal le em Integration::Handlers::CatalogItemUpdated. Datas fixas: updated_at 2026-10-14T12:00:00.123456Z; conta 9001. Mesmo arquivo nos dois repositorios; mudar um lado sem o outro quebra o spec.",
+  "fixed_updated_at": "2026-10-14T12:00:00.123456Z",
+  "account": { "id": 9001, "name": "Conta Contrato" },
+  "put_requests": [
+    {
+      "name": "servico com pai, tipos, tipo padrao e prioridade",
+      "catalog": "servico",
+      "existing": [
+        { "catalog": "servico", "code": "SRV-0001", "name": "Financeiro" },
+        { "catalog": "tipo", "code": "TIP-0001", "name": "Duvida" },
+        { "catalog": "tipo", "code": "TIP-0002", "name": "Incidente" }
+      ],
+      "request": {
+        "name": "Boletos", "description": "Segunda via", "active": true, "position": 3, "ticket_scope": "interno",
+        "visible_to_clients": false, "allow_finish": false, "all_categories": false,
+        "parent_code": "SRV-0001", "default_category_code": "TIP-0002", "default_priority": "high",
+        "category_codes": ["TIP-0001", "TIP-0002"], "code": "SRV-0002", "remote_id": null
+      },
+      "expected_item": {
+        "code": "SRV-0002", "name": "Boletos", "description": "Segunda via", "active": true, "position": 3,
+        "ticket_scope": "interno", "visible_to_clients": false, "allow_finish": false, "all_categories": false,
+        "default_priority": "high", "parent_code": "SRV-0001", "category_codes": ["TIP-0001", "TIP-0002"],
+        "default_category_code": "TIP-0002"
+      }
+    },
+    {
+      "name": "tipo com prioridades permitidas",
+      "catalog": "tipo",
+      "existing": [],
+      "request": {
+        "name": "Duvida", "active": true, "position": 2, "ticket_scope": "ambos", "allowed_priorities": ["high", "low"],
+        "code": "TIP-0001", "remote_id": null
+      },
+      "expected_item": {
+        "code": "TIP-0001", "name": "Duvida", "active": true, "position": 2, "ticket_scope": "ambos",
+        "allowed_priorities": ["high", "low"]
+      }
+    },
+    {
+      "name": "status com justificativa obrigatoria",
+      "catalog": "status",
+      "existing": [],
+      "request": {
+        "name": "Parado", "base": "parado", "ticket_scope": "ambos", "requires_justification": true, "active": true,
+        "position": 0, "code": "STS-0003", "remote_id": null
+      },
+      "expected_item": {
+        "code": "STS-0003", "name": "Parado", "base": "parado", "ticket_scope": "ambos", "requires_justification": true,
+        "active": true, "position": 0
+      }
+    },
+    {
+      "name": "justificativa ligada a status",
+      "catalog": "justificativa",
+      "existing": [
+        { "catalog": "status", "code": "STS-0003", "name": "Parado", "base": "parado" }
+      ],
+      "request": {
+        "name": "Aguardando cliente", "ticket_scope": "ambos", "active": true, "position": 0,
+        "status_codes": ["STS-0003"], "code": "JUS-0005", "remote_id": null
+      },
+      "expected_item": {
+        "code": "JUS-0005", "name": "Aguardando cliente", "ticket_scope": "ambos", "active": true, "position": 0,
+        "status_codes": ["STS-0003"]
+      }
+    },
+    {
+      "name": "motivo de encerramento",
+      "catalog": "motivo",
+      "existing": [],
+      "request": { "name": "Resolvido", "active": true, "position": 1, "code": "MOT-0002", "remote_id": null },
+      "expected_item": { "code": "MOT-0002", "name": "Resolvido", "active": true, "position": 1 }
+    }
+  ],
+  "webhooks": [
+    {
+      "name": "servico criado no Chatwoot ainda sem codigo (todos os campos)",
+      "existing": [
+        { "catalog": "servico", "code": "SRV-0001", "name": "Financeiro" },
+        { "catalog": "tipo", "code": "TIP-0002", "name": "Incidente" }
+      ],
+      "record": {
+        "catalog": "servico", "id": 301, "code": null, "name": "Boletos", "description": "Segunda via", "position": 3,
+        "ticket_scope": "interno", "visible_to_clients": false, "allow_finish": false, "all_categories": false,
+        "default_priority": "high", "parent_code": "SRV-0001", "category_codes": ["TIP-0002"], "default_category_code": "TIP-0002"
+      },
+      "changed_keys": ["name", "description", "active", "position", "ticket_scope", "visible_to_clients", "allow_finish",
+                       "all_categories", "default_priority", "parent_code", "category_codes", "default_category_code"],
+      "expected": {
+        "event": "ticket_catalog_updated",
+        "account": { "id": 9001, "name": "Conta Contrato" },
+        "catalog": "servico",
+        "item": {
+          "id": 301, "code": null, "name": "Boletos", "description": "Segunda via", "active": true, "position": 3,
+          "ticket_scope": "interno", "visible_to_clients": false, "allow_finish": false, "all_categories": false,
+          "default_priority": "high", "parent_code": "SRV-0001", "category_codes": ["TIP-0002"], "default_category_code": "TIP-0002"
+        },
+        "changed_keys": ["name", "description", "active", "position", "ticket_scope", "visible_to_clients", "allow_finish",
+                         "all_categories", "default_priority", "parent_code", "category_codes", "default_category_code"],
+        "updated_at": "2026-10-14T12:00:00.123456Z"
+      }
+    },
+    {
+      "name": "tipo renomeado",
+      "existing": [],
+      "record": {
+        "catalog": "tipo", "id": 302, "code": "TIP-0001", "name": "Duvida geral", "position": 2, "ticket_scope": "ambos",
+        "allowed_priorities": ["high", "low"]
+      },
+      "changed_keys": ["name"],
+      "expected": {
+        "event": "ticket_catalog_updated",
+        "account": { "id": 9001, "name": "Conta Contrato" },
+        "catalog": "tipo",
+        "item": {
+          "id": 302, "code": "TIP-0001", "name": "Duvida geral", "active": true, "position": 2, "ticket_scope": "ambos",
+          "allowed_priorities": ["high", "low"]
+        },
+        "changed_keys": ["name"],
+        "updated_at": "2026-10-14T12:00:00.123456Z"
+      }
+    },
+    {
+      "name": "status desativado",
+      "existing": [],
+      "record": {
+        "catalog": "status", "id": 303, "code": "STS-0003", "name": "Parado", "base": "parado", "active": false,
+        "requires_justification": true
+      },
+      "changed_keys": ["active"],
+      "expected": {
+        "event": "ticket_catalog_updated",
+        "account": { "id": 9001, "name": "Conta Contrato" },
+        "catalog": "status",
+        "item": {
+          "id": 303, "code": "STS-0003", "name": "Parado", "base": "parado", "ticket_scope": "ambos",
+          "requires_justification": true, "active": false, "position": 0
+        },
+        "changed_keys": ["active"],
+        "updated_at": "2026-10-14T12:00:00.123456Z"
+      }
+    },
+    {
+      "name": "justificativa com troca de status",
+      "existing": [
+        { "catalog": "status", "code": "STS-0003", "name": "Parado", "base": "parado" }
+      ],
+      "record": {
+        "catalog": "justificativa", "id": 304, "code": "JUS-0005", "name": "Aguardando cliente",
+        "status_codes": ["STS-0003"]
+      },
+      "changed_keys": ["status_codes"],
+      "expected": {
+        "event": "ticket_catalog_updated",
+        "account": { "id": 9001, "name": "Conta Contrato" },
+        "catalog": "justificativa",
+        "item": {
+          "id": 304, "code": "JUS-0005", "name": "Aguardando cliente", "ticket_scope": "ambos", "active": true,
+          "position": 0, "status_codes": ["STS-0003"]
+        },
+        "changed_keys": ["status_codes"],
+        "updated_at": "2026-10-14T12:00:00.123456Z"
+      }
+    },
+    {
+      "name": "motivo reordenado",
+      "existing": [],
+      "record": { "catalog": "motivo", "id": 305, "code": "MOT-0002", "name": "Resolvido", "position": 4 },
+      "changed_keys": ["position"],
+      "expected": {
+        "event": "ticket_catalog_updated",
+        "account": { "id": 9001, "name": "Conta Contrato" },
+        "catalog": "motivo",
+        "item": { "id": 305, "code": "MOT-0002", "name": "Resolvido", "active": true, "position": 4 },
+        "changed_keys": ["position"],
+        "updated_at": "2026-10-14T12:00:00.123456Z"
+      }
+    }
+  ]
+}
