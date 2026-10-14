@@ -390,7 +390,11 @@ class Conversation < ApplicationRecord
       CONVERSATION_READ => -> { saved_change_to_contact_last_seen_at? },
       CONVERSATION_CONTACT_CHANGED => -> { saved_change_to_contact_id? }
     }.each do |event, condition|
-      condition.call && dispatcher_dispatch(event, status_change)
+      # PATCH LOCAL (fork) - status_change é dirty tracking e no after_commit já
+      # é nil: o webhook de status nunca levava changed_attributes, e o Portal
+      # não reconhecia o eco da própria escrita. Só o evento de status muda.
+      changed = event == CONVERSATION_STATUS_CHANGED ? previous_changes.slice('status', 'updated_at') : status_change
+      condition.call && dispatcher_dispatch(event, changed)
     end
   end
 
