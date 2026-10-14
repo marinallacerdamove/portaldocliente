@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_05_180000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_14_120000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -1531,6 +1531,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_05_180000) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
+    t.index ["account_id", "code"], name: "index_ticket_categories_on_account_id_and_code", unique: true, where: "(code IS NOT NULL)"
     t.index ["account_id", "name"], name: "index_ticket_categories_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_ticket_categories_on_account_id"
   end
@@ -1543,6 +1545,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_05_180000) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
+    t.index ["account_id", "code"], name: "index_ticket_close_reasons_on_account_id_and_code", unique: true, where: "(code IS NOT NULL)"
     t.index ["account_id", "name"], name: "index_ticket_close_reasons_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_ticket_close_reasons_on_account_id"
   end
@@ -1582,6 +1586,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_05_180000) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
+    t.index ["account_id", "code"], name: "index_ticket_justifications_on_account_id_and_code", unique: true, where: "(code IS NOT NULL)"
     t.index ["account_id", "name"], name: "index_ticket_justifications_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_ticket_justifications_on_account_id"
   end
@@ -1610,6 +1616,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_05_180000) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
+    t.index ["account_id", "code"], name: "index_ticket_services_on_account_id_and_code", unique: true, where: "(code IS NOT NULL)"
     t.index ["account_id", "parent_id", "name"], name: "index_ticket_services_on_account_id_and_parent_id_and_name", unique: true
     t.index ["account_id"], name: "index_ticket_services_on_account_id"
     t.index ["default_category_id"], name: "index_ticket_services_on_default_category_id"
@@ -1635,6 +1643,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_05_180000) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
+    t.index ["account_id", "code"], name: "index_ticket_statuses_on_account_id_and_code", unique: true, where: "(code IS NOT NULL)"
     t.index ["account_id", "name"], name: "index_ticket_statuses_on_account_id_and_name", unique: true
     t.index ["account_id"], name: "index_ticket_statuses_on_account_id"
   end
