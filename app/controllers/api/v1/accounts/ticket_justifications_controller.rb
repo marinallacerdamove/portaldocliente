@@ -16,6 +16,7 @@ class Api::V1::Accounts::TicketJustificationsController < Api::V1::Accounts::Bas
   def assign_associations
     return unless params[:ticket_justification].key?(:status_ids)
 
-    @record.ticket_statuses = Current.account.ticket_statuses.where(id: params[:ticket_justification][:status_ids])
+    @record.replace_synced_association(:ticket_statuses, Current.account.ticket_statuses.where(id: params[:ticket_justification][:status_ids]),
+                                       'status_codes')
   end
 end

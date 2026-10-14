@@ -54,6 +54,9 @@ module Events::Types
   COMPANY_UPDATED = 'company.updated'
   CONTACT_COMPANY_UPDATED = 'contact.company_updated'
 
+  # PATCH LOCAL (fork): cadastro de atendimento editado aqui, a caminho do Portal
+  TICKET_CATALOG_UPDATED = 'ticket_catalog.updated'
+
   # contact events
   INBOX_CREATED = 'inbox.created'
   INBOX_UPDATED = 'inbox.updated'

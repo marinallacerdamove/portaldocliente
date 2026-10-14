@@ -18,6 +18,7 @@ class Api::V1::Accounts::TicketServicesController < Api::V1::Accounts::BaseContr
   def assign_associations
     return unless params[:ticket_service].key?(:category_ids)
 
-    @record.categories = Current.account.ticket_categories.where(id: params[:ticket_service][:category_ids])
+    @record.replace_synced_association(:categories, Current.account.ticket_categories.where(id: params[:ticket_service][:category_ids]),
+                                       'category_codes')
   end
 end

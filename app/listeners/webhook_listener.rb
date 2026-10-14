@@ -86,6 +86,12 @@ class WebhookListener < BaseListener
     deliver_account_webhooks(payload, account)
   end
 
+  # PATCH LOCAL (fork) - cadastro de atendimento sincronizado com o Portal do Cliente
+  def ticket_catalog_updated(event)
+    item = event.data[:item]
+    deliver_account_webhooks(TicketCatalog::WebhookPayload.new(item, event.data[:changed_keys]).as_json, item.account)
+  end
+
   def inbox_created(event)
     inbox, account = extract_inbox_and_account(event)
     inbox_webhook_data = Inbox::EventDataPresenter.new(inbox).webhook_data

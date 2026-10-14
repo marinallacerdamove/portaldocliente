@@ -9,6 +9,9 @@
 # nunca mais muda. NÃO entra por atribuição em massa nem pela API de admin
 # (`code=` é privado): o único caminho é `assign_code`, usado pelo endpoint de
 # sincronização com o Portal.
+#
+# Mudança feita aqui (tela do Chatwoot) sai como o evento `ticket_catalog.updated`
+# para o Portal; mudança que veio do próprio Portal (`portal_sync`) não volta.
 module TicketCatalogItem
   extend ActiveSupport::Concern
 
@@ -34,6 +37,7 @@ module TicketCatalogItem
     scope :ordered, -> { order(:position, :name) }
 
     after_commit :sync_attribute_values
+    after_commit :dispatch_portal_event, on: [:create, :update], unless: :portal_sync
   end
 
   class_methods do
@@ -58,6 +62,8 @@ module TicketCatalogItem
     end
   end
 
+  attr_accessor :portal_sync
+
   def attribute_value
     name
   end
@@ -67,6 +73,18 @@ module TicketCatalogItem
   # que já existe.
   def assign_code(value)
     self.code = value
+  end
+
+  # Troca uma lista N:N (tipos do serviço, status da justificativa) e, se a lista
+  # mudou, anota o campo do contrato e renova updated_at (a troca da associação
+  # sozinha não mexe no registro, e o Portal ordena as versões por updated_at).
+  def replace_synced_association(association, records, contract_key)
+    changed = public_send(association).map(&:id).sort != records.map(&:id).sort
+    public_send("#{association}=", records)
+    return unless changed
+
+    (@changed_associations ||= []) << contract_key
+    self.updated_at = Time.current
   end
 
   private
@@ -89,5 +107,23 @@ module TicketCatalogItem
     definition.attribute_display_type = :list
     definition.attribute_values = values
     definition.save!
+  end
+
+  def dispatch_portal_event
+    keys = portal_changed_keys
+    return if keys.empty?
+
+    Rails.configuration.dispatcher.dispatch(Events::Types::TICKET_CATALOG_UPDATED, Time.zone.now, item: self, changed_keys: keys)
+  ensure
+    @changed_associations = nil
+  end
+
+  # Item novo vai inteiro; item editado, só os campos do contrato que mudaram.
+  def portal_changed_keys
+    fields = TicketCatalog::SyncFields.fields(TicketCatalog::SyncFields.key_for(self.class.name))
+    return fields if saved_change_to_id?
+
+    changed = saved_changes.keys.map { |column| TicketCatalog::SyncFields::COLUMN_REFERENCES.fetch(column, column) }
+    (changed | Array(@changed_associations)) & fields
   end
 end
