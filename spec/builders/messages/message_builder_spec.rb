@@ -313,4 +313,31 @@ describe Messages::MessageBuilder do
       end
     end
   end
+
+  # Fork (Portal do Cliente): mensagem escrita no Portal sai em nome do agente.
+  describe '#perform with sender_type User' do
+    let(:portal_admin) { create(:user, :administrator, account: account) }
+    let(:agent) { create(:user, account: account) }
+    let(:params) do
+      ActionController::Parameters.new({ content: 'nota', private: true, sender_type: 'User', sender_id: agent.id })
+    end
+
+    it 'posts as the given agent when the key belongs to an account administrator' do
+      message = described_class.new(portal_admin, conversation, params).perform
+      expect(message.sender).to eq(agent)
+    end
+
+    it 'keeps the key owner when the poster is not an administrator' do
+      other_agent = create(:user, account: account)
+      message = described_class.new(other_agent, conversation, params).perform
+      expect(message.sender).to eq(other_agent)
+    end
+
+    it 'keeps the key owner when the agent is from another account' do
+      outsider = create(:user, account: create(:account))
+      outsider_params = ActionController::Parameters.new({ content: 'nota', sender_type: 'User', sender_id: outsider.id })
+      message = described_class.new(portal_admin, conversation, outsider_params).perform
+      expect(message.sender).to eq(portal_admin)
+    end
+  end
 end

@@ -134,9 +134,21 @@ class Messages::MessageBuilder
   end
 
   def message_sender
+    return portal_agent_sender if @params[:sender_type] == 'User'
     return if @params[:sender_type] != 'AgentBot'
 
     AgentBot.where(account_id: [nil, @conversation.account.id]).find_by(id: @params[:sender_id])
+  end
+
+  # Fork (Portal do Cliente): a integração posta com a chave de um
+  # administrador, e a mensagem escrita por outro agente no Portal aparecia
+  # como do administrador. Com sender_type=User, sai em nome do agente
+  # informado: só quando quem posta é administrador da conta e o agente é da
+  # mesma conta; senão, o próprio usuário da chave, como sempre.
+  def portal_agent_sender
+    return unless @user.is_a?(User) && @account.account_users.find_by(user_id: @user.id)&.administrator?
+
+    @account.users.find_by(id: @params[:sender_id])
   end
 
   def message_params
