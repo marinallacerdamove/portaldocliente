@@ -321,6 +321,12 @@
     "VISIBLE_TO_AGENTS": "Mensagem Privada: Apenas visível para você e seu time",
     "CHANGE_STATUS": "Estado da conversa mudou",
     "RESOLVE_BLOCKED": "Preencha antes de resolver: {fields}",
+    "PORTAL_TICKET_OFFER": {
+      "TITLE": "Criar ticket desta conversa no Portal?",
+      "DESCRIPTION": "Conversa com {name}. A conversa de WhatsApp não vira ticket sozinha. Se criar, o ticket nasce no Portal já encerrado, com o histórico desta conversa, no nome do cliente.",
+      "YES": "Sim, criar ticket",
+      "NO": "Não, só encerrar"
+    },
     "RESOLVE_REQUIRED_ACTIONS": "Preencha em Ações da conversa antes de resolver: {fields}",
     "CHANGE_STATUS_FAILED": "Mudança de status da conversa falhou",
     "CHANGE_AGENT": "Novo agente atribuído",

@@ -9,6 +9,12 @@ import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
 import { useResolveRequirements } from 'dashboard/composables/useResolveRequirements';
 import { statusChangeErrorMessage } from 'dashboard/helper/statusChangeError';
+import { shouldOfferPortalTicket } from 'dashboard/helper/portalTicketOffer';
+import {
+  CRIAR_TICKET_PORTAL_ATTRIBUTE_KEY,
+  CRIAR_TICKET_PORTAL_NAO,
+  CRIAR_TICKET_PORTAL_SIM,
+} from 'dashboard/constants/ticketDetailAttributes';
 
 import WootDropdownItem from 'shared/components/ui/dropdown/DropdownItem.vue';
 import WootDropdownMenu from 'shared/components/ui/dropdown/DropdownMenu.vue';
@@ -21,6 +27,7 @@ import {
 import ButtonGroup from 'dashboard/components-next/buttonGroup/ButtonGroup.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ConversationResolveAttributesModal from 'dashboard/components-next/ConversationWorkflow/ConversationResolveAttributesModal.vue';
+import ResolvePortalTicketDialog from 'dashboard/components-next/ConversationWorkflow/ResolvePortalTicketDialog.vue';
 
 const store = useStore();
 const getters = useStoreGetters();
@@ -32,6 +39,7 @@ const { missingFor } = useResolveRequirements();
 const arrowDownButtonRef = ref(null);
 const isLoading = ref(false);
 const resolveAttributesModalRef = ref(null);
+const portalTicketDialogRef = ref(null);
 // PATCH LOCAL (fork) - atributos que vão junto com esta resolução (ex.: status
 // "Fechado" escolhido no cabeçalho), gravados no mesmo update do motivo.
 const pendingExtraAttributes = ref({});
@@ -87,12 +95,17 @@ const openSnoozeModal = () => {
   ninja.open({ parent: 'snooze_conversation' });
 };
 
-const toggleStatus = (status, snoozedUntil, customAttributes = null) => {
+const toggleStatus = (
+  status,
+  snoozedUntil,
+  customAttributes = null,
+  conversationId = currentChat.value.id
+) => {
   closeDropdown();
   isLoading.value = true;
 
   const payload = {
-    conversationId: currentChat.value.id,
+    conversationId,
     status,
     snoozedUntil,
   };
@@ -112,10 +125,12 @@ const toggleStatus = (status, snoozedUntil, customAttributes = null) => {
 
 const handleResolveWithAttributes = ({ attributes, context }) => {
   if (context) {
-    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED, context.snoozedUntil, {
-      ...pendingExtraAttributes.value,
-      ...attributes,
-    });
+    toggleStatus(
+      wootConstants.STATUS_TYPE.RESOLVED,
+      context.snoozedUntil,
+      { ...pendingExtraAttributes.value, ...attributes },
+      context.id
+    );
   }
 };
 
@@ -124,8 +139,11 @@ const onCmdOpenConversation = () => {
 };
 
 const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
+  // A conversa em que o agente clicou: com a pergunta do Portal aberta (ou o
+  // atalho que já passa pra próxima) a selecionada pode mudar antes de encerrar.
+  const target = currentChat.value;
   pendingExtraAttributes.value = attributes;
-  const requirements = await missingFor(currentChat.value, {
+  const requirements = await missingFor(target, {
     priority: t('CONVERSATION.PRIORITY.TITLE'),
     assignee: t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL'),
     team: t('CONVERSATION_SIDEBAR.TEAM_LABEL'),
@@ -146,7 +164,21 @@ const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
     );
     return;
   }
-  const currentCustomAttributes = currentChat.value.custom_attributes || {};
+  // Conversa de WhatsApp sem ticket: o agente decide se vira ticket no Portal.
+  // Fechar a pergunta (X/Esc) desiste de encerrar.
+  if (shouldOfferPortalTicket(target)) {
+    const createTicket = await portalTicketDialogRef.value?.ask(
+      target.meta?.sender?.name
+    );
+    if (createTicket === null) return;
+    pendingExtraAttributes.value = {
+      ...pendingExtraAttributes.value,
+      [CRIAR_TICKET_PORTAL_ATTRIBUTE_KEY]: createTicket
+        ? CRIAR_TICKET_PORTAL_SIM
+        : CRIAR_TICKET_PORTAL_NAO,
+    };
+  }
+  const currentCustomAttributes = target.custom_attributes || {};
   const { missing } = checkMissingAttributes(currentCustomAttributes);
   const { closeReason } = requirements;
   if (
@@ -158,7 +190,7 @@ const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
 
   if (missing.length) {
     const conversationContext = {
-      id: currentChat.value.id,
+      id: target.id,
       snoozedUntil: null,
     };
     resolveAttributesModalRef.value?.open(
@@ -166,10 +198,15 @@ const onCmdResolveConversation = async ({ attributes = {} } = {}) => {
       currentCustomAttributes,
       conversationContext
     );
-  } else if (Object.keys(attributes).length) {
-    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED, null, attributes);
+  } else if (Object.keys(pendingExtraAttributes.value).length) {
+    toggleStatus(
+      wootConstants.STATUS_TYPE.RESOLVED,
+      null,
+      pendingExtraAttributes.value,
+      target.id
+    );
   } else {
-    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED);
+    toggleStatus(wootConstants.STATUS_TYPE.RESOLVED, null, null, target.id);
   }
 };
 
@@ -294,5 +331,6 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
       ref="resolveAttributesModalRef"
       @submit="handleResolveWithAttributes"
     />
+    <ResolvePortalTicketDialog ref="portalTicketDialogRef" />
   </div>
 </template>

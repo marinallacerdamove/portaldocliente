@@ -362,6 +362,12 @@
     "VISIBLE_TO_AGENTS": "Private Note: Only visible to you and your team",
     "CHANGE_STATUS": "Conversation status changed",
     "RESOLVE_BLOCKED": "Fill in before resolving: {fields}",
+    "PORTAL_TICKET_OFFER": {
+      "TITLE": "Create a Portal ticket from this conversation?",
+      "DESCRIPTION": "Conversation with {name}. WhatsApp conversations do not become tickets on their own. If you create it, the ticket is born in the Portal already resolved, with this conversation's history, under the customer's name.",
+      "YES": "Yes, create ticket",
+      "NO": "No, just resolve"
+    },
     "RESOLVE_REQUIRED_ACTIONS": "Fill in Conversation actions before resolving: {fields}",
     "CHANGE_STATUS_FAILED": "Conversation status change failed",
     "CHANGE_AGENT": "Conversation Assignee changed",

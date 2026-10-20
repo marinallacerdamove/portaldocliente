@@ -11,6 +11,12 @@ export const TICKET_ID_EXTERNO_ATTRIBUTE_KEY = 'ticket_id_externo';
 export const TICKET_PAI_ID_ATTRIBUTE_KEY = 'ticket_pai_id';
 export const TICKET_FILHOS_IDS_ATTRIBUTE_KEY = 'ticket_filhos_ids';
 export const VISIVEL_PARCEIRO_ATTRIBUTE_KEY = 'visivel_parceiro';
+// Resposta do agente a "Criar ticket desta conversa no Portal?" ao encerrar uma
+// conversa de WhatsApp ('sim' ou 'nao'); o Portal lê no conversation_status_changed
+// (Integration::ChatwootContract::ATTR_CREATE_PORTAL_TICKET).
+export const CRIAR_TICKET_PORTAL_ATTRIBUTE_KEY = 'criar_ticket_portal';
+export const CRIAR_TICKET_PORTAL_SIM = 'sim';
+export const CRIAR_TICKET_PORTAL_NAO = 'nao';
 
 // Código de negócio do item do cadastro escolhido na conversa (chaves ocultas,
 // o servidor mantém junto do nome: TicketCatalogCodes).
@@ -72,7 +78,8 @@ export const TICKET_LINK_ATTRIBUTE_KEYS = Object.freeze([
 // Rendered no cabeçalho da conversa (ConversationHeader.vue), não na barra
 // lateral - ainda precisa ficar fora de "Informação da conversa"/"Informações
 // do Portal do Cliente" pra não duplicar o mesmo número na tela.
-export const HEADER_ATTRIBUTE_KEYS = Object.freeze(['ticket_id']);
+export const TICKET_ID_ATTRIBUTE_KEY = 'ticket_id';
+export const HEADER_ATTRIBUTE_KEYS = Object.freeze([TICKET_ID_ATTRIBUTE_KEY]);
 
 // Every conversation_attribute key that has a dedicated home elsewhere in the
 // sidebar - used to decide whether "Informação da conversa" has anything
