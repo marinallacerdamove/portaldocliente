@@ -35,6 +35,25 @@ RSpec.describe Conversations::InternalTicketService do
     expect(ticket).to have_attributes(team: team, assignee: agent)
   end
 
+  context 'when the ticket is created already assigned to someone else' do
+    let(:other) { create(:user, account: account, role: :agent) }
+
+    before do
+      create(:inbox_member, user: other, inbox: inbox)
+      create(:team_member, team: team, user: other)
+    end
+
+    it 'tells the assignee and records the assignment, like assigning on screen' do
+      allow(Rails.configuration.dispatcher).to receive(:dispatch).and_call_original
+
+      expect { create_ticket(team: team, assignee: other, message: { content: 'Descrição', private: true }) }
+        .to have_enqueued_job(Conversations::ActivityMessageJob)
+
+      expect(Rails.configuration.dispatcher).to have_received(:dispatch)
+        .with(Events::Types::ASSIGNEE_CHANGED, anything, hash_including(notifiable_assignee_change: true))
+    end
+  end
+
   it 'renders the protocol in the first message' do
     ticket = create_ticket(message: { content: 'Protocolo #{{conversation.display_id}}', private: true })
 

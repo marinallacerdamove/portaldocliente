@@ -35,6 +35,8 @@ class Conversations::InternalTicketService
       link_conversation
       @conversation.reload
     end
+    announce_assignment
+    @conversation
   end
 
   private
@@ -55,6 +57,25 @@ class Conversations::InternalTicketService
     # mesmo que o time dele seja outro (criar já com os dois o descartaria).
     conversation.update!(assignee: @params[:assignee]) if @params[:assignee]
     conversation.reload
+  end
+
+  # Responsável escolhido já na criação: os callbacks do modelo não enxergam
+  # essa troca (o reload e as gravações seguintes apagam o saved_changes), então
+  # o aviso ao responsável, o evento e a atividade "atribuiu" saíam sem acontecer.
+  # Depois do commit, como na atribuição pela tela.
+  def announce_assignment
+    assignee = @params[:assignee]
+    return if assignee.blank?
+
+    actor = Current.acting_user || @user
+    self_assigned = assignee.id == actor.id
+    Rails.configuration.dispatcher.dispatch(
+      Events::Types::ASSIGNEE_CHANGED, Time.zone.now, conversation: @conversation, notifiable_assignee_change: !self_assigned,
+                                                      changed_attributes: { 'assignee_id' => [nil, assignee.id] }, performed_by: Current.executed_by
+    )
+    content = I18n.t("conversations.activity.assignee.#{self_assigned ? 'self_assigned' : 'assigned'}",
+                     assignee_name: assignee.name, user_name: actor.name)
+    ::Conversations::ActivityMessageJob.perform_later(@conversation, @conversation.send(:activity_message_params, content))
   end
 
   def create_first_message

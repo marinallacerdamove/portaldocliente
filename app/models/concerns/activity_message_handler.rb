@@ -19,7 +19,7 @@ module ActivityMessageHandler
   end
 
   def determine_user_name
-    Current.user&.name
+    (Current.acting_user || Current.user)&.name
   end
 
   def handle_status_change(user_name)

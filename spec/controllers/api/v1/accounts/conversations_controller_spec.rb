@@ -623,6 +623,36 @@ RSpec.describe 'Conversations API', type: :request do
         create(:inbox_member, user: agent, inbox: conversation.inbox)
       end
 
+      # PATCH LOCAL (fork) - cabeçalho X-Portal-Acting-Agent
+      context 'with the acting agent header (fork)' do
+        let(:acting) { create(:user, account: account, role: :agent, name: 'Pedro Agente') }
+
+        def toggle(user, header, priority = 'high')
+          perform_enqueued_jobs do
+            post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/toggle_priority",
+                 headers: user.create_new_auth_token.merge(header), params: { priority: priority }, as: :json
+          end
+        end
+
+        it 'records the activity in the name of the acting agent when the key owner is an administrator' do
+          toggle(administrator, 'X-Portal-Acting-Agent' => acting.id.to_s)
+
+          expect(conversation.messages.activity.pluck(:content).join(' ')).to include('Pedro Agente')
+        end
+
+        it 'ignores the header from a non-administrator, from another account and for an unknown agent' do
+          outsider = create(:user, account: create(:account), name: 'Fora Da Conta')
+          toggle(agent, { 'X-Portal-Acting-Agent' => acting.id.to_s }, 'low')
+          toggle(administrator, { 'X-Portal-Acting-Agent' => outsider.id.to_s }, 'medium')
+          toggle(administrator, { 'X-Portal-Acting-Agent' => '0' }, 'urgent')
+
+          activities = conversation.messages.activity.pluck(:content).join(' ')
+          expect(activities).to include(agent.name, administrator.name)
+          expect(activities).not_to include('Pedro Agente')
+          expect(activities).not_to include('Fora Da Conta')
+        end
+      end
+
       # PATCH LOCAL (fork) - ResolveRequirementsGuard
       context 'with resolve requirements (fork)' do
         let(:blocked) { create(:conversation, account: account, inbox: conversation.inbox, priority: nil) }

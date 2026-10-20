@@ -364,9 +364,11 @@ class Message < ApplicationRecord
     # if the sender is not a user, it's not a human response
     # if automation rule id is present, it's not a human response
     # if campaign id is present, it's not a human response
+    # portal_auto (fork): automatic message the Portal posts (welcome, out of hours, resolved)
     # external echo messages are responses sent from the native app (WhatsApp Business, Instagram)
     outgoing? &&
       content_attributes['automation_rule_id'].blank? &&
+      content_attributes['portal_auto'].blank? &&
       additional_attributes['campaign_id'].blank? &&
       (sender.is_a?(User) || content_attributes['external_echo'].present?)
   end

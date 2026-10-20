@@ -10,7 +10,7 @@ class Api::V1::Accounts::InternalTicketsController < Api::V1::Accounts::BaseCont
       inbox: inbox, contact: Current.account.contacts.find(ticket_params[:contact_id]), user: Current.user, params: service_params
     ).perform
     render 'api/v1/accounts/conversations/create'
-  rescue Conversations::InternalTicketService::InvalidTicket, Conversations::TicketLinkService::InvalidLink => e
+  rescue Conversations::InternalTicketService::InvalidTicket, Conversations::TicketLinkService::InvalidLink, JSON::ParserError => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
 

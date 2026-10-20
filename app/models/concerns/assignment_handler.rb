@@ -55,7 +55,8 @@ module AssignmentHandler
   end
 
   def process_assignment_activities
-    user_name = Current.user.name if Current.user.present?
+    acting = Current.acting_user || Current.user
+    user_name = acting.name if acting.present?
     if saved_change_to_team_id?
       create_team_change_activity(user_name)
     elsif saved_change_to_assignee_id?
@@ -64,6 +65,6 @@ module AssignmentHandler
   end
 
   def self_assign?(assignee_id)
-    assignee_id.present? && Current.user&.id == assignee_id
+    assignee_id.present? && (Current.acting_user || Current.user)&.id == assignee_id
   end
 end
