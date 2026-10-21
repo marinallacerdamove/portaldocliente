@@ -7,6 +7,9 @@
 class Api::V1::Accounts::TicketCatalogSyncController < Api::V1::Accounts::BaseController
   class UnknownCode < StandardError; end
 
+  # Colunas que chegam como lista.
+  LIST_COLUMNS = %w[allowed_priorities options].freeze
+
   rescue_from UnknownCode do |error|
     render json: { error: error.message }, status: :unprocessable_entity
   end
@@ -55,14 +58,18 @@ class Api::V1::Accounts::TicketCatalogSyncController < Api::V1::Accounts::BaseCo
       scope.new
   end
 
+  # Regra repete nome: só adota quando há uma única sem código com esse nome
+  # (as que já existiam nos dois lados são ligadas antes pelo rake do Portal).
   def unclaimed_by_name
     candidates = scope.where(code: nil).where('lower(name) = lower(?)', params[:name].to_s.squish)
     candidates = candidates.where(parent_id: parent&.id) if key == 'servico'
-    candidates.first
+    return candidates.first unless key == 'regra'
+
+    candidates.first if candidates.one?
   end
 
   def record_attributes
-    params.permit(*TicketCatalog::SyncFields::COLUMNS.fetch(key).map { |field| field == 'allowed_priorities' ? { field => [] } : field })
+    params.permit(*TicketCatalog::SyncFields::COLUMNS.fetch(key).map { |field| LIST_COLUMNS.include?(field) ? { field => [] } : field })
   end
 
   def assign_references
@@ -70,6 +77,20 @@ class Api::V1::Accounts::TicketCatalogSyncController < Api::V1::Accounts::BaseCo
     assign_default_category
     assign_list(:categories, :ticket_categories, 'category_codes') if key == 'servico'
     assign_list(:ticket_statuses, :ticket_statuses, 'status_codes') if key == 'justificativa'
+    assign_rule_fields if key == 'regra'
+  end
+
+  # Campo citado pela regra que esta conta ainda não tem: 422, o Portal repete
+  # depois que o campo chegar.
+  def assign_rule_fields
+    %w[conditions fields].each do |attribute|
+      next unless params.key?(attribute)
+
+      entries, missing = TicketCatalog::SyncFields.rule_from_wire(params.to_unsafe_h[attribute], Current.account)
+      raise UnknownCode, "unknown field_key: #{missing.join(', ')}" if missing.any?
+
+      @record.public_send("#{attribute}=", entries)
+    end
   end
 
   def assign_default_category

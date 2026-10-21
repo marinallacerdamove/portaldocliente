@@ -157,7 +157,8 @@ Rails.application.routes.draw do
           resources :ticket_statuses, only: [:index, :create, :show, :update]
           resources :ticket_justifications, only: [:index, :create, :show, :update]
           resources :ticket_close_reasons, only: [:index, :create, :show, :update]
-          put 'ticket_catalog_sync/:catalog', to: 'ticket_catalog_sync#upsert', constraints: { catalog: /servico|tipo|status|justificativa|motivo/ }
+          put 'ticket_catalog_sync/:catalog', to: 'ticket_catalog_sync#upsert',
+                                              constraints: { catalog: /servico|tipo|status|justificativa|motivo|campo|regra/ }
           resources :ticket_custom_fields, only: [:index, :create, :show, :update]
           resources :ticket_field_rules, only: [:index, :create, :show, :update]
           resources :sla_policies, only: [:index, :create, :show, :update, :destroy]

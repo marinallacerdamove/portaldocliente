@@ -10,6 +10,9 @@
 # fields: [{ field_id:, columns: 1..12, visible_to_clients:, editable_by_clients:,
 #   editable_by_agents:, required_on: }] - na ordem de exibição.
 class TicketFieldRule < ApplicationRecord
+  include TicketCatalogCode
+  include TicketCatalogPortalEvent
+
   GROUPS = %w[all any].freeze
   ATTRIBUTES = %w[servico tipo_de_solicitacao status campo origem empresa equipe responsavel].freeze
   OPERATORS = %w[equal_to not_equal_to is_present].freeze
@@ -31,7 +34,7 @@ class TicketFieldRule < ApplicationRecord
   before_validation :normalize
 
   def as_json(*)
-    slice(:id, :name, :active, :conditions, :fields, :position)
+    slice(:id, :code, :name, :active, :conditions, :fields, :position)
   end
 
   private

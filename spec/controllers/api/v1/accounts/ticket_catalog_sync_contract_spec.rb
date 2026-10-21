@@ -77,6 +77,12 @@ RSpec.describe 'Ticket catalog sync contract with the Portal', type: :request do
       record.parent = account.ticket_services.find_by!(code: spec['parent_code']) if spec['parent_code']
       record.default_category = account.ticket_categories.find_by!(code: spec['default_category_code']) if spec['default_category_code']
       assign_lists(record, spec)
+      assign_rule_fields(record, spec) if spec['catalog'] == 'regra'
+    end
+
+    def assign_rule_fields(record, spec)
+      record.conditions, = TicketCatalog::SyncFields.rule_from_wire(spec['conditions'], account)
+      record.fields, = TicketCatalog::SyncFields.rule_from_wire(spec['fields'], account)
     end
 
     def assign_lists(record, spec)

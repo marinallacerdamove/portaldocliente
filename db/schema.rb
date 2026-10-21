@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_14_120000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_21_130000) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -775,8 +775,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_14_120000) do
     t.jsonb "additional_attributes", default: {}
     t.jsonb "custom_attributes", default: {}
     t.datetime "last_activity_at", precision: nil
-    t.index ["account_id", "domain"], name: "index_companies_on_account_and_domain", unique: true, where: "(domain IS NOT NULL)"
     t.index "account_id, upper(regexp_replace((custom_attributes ->> 'cnpj'::text), '[^0-9A-Za-z]'::text, ''::text, 'g'::text))", name: "index_companies_on_account_id_and_cnpj_key", unique: true, where: "(regexp_replace((custom_attributes ->> 'cnpj'::text), '[^0-9A-Za-z]'::text, ''::text, 'g'::text) <> ''::text)"
+    t.index ["account_id", "domain"], name: "index_companies_on_account_and_domain", unique: true, where: "(domain IS NOT NULL)"
     t.index ["account_id"], name: "index_companies_on_account_id"
     t.index ["name", "account_id"], name: "index_companies_on_name_and_account_id"
   end
@@ -1575,6 +1575,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_14_120000) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
+    t.index ["account_id", "code"], name: "index_ticket_field_rules_on_account_id_and_code", unique: true, where: "(code IS NOT NULL)"
     t.index ["account_id"], name: "index_ticket_field_rules_on_account_id"
   end
 

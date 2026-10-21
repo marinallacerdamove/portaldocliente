@@ -4,40 +4,28 @@
 # que continua sendo onde a conversa guarda o valor (filtros, automações,
 # Portal e relatórios leem de lá).
 #
-# Código (`code`): identidade de negócio do item, dona do Portal do Cliente
-# (SRV-0042, TIP-0007...). Nasce nulo; vai de nulo para um valor uma única vez e
-# nunca mais muda. NÃO entra por atribuição em massa nem pela API de admin
-# (`code=` é privado): o único caminho é `assign_code`, usado pelo endpoint de
-# sincronização com o Portal.
-#
-# Mudança feita aqui (tela do Chatwoot) sai como o evento `ticket_catalog.updated`
-# para o Portal; mudança que veio do próprio Portal (`portal_sync`) não volta.
+# Código (`code`, TicketCatalogCode) e evento para o Portal (TicketCatalogPortalEvent)
+# são comuns também ao campo adicional e à regra de exibição.
 module TicketCatalogItem
   extend ActiveSupport::Concern
 
-  CODE_FORMAT = /\A[A-Z0-9]+(-[A-Z0-9]+)*\z/
-  CODE_MAX_LENGTH = 32
-
   included do
     include TicketCatalogRename
+    include TicketCatalogCode
+    include TicketCatalogPortalEvent
 
     belongs_to :account
 
     enum ticket_scope: { publico: 0, interno: 1, ambos: 2 }
 
     validates :name, presence: true
-    validates :code, format: { with: CODE_FORMAT }, length: { maximum: CODE_MAX_LENGTH },
-                     uniqueness: { scope: :account_id }, allow_nil: true, if: :will_save_change_to_code?
-    validate :code_never_changes
 
     before_validation { self.name = name.to_s.squish }
-    before_validation { self.code = code.to_s.strip.presence }
 
     scope :active, -> { where(active: true) }
     scope :ordered, -> { order(:position, :name) }
 
     after_commit :sync_attribute_values
-    after_commit :dispatch_portal_event, on: [:create, :update], unless: :portal_sync
   end
 
   class_methods do
@@ -62,42 +50,11 @@ module TicketCatalogItem
     end
   end
 
-  attr_accessor :portal_sync
-
   def attribute_value
     name
   end
 
-  # Caminho do endpoint de sincronização: grava o código (nulo -> valor) sem
-  # abrir `code=` pra atribuição em massa. A validação recusa trocar um código
-  # que já existe.
-  def assign_code(value)
-    self.code = value
-  end
-
-  # Troca uma lista N:N (tipos do serviço, status da justificativa) e, se a lista
-  # mudou, anota o campo do contrato e renova updated_at (a troca da associação
-  # sozinha não mexe no registro, e o Portal ordena as versões por updated_at).
-  def replace_synced_association(association, records, contract_key)
-    changed = public_send(association).map(&:id).sort != records.map(&:id).sort
-    public_send("#{association}=", records)
-    return unless changed
-
-    (@changed_associations ||= []) << contract_key
-    self.updated_at = Time.current
-  end
-
   private
-
-  def code=(value)
-    self[:code] = value
-  end
-
-  def code_never_changes
-    return unless persisted? && will_save_change_to_code? && code_in_database.present?
-
-    errors.add(:code, :immutable, message: 'cannot be changed once set')
-  end
 
   def sync_attribute_values
     key, display_name = self.class.catalog_attribute
@@ -107,23 +64,5 @@ module TicketCatalogItem
     definition.attribute_display_type = :list
     definition.attribute_values = values
     definition.save!
-  end
-
-  def dispatch_portal_event
-    keys = portal_changed_keys
-    return if keys.empty?
-
-    Rails.configuration.dispatcher.dispatch(Events::Types::TICKET_CATALOG_UPDATED, Time.zone.now, item: self, changed_keys: keys)
-  ensure
-    @changed_associations = nil
-  end
-
-  # Item novo vai inteiro; item editado, só os campos do contrato que mudaram.
-  def portal_changed_keys
-    fields = TicketCatalog::SyncFields.fields(TicketCatalog::SyncFields.key_for(self.class.name))
-    return fields if saved_change_to_id?
-
-    changed = saved_changes.keys.map { |column| TicketCatalog::SyncFields::COLUMN_REFERENCES.fetch(column, column) }
-    (changed | Array(@changed_associations)) & fields
   end
 end

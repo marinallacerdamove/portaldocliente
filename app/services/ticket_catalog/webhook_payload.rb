@@ -36,6 +36,8 @@ class TicketCatalog::WebhookPayload
         default_category_code: @item.default_category&.code }
     when 'justificativa'
       { status_codes: codes(@item.ticket_statuses) }
+    when 'regra'
+      TicketCatalog::SyncFields.rule_wire(@item)
     else
       {}
     end

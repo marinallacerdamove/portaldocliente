@@ -71,6 +71,50 @@
       "existing": [],
       "request": { "name": "Resolvido", "active": true, "position": 1, "code": "MOT-0002", "remote_id": null },
       "expected_item": { "code": "MOT-0002", "name": "Resolvido", "active": true, "position": 1 }
+    },
+    {
+      "name": "campo adicional (a chave e o codigo)",
+      "catalog": "campo",
+      "existing": [],
+      "request": {
+        "name": "Prazo do cliente", "field_type": "date", "hint": "Data combinada", "options": [], "active": true, "position": 3,
+        "code": "prazo_cliente", "remote_id": null
+      },
+      "expected_item": {
+        "code": "prazo_cliente", "name": "Prazo do cliente", "field_type": "date", "hint": "Data combinada", "options": [],
+        "active": true, "position": 3
+      }
+    },
+    {
+      "name": "regra de exibicao (campos pela chave)",
+      "catalog": "regra",
+      "existing": [
+        { "catalog": "campo", "code": "causa", "name": "Causa" },
+        { "catalog": "campo", "code": "detalhe", "name": "Detalhe" }
+      ],
+      "request": {
+        "name": "Causa do erro", "active": true, "position": 0,
+        "conditions": [
+          { "group": "all", "attribute": "servico", "operator": "equal_to", "value": "ALBATROSS" },
+          { "group": "all", "attribute": "campo", "operator": "equal_to", "value": "Bug", "field_key": "causa" }
+        ],
+        "fields": [
+          { "columns": 6, "required_on": "conclusao", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "detalhe" },
+          { "columns": 12, "required_on": "nao_exigir", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "causa" }
+        ],
+        "code": "REG-0007", "remote_id": null
+      },
+      "expected_item": {
+        "code": "REG-0007", "name": "Causa do erro", "active": true, "position": 0,
+        "conditions": [
+          { "group": "all", "attribute": "servico", "operator": "equal_to", "value": "ALBATROSS" },
+          { "group": "all", "attribute": "campo", "operator": "equal_to", "value": "Bug", "field_key": "causa" }
+        ],
+        "fields": [
+          { "columns": 6, "required_on": "conclusao", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "detalhe" },
+          { "columns": 12, "required_on": "nao_exigir", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "causa" }
+        ]
+      }
     }
   ],
   "webhooks": [
@@ -174,6 +218,63 @@
         "catalog": "motivo",
         "item": { "id": 305, "code": "MOT-0002", "name": "Resolvido", "active": true, "position": 4 },
         "changed_keys": ["position"],
+        "updated_at": "2026-10-14T12:00:00.123456Z"
+      }
+    },
+    {
+      "name": "dica do campo editada",
+      "existing": [],
+      "record": {
+        "catalog": "campo", "id": 410, "code": "prazo_cliente", "name": "Prazo do cliente", "field_type": "date",
+        "hint": "Data combinada", "options": [], "position": 3
+      },
+      "changed_keys": ["hint"],
+      "expected": {
+        "event": "ticket_catalog_updated",
+        "account": { "id": 9001, "name": "Conta Contrato" },
+        "catalog": "campo",
+        "item": {
+          "id": 410, "code": "prazo_cliente", "name": "Prazo do cliente", "field_type": "date", "hint": "Data combinada",
+          "options": [], "active": true, "position": 3
+        },
+        "changed_keys": ["hint"],
+        "updated_at": "2026-10-14T12:00:00.123456Z"
+      }
+    },
+    {
+      "name": "regra renomeada",
+      "existing": [
+        { "catalog": "campo", "code": "causa", "name": "Causa" },
+        { "catalog": "campo", "code": "detalhe", "name": "Detalhe" }
+      ],
+      "record": {
+        "catalog": "regra", "id": 420, "code": "REG-0007", "name": "Causa do erro", "position": 0,
+        "conditions": [
+          { "group": "all", "attribute": "servico", "operator": "equal_to", "value": "ALBATROSS" },
+          { "group": "all", "attribute": "campo", "operator": "equal_to", "value": "Bug", "field_key": "causa" }
+        ],
+        "fields": [
+          { "columns": 6, "required_on": "conclusao", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "detalhe" },
+          { "columns": 12, "required_on": "nao_exigir", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "causa" }
+        ]
+      },
+      "changed_keys": ["name"],
+      "expected": {
+        "event": "ticket_catalog_updated",
+        "account": { "id": 9001, "name": "Conta Contrato" },
+        "catalog": "regra",
+        "item": {
+          "id": 420, "code": "REG-0007", "name": "Causa do erro", "active": true, "position": 0,
+          "conditions": [
+          { "group": "all", "attribute": "servico", "operator": "equal_to", "value": "ALBATROSS" },
+          { "group": "all", "attribute": "campo", "operator": "equal_to", "value": "Bug", "field_key": "causa" }
+        ],
+          "fields": [
+          { "columns": 6, "required_on": "conclusao", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "detalhe" },
+          { "columns": 12, "required_on": "nao_exigir", "visible_to_clients": false, "editable_by_clients": false, "editable_by_agents": true, "field_key": "causa" }
+        ]
+        },
+        "changed_keys": ["name"],
         "updated_at": "2026-10-14T12:00:00.123456Z"
       }
     }
