@@ -4,7 +4,8 @@ describe Macros::ExecutionService, type: :service do
   let(:account) { create(:account) }
   let(:user) { create(:user, account: account) }
   let(:inbox) { create(:inbox, account: account) }
-  let(:conversation) { create(:conversation, account: account, inbox: inbox, status: :open) }
+  # Fork: o Resolver (botão, macro e resolução em massa) também exige Prioridade e Agente (e Time, quando a conta tem time).
+  let(:conversation) { create(:conversation, account: account, inbox: inbox, status: :open, priority: :high, assignee: user) }
   let(:macro) do
     create(:macro, account: account, created_by: user, updated_by: user,
                    actions: [{ 'action_name' => 'resolve_conversation', 'action_params' => [] }])
@@ -19,6 +20,14 @@ describe Macros::ExecutionService, type: :service do
   end
 
   it 'skips the resolve action when a required attribute is missing' do
+    described_class.new(macro, conversation, user).perform
+
+    expect(conversation.reload.status).to eq('open')
+  end
+
+  it 'skips the resolve action when the conversation has no assignee (fork: same checks as the Resolver button)' do
+    conversation.update!(custom_attributes: { 'priority_level' => 'high' }, assignee: nil)
+
     described_class.new(macro, conversation, user).perform
 
     expect(conversation.reload.status).to eq('open')
