@@ -68,8 +68,8 @@ RSpec.describe 'Ticket catalog admin screen and the Portal event', type: :reques
   end
 
   it 'does not send back what came from the Portal' do
-    put "/api/v1/accounts/#{account.id}/ticket_catalog_sync/campo", headers: admin.create_new_auth_token,
-                                                                    params: { code: 'causa', name: 'Causa', field_type: 'text', options: [] }, as: :json
+    body = { code: 'causa', name: 'Causa', field_type: 'text', options: [] }
+    put "/api/v1/accounts/#{account.id}/ticket_catalog_sync/campo", headers: admin.create_new_auth_token, params: body, as: :json
 
     expect(response).to have_http_status(:success)
     expect(dispatcher).not_to have_received(:dispatch).with(Events::Types::TICKET_CATALOG_UPDATED, anything, anything)
