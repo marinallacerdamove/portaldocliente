@@ -233,6 +233,53 @@ describe('useMacroExecution', () => {
       expect(useAlert).toHaveBeenCalledWith('MACROS.EXECUTE.RESOLVE_BLOCKED');
     });
 
+    // Regressão B237: macro disparada pelo serviço rodava sem mensagem de
+    // sucesso (e o aviso de "resolver travado" era engolido no modo silencioso).
+    it('shows the success message of a silent macro only after it ran', async () => {
+      const { execute } = useMacroExecution();
+
+      execute(macroWith([addLabel]), CONVERSATION_ID, {
+        silent: true,
+        successMessage: 'Macro aplicada',
+      });
+      expect(useAlert).not.toHaveBeenCalled();
+      await flushPromises();
+
+      expect(dispatch).toHaveBeenCalledWith(
+        'macros/execute',
+        expect.anything()
+      );
+      expect(useAlert).toHaveBeenCalledTimes(1);
+      expect(useAlert).toHaveBeenCalledWith('Macro aplicada');
+    });
+
+    it('stays silent when a silent macro has no success message', async () => {
+      const { execute } = useMacroExecution();
+
+      execute(macroWith([addLabel]), CONVERSATION_ID, { silent: true });
+      await flushPromises();
+
+      expect(useAlert).not.toHaveBeenCalled();
+    });
+
+    it('still warns what blocks the resolution of a silent macro', async () => {
+      missingFor.mockResolvedValue({
+        actions: [{ key: 'priority', label: 'Prioridade' }],
+        customFields: [],
+        closeReason: null,
+      });
+      const { execute } = useMacroExecution();
+
+      execute(macroWith([resolveConversation]), CONVERSATION_ID, {
+        silent: true,
+        successMessage: 'Macro aplicada',
+      });
+      await flushPromises();
+
+      expect(useAlert).toHaveBeenCalledTimes(1);
+      expect(useAlert).toHaveBeenCalledWith('MACROS.EXECUTE.RESOLVE_BLOCKED');
+    });
+
     it('does not look at the requirements for a macro that cannot resolve', async () => {
       const { execute } = useMacroExecution();
 

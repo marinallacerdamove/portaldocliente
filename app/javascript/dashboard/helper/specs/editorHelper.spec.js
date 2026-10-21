@@ -183,6 +183,24 @@ describe('stripUnsupportedMarkdown', () => {
     expect(result).toBe('![](http://localhost:3000/image.png)');
     expect(result).not.toContain('!:');
   });
+  // Regressão B212: o padrão que remove link virava a imagem em "!: url" na
+  // caixa de resposta. Nenhum canal real aceita imagem sem aceitar link, então
+  // registra um canal de teste no FORMATTING só durante o exemplo.
+  it('does not turn an image into "!: url" on a channel with image but without link', () => {
+    FORMATTING['Channel::ImageOnlyTest'] = { marks: [], nodes: ['image'] };
+    try {
+      const result = stripUnsupportedMarkdown(
+        'Veja ![](http://localhost:3000/image.png) e [site](http://example.com)',
+        'Channel::ImageOnlyTest'
+      );
+      expect(result).toBe(
+        'Veja ![](http://localhost:3000/image.png) e site: http://example.com'
+      );
+      expect(result).not.toContain('!:');
+    } finally {
+      delete FORMATTING['Channel::ImageOnlyTest'];
+    }
+  });
   it('strips images but keeps bold/italic/link for Telegram channel', () => {
     const result = stripUnsupportedMarkdown(richSignature, 'Channel::Telegram');
     expect(result).toContain('**Bold**');

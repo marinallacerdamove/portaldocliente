@@ -234,6 +234,16 @@ RSpec.describe Message do
       expect(conversation.first_reply_created_at).to be_nil
       expect(conversation.waiting_since).to eq conversation.created_at
     end
+
+    # Regressão B203: a mensagem automática do Portal (boas-vindas, fora do expediente, resolvido) contava como
+    # resposta humana: marcava a primeira resposta e tirava o ticket de "aguardando"
+    it 'does not count a Portal automatic message (portal_auto) as the first reply nor clear waiting_since' do
+      message = create(:message, message_type: :outgoing, conversation: conversation, content_attributes: { portal_auto: true })
+
+      expect(message.sender).to be_a(User)
+      expect(conversation.reload.first_reply_created_at).to be_nil
+      expect(conversation.waiting_since).to eq conversation.created_at
+    end
   end
 
   describe '#reopen_conversation' do

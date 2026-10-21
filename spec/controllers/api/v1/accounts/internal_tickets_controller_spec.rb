@@ -58,6 +58,16 @@ RSpec.describe 'Internal tickets API', type: :request do
     expect(response.parsed_body['error']).to eq('priority')
   end
 
+  # Regressão B204: um corpo `ticket` com JSON malformado dava 500 (JSON::ParserError sem tratamento)
+  it 'answers 422 and creates nothing when the ticket is not valid JSON' do
+    expect do
+      post "/api/v1/accounts/#{account.id}/internal_tickets", headers: agent.create_new_auth_token, params: { ticket: '{inbox_id: ' }
+    end.not_to change(Conversation, :count)
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response.parsed_body['error']).to be_present
+  end
+
   it 'refuses an inbox the agent cannot see' do
     hidden_inbox = create(:inbox, account: account)
 

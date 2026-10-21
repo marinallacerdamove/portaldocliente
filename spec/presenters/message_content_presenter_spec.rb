@@ -112,6 +112,19 @@ RSpec.describe MessageContentPresenter do
       end
     end
 
+    # Regressão B208: a mensagem de canal API (Portal do Cliente) chegava no webhook em markdown cru
+    # (`**negrito**`, `![img](url)`) em vez de HTML; o webhook é o único caminho de entrega desse canal
+    context 'when the inbox is an API channel (Portal)' do
+      let(:conversation) { create(:conversation, inbox: create(:channel_api).inbox) }
+      let(:content_type) { 'text' }
+      let(:content) { "Regular **bold** message\n\n![assinatura](https://example.com/assinatura.png)" }
+
+      it 'sends the HTML-rendered content instead of the raw markdown' do
+        expect(presenter.webhook_content).to include('<strong>bold</strong>', '<img src="https://example.com/assinatura.png"')
+        expect(presenter.webhook_content).not_to include('**bold**', '![assinatura]')
+      end
+    end
+
     context 'when message is input_csat and inbox is not web widget' do
       let(:content_type) { 'input_csat' }
       let(:content) { 'Rate your experience' }

@@ -300,6 +300,19 @@ describe('createConversationPayload', () => {
 
     expect(payload.has('additional_attributes[mail_subject]')).toBe(false);
   });
+
+  // Regressão B210: sem source_id/assignee_id o FormData mandava a string
+  // "undefined" e a 2ª criação de conversa batia em RecordNotUnique.
+  it('does not send source_id or assignee_id when they are not provided', () => {
+    const payload = createConversationPayload({
+      params: { inboxId: '1', message: { content: 'Test' } },
+      contactId: '23',
+    });
+
+    expect(payload.has('source_id')).toBe(false);
+    expect(payload.has('assignee_id')).toBe(false);
+    expect([...payload.values()]).not.toContain('undefined');
+  });
 });
 
 describe('createWhatsAppConversationPayload', () => {

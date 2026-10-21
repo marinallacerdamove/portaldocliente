@@ -130,6 +130,22 @@ RSpec.describe Company, type: :model do
 
       expect(account.companies.new(name: 'Sem 2')).to be_valid
     end
+
+    # Regressão B189: duas gravações ao mesmo tempo (sync do Portal e agente) passavam as duas pela validação
+    # do model e o CPF/CNPJ ficava duplicado na conta; quem barra a corrida é o índice único do banco
+    it 'is enforced by the database even when the model validation is skipped' do
+      duplicate = account.companies.new(name: 'Corrida', custom_attributes: { 'cnpj' => '12345678000195' })
+
+      expect { duplicate.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique, /index_companies_on_account_id_and_cnpj_key/)
+    end
+
+    it 'lets the database accept the same key in another account and companies without CPF/CNPJ' do
+      account.companies.new(name: 'Sem 1').save!(validate: false)
+      account.companies.new(name: 'Sem 2').save!(validate: false)
+
+      expect { create(:account).companies.new(name: 'ACME', custom_attributes: { 'cnpj' => '12345678000195' }).save!(validate: false) }
+        .not_to raise_error
+    end
   end
 
   describe 'Portal sync events' do

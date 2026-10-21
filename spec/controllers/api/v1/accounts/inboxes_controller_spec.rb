@@ -163,6 +163,34 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(response.parsed_body['reauthorization_required']).to be(false)
       end
 
+      # Regressão B190: caixa Gmail via IMAP/SMTP com senha de app (sem OAuth, provider_config vazio) sempre
+      # aparecia como "reautorizar"; agora só avisa quando o login do IMAP falha de verdade
+      context 'with a Gmail IMAP inbox using an app password (no OAuth)' do
+        let(:gmail_channel) do
+          create(:channel_email, account: account, imap_enabled: true, imap_address: 'imap.gmail.com', imap_port: 993,
+                                 imap_login: 'suporte@gmail.com', imap_password: 'senha-de-app', imap_enable_ssl: true)
+        end
+
+        def fetch_gmail_inbox
+          get "/api/v1/accounts/#{account.id}/inboxes/#{gmail_channel.inbox.id}", headers: admin.create_new_auth_token, as: :json
+        end
+
+        it 'does not ask for reauthorization while the IMAP login works' do
+          fetch_gmail_inbox
+
+          expect(response).to have_http_status(:success)
+          expect(response.parsed_body['reauthorization_required']).to be(false)
+        end
+
+        it 'asks for reauthorization once the IMAP login has failed' do
+          gmail_channel.prompt_reauthorization!
+
+          fetch_gmail_inbox
+
+          expect(response.parsed_body['reauthorization_required']).to be(true)
+        end
+      end
+
       it 'returns the inbox if assigned inbox is assigned as agent' do
         create(:inbox_member, user: agent, inbox: inbox)
         get "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}",
