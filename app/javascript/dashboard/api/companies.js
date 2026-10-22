@@ -110,6 +110,24 @@ class CompanyAPI extends ApiClient {
           license,
         });
   }
+
+  saveUpdateServerModule(id, moduleId, licenseModule) {
+    return moduleId
+      ? axios.patch(
+          `${this.url}/${id}/portal_update_server/license_modules/${moduleId}`,
+          { license_module: licenseModule }
+        )
+      : axios.post(`${this.url}/${id}/portal_update_server/license_modules`, {
+          license_module: licenseModule,
+        });
+  }
+
+  reorderUpdateServerModules(id, ids) {
+    return axios.post(
+      `${this.url}/${id}/portal_update_server/license_modules/reorder`,
+      { ids }
+    );
+  }
 }
 
 export default new CompanyAPI();

@@ -252,7 +252,7 @@
         "BASES": {
           "TITLE": "Bases",
           "ADD": "Adicionar base",
-          "EMPTY": "Nenhuma base ainda.",
+          "EMPTY": "Cadastre as bases que esta empresa usa no Update Server.",
           "FIELDS": {
             "albatross_id": "ID",
             "display_code": "Código de exibição",
@@ -261,25 +261,132 @@
             "database_name": "Banco de dados",
             "link": "Link",
             "documento": "Documento"
+          },
+          "DESCRIPTION": "Bases que esta empresa usa no Update Server do Albatross.",
+          "EMPTY_TITLE": "Nenhuma base ainda",
+          "EMPTY_CTA": "Adicionar primeira base",
+          "SEARCH": "Buscar por ID, nome, banco ou documento",
+          "FORM_NEW": "Nova base",
+          "FORM_EDIT": "Editar base",
+          "SECTIONS": {
+            "IDENTITY": "Identificação",
+            "ACCESS": "Banco e acesso"
+          },
+          "PLACEHOLDERS": {
+            "albatross_id": "Só números",
+            "display_code": "Só números",
+            "razao_social": "Razão social da empresa",
+            "display_name": "Nome exibido no Albatross",
+            "database_name": "erp<ID>_<nome da base>",
+            "link": "https://",
+            "documento": "CPF ou CNPJ"
+          },
+          "HELP": {
+            "albatross_id": "O ID da base no Update Server. Não pode repetir dentro desta empresa.",
+            "display_code": "Opcional. A ordem em que aparece na lista do Update Server.",
+            "database_name": "Nome exato do banco, usado para achar a base.",
+            "link": "Opcional. Precisa começar com http:// ou https://.",
+            "documento": "Opcional. CPF ou CNPJ do dono da base."
           }
         },
         "LICENSES": {
           "TITLE": "Licenças",
           "ADD": "Adicionar licença",
-          "EMPTY": "Nenhuma licença ainda.",
+          "EMPTY": "Cadastre os usuários desta empresa e os módulos de cada um.",
           "MODULES": "Módulos",
           "FIELDS": {
             "user_name": "Usuário",
             "code": "Código da licença",
-            "license_type": "Tipo de licença"
+            "license_type": "Tipo de licença",
+            "module_code": "Código",
+            "module_name": "Nome"
+          },
+          "DESCRIPTION": "Uma licença por usuário, com os módulos que ele tem. Os totais são somados sozinhos.",
+          "EMPTY_TITLE": "Nenhuma licença ainda",
+          "EMPTY_CTA": "Adicionar primeira licença",
+          "ADD_BULK": "Adicionar vários usuários",
+          "SEARCH": "Buscar por usuário, código ou tipo",
+          "GROUP_BY_CODE": "Agrupar por código",
+          "GROUP_TITLE": "Licença {code}",
+          "NO_CODE": "Sem código de licença",
+          "GROUP_COUNT": "{count} usuário | {count} usuários",
+          "MODULE_FILTER": "Filtrando pelo módulo:",
+          "CLEAR_MODULE_FILTER": "Remover o filtro de módulo",
+          "DUPLICATE_USER": "Este usuário já tem uma licença ativa nesta empresa. Você ainda pode salvar.",
+          "FORM_NEW": "Nova licença",
+          "FORM_EDIT": "Editar licença",
+          "TOGGLE": "Ativar ou desativar a licença de {user}",
+          "SECTIONS": {
+            "USER": "Usuário e licença"
+          },
+          "PLACEHOLDERS": {
+            "user_name": "Nome do usuário",
+            "code": "Só números",
+            "license_type": "Letra do tipo"
+          },
+          "HELP": {
+            "code": "O código da licença. Usuários com o mesmo código ficam agrupados.",
+            "license_type": "O tipo da licença, como na planilha.",
+            "modules": "Escolha ao menos um módulo. Só licença ativa entra nos totais."
+          },
+          "BULK": {
+            "TITLE": "Adicionar vários usuários",
+            "DESCRIPTION": "Um usuário por linha. O código, o tipo e os módulos abaixo valem para todos.",
+            "USERS": "Usuários",
+            "USERS_PLACEHOLDER": "Um nome de usuário por linha",
+            "PREVIEW": "{count} licença será criada | {count} licenças serão criadas",
+            "IGNORED": "{count} linha repetida ignorada | {count} linhas repetidas ignoradas",
+            "EXISTING": "{count} usuário já tem licença ativa | {count} usuários já têm licença ativa",
+            "PROGRESS": "Criando {done} de {total}…",
+            "DONE": "{count} licença criada | {count} licenças criadas",
+            "FAILED_TITLE": "Estes usuários não foram criados. Eles continuam na caixa para você tentar de novo:",
+            "SUBMIT": "Criar licenças"
+          },
+          "MODULES_BUTTON": "Módulos",
+          "MODULES_PANEL": {
+            "TITLE": "Módulos de licença",
+            "DESCRIPTION": "Valem para todas as empresas. Módulo que saiu de uso é inativado, não excluído, e continua aparecendo nas licenças que já o usam.",
+            "EMPTY": "Nenhum módulo cadastrado.",
+            "MOVE_UP": "Subir",
+            "MOVE_DOWN": "Descer",
+            "NAME_PLACEHOLDER": "Nome do módulo",
+            "CODE_PLACEHOLDER": "Letras e números",
+            "ADD": "Adicionar",
+            "TOGGLE": "Ativar ou desativar o módulo {code}",
+            "SAVE_ERROR": "Não foi possível salvar o módulo."
           }
         },
         "SUMMARY": {
           "TITLE": "Licenças utilizadas",
           "EMPTY": "Nenhuma licença ativa.",
-          "TOTAL": "Quantidade de licenças",
-          "COMBINATIONS": "Combinações de módulos"
-        }
+          "TOTAL": "licenças ativas",
+          "COMBINATIONS": "Combinações de módulos",
+          "PER_MODULE": "Por módulo",
+          "FILTER_HINT": "Clique num módulo para filtrar a lista de licenças."
+        },
+        "ACTIVE_BADGE": "Ativa",
+        "INACTIVE_BADGE": "Inativa",
+        "RETRY": "Tentar de novo",
+        "CLOSE": "Fechar",
+        "EXPORT_CSV": "Exportar CSV",
+        "COPY": "Copiar nome do banco",
+        "COPIED": "Copiado",
+        "COPY_ERROR": "Não foi possível copiar.",
+        "OPEN": "Abrir",
+        "COUNTS": "{active} ativas, {inactive} inativas",
+        "SHOWING": "mostrando {shown} de {total}",
+        "NO_RESULTS_TITLE": "Nenhum resultado",
+        "NO_RESULTS": "Nada corresponde à busca ou aos filtros.",
+        "CLEAR_FILTERS": "Limpar filtros",
+        "TOGGLE_BASE": "Ativar ou desativar a base {id}",
+        "FILTERS": {
+          "LABEL": "Filtrar por situação",
+          "ALL": "Todas",
+          "ACTIVE": "Ativas",
+          "INACTIVE": "Inativas"
+        },
+        "REFRESH": "Atualizar",
+        "UPDATED_AT": "Atualizado às {time}"
       }
     },
     "EMPTY_STATE": {

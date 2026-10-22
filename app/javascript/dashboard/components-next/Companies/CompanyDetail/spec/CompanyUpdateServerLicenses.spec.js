@@ -27,7 +27,7 @@ describe('CompanyUpdateServerLicenses', () => {
     wrapper.vm.startNew();
     Object.assign(wrapper.vm.draft, {
       user_name: 'ana',
-      code: '2773',
+      code: '5005',
       license_type: 'B',
     });
     wrapper.vm.toggleModule(1, true);
@@ -38,7 +38,7 @@ describe('CompanyUpdateServerLicenses', () => {
 
     expect(wrapper.props('save')).toHaveBeenCalledWith(null, {
       user_name: 'ana',
-      code: '2773',
+      code: '5005',
       license_type: 'B',
       active: true,
       license_module_ids: [2],
@@ -82,5 +82,93 @@ describe('CompanyUpdateServerLicenses', () => {
       'FIN',
       'OLD',
     ]);
+  });
+
+  const licenses = [
+    {
+      id: 1,
+      user_name: 'Ana',
+      code: '5005',
+      license_type: 'A',
+      active: true,
+      license_module_ids: [1],
+      combination: 'STK',
+    },
+    {
+      id: 2,
+      user_name: 'Bia',
+      code: '5005',
+      license_type: 'A',
+      active: true,
+      license_module_ids: [1, 2],
+      combination: 'STK_FIN',
+    },
+    {
+      id: 3,
+      user_name: 'Caio',
+      code: '',
+      license_type: 'B',
+      active: false,
+      license_module_ids: [2],
+      combination: 'FIN',
+    },
+  ];
+
+  it('filters the list by the module picked in the totals board', () => {
+    const wrapper = mountLicenses({ licenses, moduleFilter: 'FIN' });
+
+    expect(wrapper.vm.list.visible.value.map(item => item.id)).toEqual([2, 3]);
+  });
+
+  it('groups the visible licenses by code, with the ones without code last', () => {
+    const wrapper = mountLicenses({ licenses });
+
+    expect(
+      wrapper.vm.groups.map(group => [group.code, group.items.length])
+    ).toEqual([
+      ['5005', 2],
+      ['', 1],
+    ]);
+  });
+
+  it('warns about an already active user without blocking the save', async () => {
+    const save = vi.fn().mockResolvedValue(true);
+    const wrapper = mountLicenses({ licenses, save });
+
+    wrapper.vm.startNew();
+    wrapper.vm.draft.user_name = ' ana ';
+    expect(wrapper.vm.duplicateUser).toBe(true);
+    wrapper.vm.draft.license_module_ids = [1];
+    await wrapper.vm.submit();
+
+    expect(save).toHaveBeenCalled();
+    wrapper.vm.startEdit(licenses[0]);
+    expect(wrapper.vm.duplicateUser).toBe(false);
+  });
+
+  it('sends only the active flag when switching a license on the row', async () => {
+    const save = vi.fn().mockResolvedValue(true);
+    const wrapper = mountLicenses({ licenses, save });
+
+    await wrapper.vm.toggleActive(licenses[0], false);
+
+    expect(save).toHaveBeenCalledWith(1, { active: false });
+  });
+
+  it('tells the container when a form, the batch or the modules panel is open', async () => {
+    const wrapper = mountLicenses({
+      licenses,
+      saveEach: vi.fn(),
+      saveModule: vi.fn(),
+    });
+
+    wrapper.vm.startBulk();
+    await wrapper.vm.$nextTick();
+    wrapper.vm.startModules();
+    await wrapper.vm.$nextTick();
+    wrapper.vm.modulesOpen = false;
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.emitted('busyChange')).toEqual([[true], [false]]);
   });
 });

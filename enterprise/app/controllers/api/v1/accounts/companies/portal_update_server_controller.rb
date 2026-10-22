@@ -1,13 +1,15 @@
 # PATCH LOCAL (fork) - aba Update Server da empresa (bases + licenças),
 # repassada pro Portal do Cliente (ver PortalUpdateServer::Client). Ver: quem
-# vê a empresa; gravar: quem edita a empresa. Sem exclusão: base e licença
-# saem de uso inativando (campo active).
+# vê a empresa; gravar: quem edita a empresa. Sem exclusão: base, licença e
+# módulo de licença saem de uso inativando (campo active).
 class Api::V1::Accounts::Companies::PortalUpdateServerController < Api::V1::Accounts::Companies::BaseController
   BASE_PARAMS = %i[albatross_id display_code razao_social display_name database_name link documento active].freeze
   LICENSE_PARAMS = [:code, :license_type, :user_name, :active, { license_module_ids: [] }].freeze
+  MODULE_PARAMS = %i[code name active].freeze
 
   before_action :authorize_company_read!, only: [:show]
-  before_action :authorize_company_update!, only: [:create_base, :update_base, :create_license, :update_license]
+  before_action :authorize_company_update!,
+                only: [:create_base, :update_base, :create_license, :update_license, :create_module, :update_module, :reorder_modules]
 
   rescue_from PortalDocuments::Client::Error do |e|
     Rails.logger.error("[PortalUpdateServer] #{e.message}")
@@ -34,6 +36,18 @@ class Api::V1::Accounts::Companies::PortalUpdateServerController < Api::V1::Acco
     relay(client.save_license(params[:id], license_params.to_h))
   end
 
+  def create_module
+    relay(client.save_module(nil, module_params.to_h))
+  end
+
+  def update_module
+    relay(client.save_module(params[:id], module_params.to_h))
+  end
+
+  def reorder_modules
+    relay(client.reorder_modules(Array(params[:ids]).map(&:to_i)))
+  end
+
   private
 
   def client
@@ -46,6 +60,10 @@ class Api::V1::Accounts::Companies::PortalUpdateServerController < Api::V1::Acco
 
   def license_params
     params.require(:license).permit(*LICENSE_PARAMS)
+  end
+
+  def module_params
+    params.require(:license_module).permit(*MODULE_PARAMS)
   end
 
   def relay(portal_response)

@@ -256,6 +256,9 @@ Rails.application.routes.draw do
               patch 'portal_update_server/bases/:id', to: 'portal_update_server#update_base'
               post 'portal_update_server/licenses', to: 'portal_update_server#create_license'
               patch 'portal_update_server/licenses/:id', to: 'portal_update_server#update_license'
+              post 'portal_update_server/license_modules', to: 'portal_update_server#create_module'
+              patch 'portal_update_server/license_modules/:id', to: 'portal_update_server#update_module'
+              post 'portal_update_server/license_modules/reorder', to: 'portal_update_server#reorder_modules'
             end
           end
           resources :contacts, only: [:index, :show, :update, :create, :destroy] do

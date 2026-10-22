@@ -185,7 +185,7 @@
         "BASES": {
           "TITLE": "Bases",
           "ADD": "Add base",
-          "EMPTY": "No bases yet.",
+          "EMPTY": "Add the databases this company uses in the Update Server.",
           "FIELDS": {
             "albatross_id": "ID",
             "display_code": "Display code",
@@ -194,25 +194,132 @@
             "database_name": "Database",
             "link": "Link",
             "documento": "Document"
+          },
+          "DESCRIPTION": "Databases this company uses in the Albatross Update Server.",
+          "EMPTY_TITLE": "No bases yet",
+          "EMPTY_CTA": "Add first base",
+          "SEARCH": "Search by ID, name, database or document",
+          "FORM_NEW": "New base",
+          "FORM_EDIT": "Edit base",
+          "SECTIONS": {
+            "IDENTITY": "Identification",
+            "ACCESS": "Database and access"
+          },
+          "PLACEHOLDERS": {
+            "albatross_id": "Digits only",
+            "display_code": "Digits only",
+            "razao_social": "Company legal name",
+            "display_name": "Name shown in Albatross",
+            "database_name": "erp<ID>_<base name>",
+            "link": "https://",
+            "documento": "CPF or CNPJ"
+          },
+          "HELP": {
+            "albatross_id": "The base ID in the Update Server. It cannot repeat inside this company.",
+            "display_code": "Optional. The order shown in the Update Server list.",
+            "database_name": "Exact database name, used to find the base.",
+            "link": "Optional. Must start with http:// or https://.",
+            "documento": "Optional. CPF or CNPJ of the base owner."
           }
         },
         "LICENSES": {
           "TITLE": "Licenses",
           "ADD": "Add license",
-          "EMPTY": "No licenses yet.",
+          "EMPTY": "Add the users of this company and the modules each one uses.",
           "MODULES": "Modules",
           "FIELDS": {
             "user_name": "User",
             "code": "License code",
-            "license_type": "License type"
+            "license_type": "License type",
+            "module_code": "Code",
+            "module_name": "Name"
+          },
+          "DESCRIPTION": "One license per user, with the modules that user has. The totals are summed automatically.",
+          "EMPTY_TITLE": "No licenses yet",
+          "EMPTY_CTA": "Add first license",
+          "ADD_BULK": "Add several users",
+          "SEARCH": "Search by user, code or type",
+          "GROUP_BY_CODE": "Group by code",
+          "GROUP_TITLE": "License {code}",
+          "NO_CODE": "No license code",
+          "GROUP_COUNT": "{count} user | {count} users",
+          "MODULE_FILTER": "Filtering by module:",
+          "CLEAR_MODULE_FILTER": "Remove the module filter",
+          "DUPLICATE_USER": "This user already has an active license in this company. You can still save.",
+          "FORM_NEW": "New license",
+          "FORM_EDIT": "Edit license",
+          "TOGGLE": "Turn {user}'s license on or off",
+          "SECTIONS": {
+            "USER": "User and license"
+          },
+          "PLACEHOLDERS": {
+            "user_name": "User name",
+            "code": "Digits only",
+            "license_type": "Type letter"
+          },
+          "HELP": {
+            "code": "The license code. Users with the same code are grouped.",
+            "license_type": "The license type, as used in the spreadsheet.",
+            "modules": "Pick at least one module. Only active licenses count in the totals."
+          },
+          "BULK": {
+            "TITLE": "Add several users",
+            "DESCRIPTION": "One user per line. The code, type and modules below apply to everyone.",
+            "USERS": "Users",
+            "USERS_PLACEHOLDER": "One user name per line",
+            "PREVIEW": "{count} license will be created | {count} licenses will be created",
+            "IGNORED": "{count} repeated line ignored | {count} repeated lines ignored",
+            "EXISTING": "{count} user already has an active license | {count} users already have an active license",
+            "PROGRESS": "Creating {done} of {total}…",
+            "DONE": "{count} license created | {count} licenses created",
+            "FAILED_TITLE": "These users were not created. They stay in the box so you can try again:",
+            "SUBMIT": "Create licenses"
+          },
+          "MODULES_BUTTON": "Modules",
+          "MODULES_PANEL": {
+            "TITLE": "License modules",
+            "DESCRIPTION": "They apply to every company. A module that is no longer used is deactivated, not deleted, and still shows in the licenses that already use it.",
+            "EMPTY": "No modules yet.",
+            "MOVE_UP": "Move up",
+            "MOVE_DOWN": "Move down",
+            "NAME_PLACEHOLDER": "Module name",
+            "CODE_PLACEHOLDER": "Letters and numbers",
+            "ADD": "Add",
+            "TOGGLE": "Turn module {code} on or off",
+            "SAVE_ERROR": "Could not save the module."
           }
         },
         "SUMMARY": {
           "TITLE": "Licenses in use",
           "EMPTY": "No active licenses.",
-          "TOTAL": "Total licenses",
-          "COMBINATIONS": "Module combinations"
-        }
+          "TOTAL": "active licenses",
+          "COMBINATIONS": "Module combinations",
+          "PER_MODULE": "By module",
+          "FILTER_HINT": "Click a module to filter the license list."
+        },
+        "ACTIVE_BADGE": "Active",
+        "INACTIVE_BADGE": "Inactive",
+        "RETRY": "Try again",
+        "CLOSE": "Close",
+        "EXPORT_CSV": "Export CSV",
+        "COPY": "Copy database name",
+        "COPIED": "Copied",
+        "COPY_ERROR": "Could not copy.",
+        "OPEN": "Open",
+        "COUNTS": "{active} active, {inactive} inactive",
+        "SHOWING": "showing {shown} of {total}",
+        "NO_RESULTS_TITLE": "No results",
+        "NO_RESULTS": "Nothing matches the search or the filters.",
+        "CLEAR_FILTERS": "Clear filters",
+        "TOGGLE_BASE": "Turn base {id} on or off",
+        "FILTERS": {
+          "LABEL": "Filter by status",
+          "ALL": "All",
+          "ACTIVE": "Active",
+          "INACTIVE": "Inactive"
+        },
+        "REFRESH": "Refresh",
+        "UPDATED_AT": "Updated at {time}"
       }
     },
     "EMPTY_STATE": {
