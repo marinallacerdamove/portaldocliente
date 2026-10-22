@@ -8,10 +8,10 @@ const mountTh = props =>
   });
 
 describe('UpdateServerSortableTh', () => {
-  it('centers a numeric column and keeps the sort arrow out of the flow', () => {
-    const numeric = mountTh({ numeric: true });
-    expect(numeric.find('th').classes()).toContain('text-center');
-    expect(numeric.find('button span').classes()).toContain('absolute');
+  it('aligns numeric and text headers to the start, like their values', () => {
+    expect(mountTh({ numeric: true }).find('th').classes()).toContain(
+      'text-left'
+    );
     expect(mountTh().find('th').classes()).toContain('text-left');
   });
 

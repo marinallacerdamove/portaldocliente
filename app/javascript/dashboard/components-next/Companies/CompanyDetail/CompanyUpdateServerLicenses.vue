@@ -364,10 +364,7 @@ const exportCsv = () => {
       />
     </UpdateServerEmpty>
 
-    <div
-      v-else
-      class="grid grid-cols-1 gap-3 2xl:grid-cols-[13rem_minmax(0,1fr)]"
-    >
+    <div v-else class="grid grid-cols-1 gap-3">
       <CompanyUpdateServerSummary
         :summary="summary"
         :selected="moduleFilter"

@@ -326,12 +326,12 @@ const exportCsv = () => {
               @click="startEdit(base)"
             >
               <td
-                class="sticky px-4 py-3 font-medium text-center tabular-nums border-t ltr:left-0 rtl:right-0 border-n-weak bg-n-solid-1 text-n-slate-12 group-hover:bg-n-solid-2 max-sm:static max-sm:bg-transparent max-sm:p-0 max-sm:border-0 max-sm:col-start-1 max-sm:row-start-1"
+                class="sticky px-4 py-3 font-medium text-left tabular-nums border-t ltr:left-0 rtl:right-0 border-n-weak bg-n-solid-1 text-n-slate-12 group-hover:bg-n-solid-2 max-sm:static max-sm:bg-transparent max-sm:p-0 max-sm:border-0 max-sm:col-start-1 max-sm:row-start-1"
               >
                 {{ base.albatross_id }}
               </td>
               <td
-                class="px-4 py-3 text-center border-t tabular-nums border-n-weak text-n-slate-12 max-sm:text-left max-sm:text-xs max-sm:p-0 max-sm:border-0 max-sm:col-span-full max-sm:row-start-2"
+                class="px-4 py-3 text-left border-t tabular-nums border-n-weak text-n-slate-12 max-sm:text-left max-sm:text-xs max-sm:p-0 max-sm:border-0 max-sm:col-span-full max-sm:row-start-2"
               >
                 <span class="sm:hidden text-n-slate-10">
                   {{ `${columnLabel('display_code')}: ` }}

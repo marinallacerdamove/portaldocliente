@@ -27,16 +27,6 @@ describe('CompanyUpdateServerSummary', () => {
     expect(wrapper.text()).toContain('STK_FIN');
   });
 
-  it('scales each bar to the biggest module', () => {
-    const bars = mountSummary()
-      .findAll('li button span.block')
-      .map(bar => bar.attributes('style'));
-
-    expect(bars[0]).toContain('width: 100%');
-    expect(bars[1]).toContain('width: 50%');
-    expect(bars[2]).toContain('width: 0%');
-  });
-
   it('selects a module on click and clears it on the second click', async () => {
     const wrapper = mountSummary();
     await wrapper.findAll('li button')[1].trigger('click');

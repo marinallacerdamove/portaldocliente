@@ -33,7 +33,7 @@ const icon = computed(() => {
     :aria-sort="ariaSort"
     class="sticky top-0 z-10 py-2 text-xs font-medium whitespace-nowrap bg-n-solid-2 text-n-slate-11"
     :class="[
-      numeric ? 'w-20 px-4 text-center' : 'px-3 text-left',
+      numeric ? 'w-20 px-3 text-left' : 'px-3 text-left',
       { 'ltr:left-0 rtl:right-0 z-20': sticky },
     ]"
   >
@@ -47,14 +47,7 @@ const icon = computed(() => {
       @click="$emit('sort', sortKey)"
     >
       {{ label }}
-      <span
-        class="size-3.5"
-        :class="[
-          icon,
-          { 'opacity-40': !isActive },
-          numeric ? 'absolute -end-4 top-1/2 -translate-y-1/2' : '',
-        ]"
-      />
+      <span class="size-3.5" :class="[icon, { 'opacity-40': !isActive }]" />
     </button>
     <template v-else>{{ label }}</template>
   </th>
