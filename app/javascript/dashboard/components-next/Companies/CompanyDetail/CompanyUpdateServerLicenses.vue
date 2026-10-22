@@ -47,7 +47,7 @@ const moduleFilter = defineModel('moduleFilter', { type: String, default: '' });
 const { t } = useI18n();
 const i18nKey = suffix => `COMPANIES.DETAIL.UPDATE_SERVER.${suffix}`;
 const CSV_FILE_NAME = 'update-server-licencas.csv';
-const SPAN_COLUMNS = 6;
+const SPAN_COLUMNS = 5;
 
 const list = useUpdateServerList(
   () =>
@@ -366,7 +366,7 @@ const exportCsv = () => {
 
     <div
       v-else
-      class="grid grid-cols-1 gap-4 xl:grid-cols-[17.5rem_minmax(0,1fr)]"
+      class="grid grid-cols-1 gap-3 2xl:grid-cols-[13rem_minmax(0,1fr)]"
     >
       <CompanyUpdateServerSummary
         :summary="summary"
@@ -442,32 +442,24 @@ const exportCsv = () => {
         </UpdateServerEmpty>
         <div
           v-else
-          class="overflow-auto border rounded-lg max-h-[32rem] border-n-weak"
+          class="overflow-y-auto overflow-x-hidden border rounded-lg max-h-[32rem] border-n-weak"
         >
           <table
-            class="w-full text-sm text-left border-separate border-spacing-0"
+            class="w-full text-xs text-left border-separate border-spacing-0 max-sm:block"
           >
-            <thead>
+            <thead class="max-sm:hidden">
               <tr>
                 <UpdateServerSortableTh
                   :label="t(i18nKey('LICENSES.FIELDS.user_name'))"
                   sort-key="user_name"
                   :active-key="list.sortBy.value"
                   :direction="list.sortDirection.value"
-                  sticky
                   @sort="list.toggleSort"
                 />
                 <UpdateServerSortableTh
                   :label="t(i18nKey('LICENSES.COLUMNS.code'))"
-                  :title="t(i18nKey('LICENSES.FIELDS.code'))"
+                  :title="`${t(i18nKey('LICENSES.FIELDS.code'))} · ${t(i18nKey('LICENSES.FIELDS.license_type'))}`"
                   sort-key="code"
-                  :active-key="list.sortBy.value"
-                  :direction="list.sortDirection.value"
-                  @sort="list.toggleSort"
-                />
-                <UpdateServerSortableTh
-                  :label="t(i18nKey('LICENSES.FIELDS.license_type'))"
-                  sort-key="license_type"
                   :active-key="list.sortBy.value"
                   :direction="list.sortDirection.value"
                   @sort="list.toggleSort"
@@ -490,6 +482,7 @@ const exportCsv = () => {
                 ? groups
                 : [{ code: null, items: list.visible.value }]"
               :key="group.code ?? 'all'"
+              class="max-sm:block"
             >
               <tr v-if="grouped">
                 <td
@@ -516,29 +509,31 @@ const exportCsv = () => {
               <tr
                 v-for="license in group.items"
                 :key="license.id"
-                class="cursor-pointer group hover:bg-n-alpha-1"
+                class="cursor-pointer group hover:bg-n-alpha-1 max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto_auto] max-sm:items-center max-sm:gap-x-2 max-sm:gap-y-1.5 max-sm:px-3 max-sm:py-2.5 max-sm:border-t max-sm:border-n-weak"
                 :class="{ 'opacity-60': !license.active }"
                 @click="startEdit(license)"
               >
                 <td
-                  class="sticky px-3 py-2.5 border-t ltr:left-0 rtl:right-0 border-n-weak bg-n-solid-1 group-hover:bg-n-solid-2"
+                  class="px-2.5 py-2 border-t max-w-[12rem] border-n-weak max-sm:p-0 max-sm:border-0 max-sm:max-w-none max-sm:col-start-1 max-sm:row-start-1"
                 >
-                  <div class="flex items-center gap-2.5 min-w-[9rem]">
-                    <Avatar :name="license.user_name" :size="28" rounded-full />
+                  <div class="flex items-center gap-2 min-w-0">
+                    <Avatar :name="license.user_name" :size="24" rounded-full />
                     <span class="font-medium truncate text-n-slate-12">
                       {{ license.user_name }}
                     </span>
                   </div>
                 </td>
                 <td
-                  class="px-3 py-2.5 border-t tabular-nums border-n-weak text-n-slate-12"
+                  class="px-2.5 py-2 border-t whitespace-nowrap tabular-nums border-n-weak text-n-slate-12 max-sm:p-0 max-sm:border-0 max-sm:col-span-full max-sm:row-start-2"
                 >
                   {{ license.code }}
+                  <span v-if="license.license_type" class="text-n-slate-10">
+                    {{ `· ${license.license_type}` }}
+                  </span>
                 </td>
-                <td class="px-3 py-2.5 border-t border-n-weak text-n-slate-12">
-                  {{ license.license_type }}
-                </td>
-                <td class="px-3 py-2.5 border-t border-n-weak">
+                <td
+                  class="px-2.5 py-2 border-t border-n-weak max-sm:p-0 max-sm:border-0 max-sm:col-span-full max-sm:row-start-3"
+                >
                   <div class="flex flex-wrap gap-1">
                     <UpdateServerModuleChip
                       v-for="mod in modulesOfLicense(license, modules)"
@@ -549,7 +544,9 @@ const exportCsv = () => {
                     />
                   </div>
                 </td>
-                <td class="px-3 py-2.5 border-t border-n-weak">
+                <td
+                  class="px-2.5 py-2 border-t border-n-weak max-sm:p-0 max-sm:border-0 max-sm:col-start-2 max-sm:row-start-1"
+                >
                   <UpdateServerStatusSwitch
                     :active="license.active"
                     :busy="togglingId === license.id"
@@ -559,7 +556,9 @@ const exportCsv = () => {
                     @toggle="toggleActive(license, $event)"
                   />
                 </td>
-                <td class="px-2 py-2.5 text-right border-t border-n-weak">
+                <td
+                  class="px-1.5 py-2 text-right border-t border-n-weak max-sm:p-0 max-sm:border-0 max-sm:col-start-3 max-sm:row-start-1"
+                >
                   <Button
                     v-tooltip.top="t(i18nKey('EDIT'))"
                     :aria-label="t(i18nKey('EDIT'))"

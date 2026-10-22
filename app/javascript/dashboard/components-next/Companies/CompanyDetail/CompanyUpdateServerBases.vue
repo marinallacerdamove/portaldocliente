@@ -130,6 +130,18 @@ const copyDatabase = async base => {
 
 // Colunas com nome longo mostram a forma curta no cabeçalho e o nome completo no tooltip.
 const SHORT_COLUMNS = ['display_code'];
+// Colunas da tabela: o nome de exibição vai sob a razão social e o link ao lado do
+// banco, para a tabela caber na página estreita sem rolar para o lado.
+const TABLE_COLUMN_KEYS = [
+  'albatross_id',
+  'display_code',
+  'razao_social',
+  'database_name',
+  'documento',
+];
+const TABLE_FIELDS = FIELDS.filter(field =>
+  TABLE_COLUMN_KEYS.includes(field.key)
+);
 const columnLabel = key =>
   SHORT_COLUMNS.includes(key)
     ? t(i18nKey(`BASES.COLUMNS.${key}`))
@@ -279,12 +291,12 @@ const exportCsv = () => {
         class="overflow-auto border rounded-lg max-h-[28rem] border-n-weak"
       >
         <table
-          class="w-full text-sm text-left border-separate border-spacing-0"
+          class="w-full text-sm text-left border-separate border-spacing-0 max-sm:block"
         >
-          <thead>
+          <thead class="max-sm:hidden">
             <tr>
               <UpdateServerSortableTh
-                v-for="(field, index) in FIELDS"
+                v-for="(field, index) in TABLE_FIELDS"
                 :key="field.key"
                 :label="columnLabel(field.key)"
                 :title="columnTitle(field.key)"
@@ -305,32 +317,47 @@ const exportCsv = () => {
               <th class="sticky top-0 z-10 w-10 bg-n-solid-2" />
             </tr>
           </thead>
-          <tbody>
+          <tbody class="max-sm:block">
             <tr
               v-for="base in list.visible.value"
               :key="base.id"
-              class="cursor-pointer group hover:bg-n-alpha-1"
+              class="cursor-pointer group hover:bg-n-alpha-1 max-sm:grid max-sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] max-sm:items-center max-sm:gap-x-2.5 max-sm:gap-y-1.5 max-sm:px-3 max-sm:py-2.5 max-sm:border-t max-sm:border-n-weak"
               :class="{ 'opacity-60': !base.active }"
               @click="startEdit(base)"
             >
               <td
-                class="sticky px-3 py-3 font-medium tabular-nums border-t ltr:left-0 ltr:text-right rtl:right-0 rtl:text-left border-n-weak bg-n-solid-1 text-n-slate-12 group-hover:bg-n-solid-2"
+                class="sticky px-4 py-3 font-medium text-center tabular-nums border-t ltr:left-0 rtl:right-0 border-n-weak bg-n-solid-1 text-n-slate-12 group-hover:bg-n-solid-2 max-sm:static max-sm:bg-transparent max-sm:p-0 max-sm:border-0 max-sm:col-start-1 max-sm:row-start-1"
               >
                 {{ base.albatross_id }}
               </td>
               <td
-                class="px-3 py-3 border-t tabular-nums ltr:text-right rtl:text-left border-n-weak text-n-slate-12"
+                class="px-4 py-3 text-center border-t tabular-nums border-n-weak text-n-slate-12 max-sm:text-left max-sm:text-xs max-sm:p-0 max-sm:border-0 max-sm:col-span-full max-sm:row-start-2"
               >
+                <span class="sm:hidden text-n-slate-10">
+                  {{ `${columnLabel('display_code')}: ` }}
+                </span>
                 {{ base.display_code ?? '' }}
               </td>
-              <td class="px-3 py-3 border-t border-n-weak text-n-slate-12">
-                {{ base.razao_social }}
+              <td
+                class="px-2.5 py-3 border-t border-n-weak text-n-slate-12 max-sm:p-0 max-sm:border-0 max-sm:col-start-2 max-sm:row-start-1"
+              >
+                <div class="font-medium break-words">
+                  {{ base.razao_social }}
+                </div>
+                <div
+                  v-if="base.display_name"
+                  class="text-xs break-words text-n-slate-11"
+                >
+                  {{ base.display_name }}
+                </div>
               </td>
-              <td class="px-3 py-3 border-t border-n-weak text-n-slate-12">
-                {{ base.display_name }}
-              </td>
-              <td class="px-3 py-3 border-t border-n-weak">
-                <div v-if="base.database_name" class="flex items-center gap-1">
+              <td
+                class="px-2.5 py-3 border-t border-n-weak max-sm:p-0 max-sm:border-0 max-sm:col-span-full max-sm:row-start-3"
+              >
+                <div
+                  v-if="base.database_name"
+                  class="flex flex-wrap items-center gap-1"
+                >
                   <span class="font-mono text-xs text-n-slate-12">
                     {{ base.database_name }}
                   </span>
@@ -350,15 +377,13 @@ const exportCsv = () => {
                     @click.stop="copyDatabase(base)"
                   />
                 </div>
-              </td>
-              <td class="px-3 py-3 border-t border-n-weak">
                 <a
                   v-if="isHttpLink(base.link)"
                   v-tooltip.top="linkDomain(base.link)"
                   :href="base.link"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1 text-xs text-n-blue-11 hover:underline"
+                  class="inline-flex items-center gap-1 mt-1 text-xs text-n-blue-11 hover:underline"
                   @click.stop
                 >
                   {{ t(i18nKey('OPEN')) }}
@@ -366,11 +391,13 @@ const exportCsv = () => {
                 </a>
               </td>
               <td
-                class="px-3 py-3 font-mono text-xs border-t tabular-nums border-n-weak text-n-slate-12"
+                class="px-2.5 py-3 font-mono text-xs border-t tabular-nums border-n-weak text-n-slate-12 whitespace-nowrap max-sm:p-0 max-sm:border-0 max-sm:col-span-full max-sm:row-start-4"
               >
                 {{ base.documento ? formatCnpj(base.documento) : '' }}
               </td>
-              <td class="px-3 py-3 border-t border-n-weak">
+              <td
+                class="px-3 py-3 border-t border-n-weak max-sm:p-0 max-sm:border-0 max-sm:col-start-3 max-sm:row-start-1"
+              >
                 <UpdateServerStatusSwitch
                   :active="base.active"
                   :busy="togglingId === base.id"
@@ -378,7 +405,9 @@ const exportCsv = () => {
                   @toggle="toggleActive(base, $event)"
                 />
               </td>
-              <td class="px-2 py-3 text-right border-t border-n-weak">
+              <td
+                class="px-2 py-3 text-right border-t border-n-weak max-sm:p-0 max-sm:border-0 max-sm:col-start-4 max-sm:row-start-1"
+              >
                 <Button
                   v-tooltip.top="t(i18nKey('EDIT'))"
                   :aria-label="t(i18nKey('EDIT'))"

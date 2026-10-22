@@ -201,7 +201,7 @@
           "DESCRIPTION": "Databases this company uses in the Albatross Update Server.",
           "EMPTY_TITLE": "No bases yet",
           "EMPTY_CTA": "Add first base",
-          "SEARCH": "Search by ID, name, database or document",
+          "SEARCH": "Search ID, name, database or document",
           "FORM_NEW": "New base",
           "FORM_EDIT": "Edit base",
           "SECTIONS": {
@@ -244,7 +244,7 @@
           "EMPTY_TITLE": "No licenses yet",
           "EMPTY_CTA": "Add first license",
           "ADD_BULK": "Add several users",
-          "SEARCH": "Search by user, code or type",
+          "SEARCH": "Search user, code or type",
           "GROUP_BY_CODE": "Group by code",
           "GROUP_TITLE": "License {code}",
           "NO_CODE": "No license code",

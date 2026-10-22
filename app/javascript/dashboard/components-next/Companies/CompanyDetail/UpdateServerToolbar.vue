@@ -24,7 +24,7 @@ const searchId = `update-server-search-${useId()}`;
 <template>
   <div class="flex flex-col gap-2 mb-3">
     <div class="flex flex-wrap items-center gap-2">
-      <div class="flex-1 min-w-[12rem]">
+      <div class="flex-1 min-w-[16rem] max-w-[28rem]">
         <label :for="searchId" class="sr-only">{{ searchPlaceholder }}</label>
         <Input
           :id="searchId"

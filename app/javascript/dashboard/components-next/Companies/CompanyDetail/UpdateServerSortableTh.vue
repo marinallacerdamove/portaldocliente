@@ -31,9 +31,9 @@ const icon = computed(() => {
   <th
     scope="col"
     :aria-sort="ariaSort"
-    class="sticky top-0 z-10 px-3 py-2 text-xs font-medium whitespace-nowrap bg-n-solid-2 text-n-slate-11"
+    class="sticky top-0 z-10 py-2 text-xs font-medium whitespace-nowrap bg-n-solid-2 text-n-slate-11"
     :class="[
-      numeric ? 'ltr:text-right rtl:text-left' : 'text-left',
+      numeric ? 'w-20 px-4 text-center' : 'px-3 text-left',
       { 'ltr:left-0 rtl:right-0 z-20': sticky },
     ]"
   >
@@ -42,12 +42,19 @@ const icon = computed(() => {
       type="button"
       :title="title || undefined"
       :aria-label="title || undefined"
-      class="inline-flex items-center gap-1 hover:text-n-slate-12"
+      class="relative inline-flex items-center gap-1 hover:text-n-slate-12"
       :class="{ 'text-n-slate-12': isActive }"
       @click="$emit('sort', sortKey)"
     >
       {{ label }}
-      <span class="size-3.5" :class="[icon, { 'opacity-40': !isActive }]" />
+      <span
+        class="size-3.5"
+        :class="[
+          icon,
+          { 'opacity-40': !isActive },
+          numeric ? 'absolute -end-4 top-1/2 -translate-y-1/2' : '',
+        ]"
+      />
     </button>
     <template v-else>{{ label }}</template>
   </th>
