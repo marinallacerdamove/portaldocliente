@@ -86,6 +86,30 @@ class CompanyAPI extends ApiClient {
       responseType: 'blob',
     });
   }
+
+  // PATCH LOCAL (fork) - aba Update Server (bases e licenças moram no Portal)
+  getUpdateServer(id) {
+    return axios.get(`${this.url}/${id}/portal_update_server`);
+  }
+
+  saveUpdateServerBase(id, baseId, base) {
+    return baseId
+      ? axios.patch(`${this.url}/${id}/portal_update_server/bases/${baseId}`, {
+          base,
+        })
+      : axios.post(`${this.url}/${id}/portal_update_server/bases`, { base });
+  }
+
+  saveUpdateServerLicense(id, licenseId, license) {
+    return licenseId
+      ? axios.patch(
+          `${this.url}/${id}/portal_update_server/licenses/${licenseId}`,
+          { license }
+        )
+      : axios.post(`${this.url}/${id}/portal_update_server/licenses`, {
+          license,
+        });
+  }
 }
 
 export default new CompanyAPI();

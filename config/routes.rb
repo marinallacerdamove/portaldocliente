@@ -250,6 +250,12 @@ Rails.application.routes.draw do
               resources :portal_documents, only: [:index, :create, :update, :destroy] do
                 get :download, on: :member
               end
+              # PATCH LOCAL (fork) - aba Update Server (bases e licenças moram no Portal)
+              get :portal_update_server, to: 'portal_update_server#show'
+              post 'portal_update_server/bases', to: 'portal_update_server#create_base'
+              patch 'portal_update_server/bases/:id', to: 'portal_update_server#update_base'
+              post 'portal_update_server/licenses', to: 'portal_update_server#create_license'
+              patch 'portal_update_server/licenses/:id', to: 'portal_update_server#update_license'
             end
           end
           resources :contacts, only: [:index, :show, :update, :create, :destroy] do

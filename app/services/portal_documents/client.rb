@@ -13,30 +13,32 @@ class PortalDocuments::Client
   end
 
   def list
-    call(:get, '')
+    call(:get, 'files')
   end
 
   def upload(file, categoria)
-    call(:post, '', body: { file: file.tempfile, filename: file.original_filename, categoria: categoria }, multipart: true)
+    call(:post, 'files', body: { file: file.tempfile, filename: file.original_filename, categoria: categoria }, multipart: true)
   end
 
   def update(file_id, observacao)
-    call(:patch, "/#{file_id.to_i}", body: { observacao: observacao })
+    call(:patch, "files/#{file_id.to_i}", body: { observacao: observacao })
   end
 
   def destroy(file_id)
-    call(:delete, "/#{file_id.to_i}")
+    call(:delete, "files/#{file_id.to_i}")
   end
 
   def download(file_id)
-    call(:get, "/#{file_id.to_i}/download")
+    call(:get, "files/#{file_id.to_i}/download")
   end
 
   private
 
+  # path é relativo à empresa no Portal (ex.: 'files/3'); PortalUpdateServer::Client
+  # reaproveita este repasse com outros caminhos.
   def call(method, path, options = {})
-    url = "#{ENV.fetch('PORTAL_INTERNAL_API_URL')}/api/internal/companies/#{@company.id}/files#{path}"
-    HTTParty.send(method, url, options.merge(headers: headers, timeout: TIMEOUT_SECONDS))
+    url = "#{ENV.fetch('PORTAL_INTERNAL_API_URL')}/api/internal/companies/#{@company.id}/#{path}"
+    HTTParty.send(method, url, options.merge(headers: headers.merge(options[:headers] || {}), timeout: TIMEOUT_SECONDS))
   rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError => e
     raise Error, "#{e.class}: #{e.message}"
   end

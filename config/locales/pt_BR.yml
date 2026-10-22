@@ -26,6 +26,8 @@ pt_BR:
     company_required: 'Vincule o contato a uma empresa antes de cadastrar no Portal.'
   portal_documents:
     portal_unavailable: 'Os documentos estão indisponíveis agora (o Portal não respondeu). Tente de novo em instantes.'
+  portal_update_server:
+    portal_unavailable: 'O Update Server está indisponível agora (o Portal não respondeu). Tente de novo em instantes.'
   inbox:
     reauthorization:
       success: 'Canal reautenticado com sucesso'

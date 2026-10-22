@@ -236,6 +236,50 @@
         "UPDATE_ERROR": "Não foi possível salvar a observação.",
         "REMOVE_ERROR": "Não foi possível remover o arquivo.",
         "DOWNLOAD_ERROR": "Não foi possível baixar o arquivo."
+      },
+      "UPDATE_SERVER": {
+        "TITLE": "Update Server",
+        "ACTIVE": "Ativo",
+        "YES": "Sim",
+        "NO": "Não",
+        "EDIT": "Editar",
+        "CANCEL": "Cancelar",
+        "SAVE": "Salvar",
+        "SAVING": "Salvando…",
+        "NOT_LINKED": "Esta empresa ainda não está vinculada a uma empresa do Portal do Cliente (o vínculo é pelo CPF/CNPJ).",
+        "LOAD_ERROR": "Não foi possível carregar os dados do Update Server.",
+        "SAVE_ERROR": "Não foi possível salvar.",
+        "BASES": {
+          "TITLE": "Bases",
+          "ADD": "Adicionar base",
+          "EMPTY": "Nenhuma base ainda.",
+          "FIELDS": {
+            "albatross_id": "ID",
+            "display_code": "Código de exibição",
+            "razao_social": "Razão social",
+            "display_name": "Nome de exibição",
+            "database_name": "Banco de dados",
+            "link": "Link",
+            "documento": "Documento"
+          }
+        },
+        "LICENSES": {
+          "TITLE": "Licenças",
+          "ADD": "Adicionar licença",
+          "EMPTY": "Nenhuma licença ainda.",
+          "MODULES": "Módulos",
+          "FIELDS": {
+            "user_name": "Usuário",
+            "code": "Código da licença",
+            "license_type": "Tipo de licença"
+          }
+        },
+        "SUMMARY": {
+          "TITLE": "Licenças utilizadas",
+          "EMPTY": "Nenhuma licença ativa.",
+          "TOTAL": "Quantidade de licenças",
+          "COMBINATIONS": "Combinações de módulos"
+        }
       }
     },
     "EMPTY_STATE": {

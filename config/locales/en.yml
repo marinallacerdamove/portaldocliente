@@ -39,6 +39,8 @@ en:
     company_required: 'Link the contact to a company before registering in Portal.'
   portal_documents:
     portal_unavailable: 'Documents are unavailable right now (Portal did not respond). Try again in a moment.'
+  portal_update_server:
+    portal_unavailable: 'Update Server is unavailable right now (Portal did not respond). Try again in a moment.'
   inbox:
     reauthorization:
       success: 'Channel reauthorized successfully'

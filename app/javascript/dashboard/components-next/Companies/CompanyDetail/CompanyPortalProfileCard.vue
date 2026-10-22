@@ -29,6 +29,7 @@ import CompanyAPI from 'dashboard/api/companies';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
 import InfoCardFields from 'dashboard/components-next/InfoCard/InfoCardFields.vue';
 import CompanyDocuments from './CompanyDocuments.vue';
+import CompanyUpdateServer from './CompanyUpdateServer.vue';
 import {
   SEGMENTOS,
   CLASSIFICACOES,
@@ -71,6 +72,7 @@ const CARD_TABS = computed(() =>
     canViewFinanceiro.value && { key: 'financeiro', label: 'Contrato' },
     { key: 'contabilidade', label: 'Contabilidade' },
     { key: 'documentos', label: 'Documentos' },
+    { key: 'update_server', label: 'Update Server' },
   ].filter(Boolean)
 );
 const activeTabKey = ref('dados');
@@ -1371,6 +1373,12 @@ const contabilidadeItems = computed(() => [
     <!-- Aba: Documentos - arquivos moram no Portal -->
     <CompanyDocuments
       v-if="activeTabKey === 'documentos'"
+      :company-id="company.id"
+    />
+
+    <!-- Aba: Update Server - bases e licenças moram no Portal -->
+    <CompanyUpdateServer
+      v-if="activeTabKey === 'update_server'"
       :company-id="company.id"
     />
   </div>
