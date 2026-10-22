@@ -5,6 +5,7 @@ import { computed } from 'vue';
 
 const props = defineProps({
   label: { type: String, required: true },
+  title: { type: String, default: '' },
   sortKey: { type: String, default: '' },
   activeKey: { type: String, default: null },
   direction: { type: String, default: 'asc' },
@@ -39,6 +40,8 @@ const icon = computed(() => {
     <button
       v-if="sortKey"
       type="button"
+      :title="title || undefined"
+      :aria-label="title || undefined"
       class="inline-flex items-center gap-1 hover:text-n-slate-12"
       :class="{ 'text-n-slate-12': isActive }"
       @click="$emit('sort', sortKey)"

@@ -458,7 +458,8 @@ const exportCsv = () => {
                   @sort="list.toggleSort"
                 />
                 <UpdateServerSortableTh
-                  :label="t(i18nKey('LICENSES.FIELDS.code'))"
+                  :label="t(i18nKey('LICENSES.COLUMNS.code'))"
+                  :title="t(i18nKey('LICENSES.FIELDS.code'))"
                   sort-key="code"
                   :active-key="list.sortBy.value"
                   :direction="list.sortDirection.value"

@@ -128,6 +128,15 @@ const copyDatabase = async base => {
   }
 };
 
+// Colunas com nome longo mostram a forma curta no cabeçalho e o nome completo no tooltip.
+const SHORT_COLUMNS = ['display_code'];
+const columnLabel = key =>
+  SHORT_COLUMNS.includes(key)
+    ? t(i18nKey(`BASES.COLUMNS.${key}`))
+    : t(i18nKey(`BASES.FIELDS.${key}`));
+const columnTitle = key =>
+  SHORT_COLUMNS.includes(key) ? t(i18nKey(`BASES.FIELDS.${key}`)) : '';
+
 const exportCsv = () => {
   const columns = [
     ...FIELDS.map(field => ({
@@ -277,7 +286,8 @@ const exportCsv = () => {
               <UpdateServerSortableTh
                 v-for="(field, index) in FIELDS"
                 :key="field.key"
-                :label="t(i18nKey(`BASES.FIELDS.${field.key}`))"
+                :label="columnLabel(field.key)"
+                :title="columnTitle(field.key)"
                 :sort-key="field.key"
                 :active-key="list.sortBy.value"
                 :direction="list.sortDirection.value"

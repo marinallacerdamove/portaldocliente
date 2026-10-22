@@ -253,6 +253,9 @@
           "TITLE": "Bases",
           "ADD": "Adicionar base",
           "EMPTY": "Cadastre as bases que esta empresa usa no Update Server.",
+          "COLUMNS": {
+            "display_code": "Cód. exib."
+          },
           "FIELDS": {
             "albatross_id": "ID",
             "display_code": "Código de exibição",
@@ -294,6 +297,9 @@
           "ADD": "Adicionar licença",
           "EMPTY": "Cadastre os usuários desta empresa e os módulos de cada um.",
           "MODULES": "Módulos",
+          "COLUMNS": {
+            "code": "Cód. licença"
+          },
           "FIELDS": {
             "user_name": "Usuário",
             "code": "Código da licença",

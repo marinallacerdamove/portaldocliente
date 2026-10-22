@@ -186,6 +186,9 @@
           "TITLE": "Bases",
           "ADD": "Add base",
           "EMPTY": "Add the databases this company uses in the Update Server.",
+          "COLUMNS": {
+            "display_code": "Disp. code"
+          },
           "FIELDS": {
             "albatross_id": "ID",
             "display_code": "Display code",
@@ -227,6 +230,9 @@
           "ADD": "Add license",
           "EMPTY": "Add the users of this company and the modules each one uses.",
           "MODULES": "Modules",
+          "COLUMNS": {
+            "code": "Lic. code"
+          },
           "FIELDS": {
             "user_name": "User",
             "code": "License code",
