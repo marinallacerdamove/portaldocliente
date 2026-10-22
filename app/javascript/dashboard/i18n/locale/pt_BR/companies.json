@@ -310,6 +310,8 @@
           "GROUP_TITLE": "Licença {code}",
           "NO_CODE": "Sem código de licença",
           "GROUP_COUNT": "{count} usuário | {count} usuários",
+          "SHOWING_ALL": "Mostrando todos os usuários",
+          "SHOWING_COUNT": "Mostrando {shown} de {total} usuário | Mostrando {shown} de {total} usuários",
           "MODULE_FILTER": "Filtrando pelo módulo:",
           "CLEAR_MODULE_FILTER": "Remover o filtro de módulo",
           "DUPLICATE_USER": "Este usuário já tem uma licença ativa nesta empresa. Você ainda pode salvar.",
@@ -357,7 +359,6 @@
           }
         },
         "SUMMARY": {
-          "TITLE": "Licenças utilizadas",
           "EMPTY": "Nenhuma licença ativa.",
           "TOTAL": "licenças ativas",
           "COMBINATIONS": "Combinações de módulos",

@@ -14,6 +14,7 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
 import CompanyUpdateServerBulkLicenses from './CompanyUpdateServerBulkLicenses.vue';
 import CompanyUpdateServerModules from './CompanyUpdateServerModules.vue';
+import CompanyUpdateServerSummary from './CompanyUpdateServerSummary.vue';
 import UpdateServerEmpty from './UpdateServerEmpty.vue';
 import UpdateServerModuleChip from './UpdateServerModuleChip.vue';
 import UpdateServerSortableTh from './UpdateServerSortableTh.vue';
@@ -30,6 +31,7 @@ import {
 
 const props = defineProps({
   licenses: { type: Array, default: () => [] },
+  summary: { type: Object, default: null },
   modules: { type: Array, default: () => [] },
   isSaving: { type: Boolean, default: false },
   save: { type: Function, required: true },
@@ -87,6 +89,14 @@ watch(
   () => editingId.value !== null || bulkOpen.value || modulesOpen.value,
   busy => emit('busyChange', busy)
 );
+
+// Igual ao Portal: "todos" quando nada está filtrado, senão "N de M".
+const showingText = computed(() => {
+  const shown = list.visible.value.length;
+  const total = props.licenses.length;
+  if (shown === total) return t(i18nKey('LICENSES.SHOWING_ALL'));
+  return t(i18nKey('LICENSES.SHOWING_COUNT'), { shown, total }, shown);
+});
 
 const groups = computed(() => groupByCode(list.visible.value));
 
@@ -354,195 +364,216 @@ const exportCsv = () => {
       />
     </UpdateServerEmpty>
 
-    <template v-else>
-      <UpdateServerToolbar
-        v-model:search="list.search.value"
-        v-model:status="list.status.value"
-        :search-placeholder="t(i18nKey('LICENSES.SEARCH'))"
-        :counts="list.counts.value"
-        :shown="list.visible.value.length"
-        :total="licenses.length"
-      >
-        <template #actions>
-          <label class="flex items-center gap-2 text-xs text-n-slate-11">
-            <Checkbox v-model="grouped" />
-            {{ t(i18nKey('LICENSES.GROUP_BY_CODE')) }}
-          </label>
+    <div
+      v-else
+      class="grid grid-cols-1 gap-4 xl:grid-cols-[17.5rem_minmax(0,1fr)]"
+    >
+      <CompanyUpdateServerSummary
+        :summary="summary"
+        :selected="moduleFilter"
+        @select="moduleFilter = $event"
+      />
+      <div class="min-w-0">
+        <UpdateServerToolbar
+          v-model:search="list.search.value"
+          v-model:status="list.status.value"
+          :search-placeholder="t(i18nKey('LICENSES.SEARCH'))"
+          :counts="list.counts.value"
+          :shown="list.visible.value.length"
+          :total="licenses.length"
+        >
+          <template #actions>
+            <label class="flex items-center gap-2 text-xs text-n-slate-11">
+              <Checkbox v-model="grouped" />
+              {{ t(i18nKey('LICENSES.GROUP_BY_CODE')) }}
+            </label>
+            <Button
+              :label="t(i18nKey('EXPORT_CSV'))"
+              icon="i-lucide-download"
+              ghost
+              slate
+              xs
+              :disabled="!list.visible.value.length"
+              @click="exportCsv"
+            />
+          </template>
+        </UpdateServerToolbar>
+
+        <div class="flex items-center gap-2 mb-3 min-h-6">
+          <template v-if="moduleFilter">
+            <span class="text-xs text-n-slate-11">
+              {{ t(i18nKey('LICENSES.MODULE_FILTER')) }}
+            </span>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 pr-1.5"
+              :aria-label="t(i18nKey('LICENSES.CLEAR_MODULE_FILTER'))"
+              @click="moduleFilter = ''"
+            >
+              <UpdateServerModuleChip :code="moduleFilter" />
+              <span class="i-lucide-x size-3.5 text-n-slate-10" />
+            </button>
+          </template>
+          <span
+            v-else
+            class="text-xs tabular-nums text-n-slate-11"
+            data-testid="license-showing"
+          >
+            {{ showingText }}
+          </span>
+        </div>
+
+        <UpdateServerEmpty
+          v-if="!list.visible.value.length"
+          icon="i-lucide-search-x"
+          :title="t(i18nKey('NO_RESULTS_TITLE'))"
+          :description="t(i18nKey('NO_RESULTS'))"
+        >
           <Button
-            :label="t(i18nKey('EXPORT_CSV'))"
-            icon="i-lucide-download"
+            :label="t(i18nKey('CLEAR_FILTERS'))"
             ghost
             slate
             xs
-            :disabled="!list.visible.value.length"
-            @click="exportCsv"
+            @click="
+              list.clearFilters();
+              moduleFilter = '';
+            "
           />
-        </template>
-      </UpdateServerToolbar>
-
-      <div v-if="moduleFilter" class="flex items-center gap-2 mb-3">
-        <span class="text-xs text-n-slate-11">
-          {{ t(i18nKey('LICENSES.MODULE_FILTER')) }}
-        </span>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1 pr-1.5"
-          :aria-label="t(i18nKey('LICENSES.CLEAR_MODULE_FILTER'))"
-          @click="moduleFilter = ''"
+        </UpdateServerEmpty>
+        <div
+          v-else
+          class="overflow-auto border rounded-lg max-h-[32rem] border-n-weak"
         >
-          <UpdateServerModuleChip :code="moduleFilter" />
-          <span class="i-lucide-x size-3.5 text-n-slate-10" />
-        </button>
-      </div>
-
-      <UpdateServerEmpty
-        v-if="!list.visible.value.length"
-        icon="i-lucide-search-x"
-        :title="t(i18nKey('NO_RESULTS_TITLE'))"
-        :description="t(i18nKey('NO_RESULTS'))"
-      >
-        <Button
-          :label="t(i18nKey('CLEAR_FILTERS'))"
-          ghost
-          slate
-          xs
-          @click="
-            list.clearFilters();
-            moduleFilter = '';
-          "
-        />
-      </UpdateServerEmpty>
-      <div
-        v-else
-        class="overflow-auto border rounded-lg max-h-[32rem] border-n-weak"
-      >
-        <table
-          class="w-full text-sm text-left border-separate border-spacing-0"
-        >
-          <thead>
-            <tr>
-              <UpdateServerSortableTh
-                :label="t(i18nKey('LICENSES.FIELDS.user_name'))"
-                sort-key="user_name"
-                :active-key="list.sortBy.value"
-                :direction="list.sortDirection.value"
-                sticky
-                @sort="list.toggleSort"
-              />
-              <UpdateServerSortableTh
-                :label="t(i18nKey('LICENSES.FIELDS.code'))"
-                sort-key="code"
-                :active-key="list.sortBy.value"
-                :direction="list.sortDirection.value"
-                @sort="list.toggleSort"
-              />
-              <UpdateServerSortableTh
-                :label="t(i18nKey('LICENSES.FIELDS.license_type'))"
-                sort-key="license_type"
-                :active-key="list.sortBy.value"
-                :direction="list.sortDirection.value"
-                @sort="list.toggleSort"
-              />
-              <UpdateServerSortableTh :label="t(i18nKey('LICENSES.MODULES'))" />
-              <UpdateServerSortableTh
-                :label="t(i18nKey('ACTIVE'))"
-                sort-key="active"
-                :active-key="list.sortBy.value"
-                :direction="list.sortDirection.value"
-                @sort="list.toggleSort"
-              />
-              <th class="sticky top-0 z-10 w-10 bg-n-solid-2" />
-            </tr>
-          </thead>
-          <tbody
-            v-for="group in grouped
-              ? groups
-              : [{ code: null, items: list.visible.value }]"
-            :key="group.code ?? 'all'"
+          <table
+            class="w-full text-sm text-left border-separate border-spacing-0"
           >
-            <tr v-if="grouped">
-              <td
-                :colspan="SPAN_COLUMNS"
-                class="px-3 py-2 text-xs font-semibold border-t border-n-weak bg-n-alpha-1 text-n-slate-11"
-              >
-                {{
-                  group.code
-                    ? t(i18nKey('LICENSES.GROUP_TITLE'), { code: group.code })
-                    : t(i18nKey('LICENSES.NO_CODE'))
-                }}
-                <span class="ltr:ml-1 rtl:mr-1 font-normal text-n-slate-10">
-                  {{ '·' }}
-                  {{
-                    t(
-                      i18nKey('LICENSES.GROUP_COUNT'),
-                      { count: group.items.length },
-                      group.items.length
-                    )
-                  }}
-                </span>
-              </td>
-            </tr>
-            <tr
-              v-for="license in group.items"
-              :key="license.id"
-              class="cursor-pointer group hover:bg-n-alpha-1"
-              :class="{ 'opacity-60': !license.active }"
-              @click="startEdit(license)"
+            <thead>
+              <tr>
+                <UpdateServerSortableTh
+                  :label="t(i18nKey('LICENSES.FIELDS.user_name'))"
+                  sort-key="user_name"
+                  :active-key="list.sortBy.value"
+                  :direction="list.sortDirection.value"
+                  sticky
+                  @sort="list.toggleSort"
+                />
+                <UpdateServerSortableTh
+                  :label="t(i18nKey('LICENSES.FIELDS.code'))"
+                  sort-key="code"
+                  :active-key="list.sortBy.value"
+                  :direction="list.sortDirection.value"
+                  @sort="list.toggleSort"
+                />
+                <UpdateServerSortableTh
+                  :label="t(i18nKey('LICENSES.FIELDS.license_type'))"
+                  sort-key="license_type"
+                  :active-key="list.sortBy.value"
+                  :direction="list.sortDirection.value"
+                  @sort="list.toggleSort"
+                />
+                <UpdateServerSortableTh
+                  :label="t(i18nKey('LICENSES.MODULES'))"
+                />
+                <UpdateServerSortableTh
+                  :label="t(i18nKey('ACTIVE'))"
+                  sort-key="active"
+                  :active-key="list.sortBy.value"
+                  :direction="list.sortDirection.value"
+                  @sort="list.toggleSort"
+                />
+                <th class="sticky top-0 z-10 w-10 bg-n-solid-2" />
+              </tr>
+            </thead>
+            <tbody
+              v-for="group in grouped
+                ? groups
+                : [{ code: null, items: list.visible.value }]"
+              :key="group.code ?? 'all'"
             >
-              <td
-                class="sticky px-3 py-2.5 border-t ltr:left-0 rtl:right-0 border-n-weak bg-n-solid-1 group-hover:bg-n-solid-2"
-              >
-                <div class="flex items-center gap-2.5 min-w-[9rem]">
-                  <Avatar :name="license.user_name" :size="28" rounded-full />
-                  <span class="font-medium truncate text-n-slate-12">
-                    {{ license.user_name }}
+              <tr v-if="grouped">
+                <td
+                  :colspan="SPAN_COLUMNS"
+                  class="px-3 py-2 text-xs font-semibold border-t border-n-weak bg-n-alpha-1 text-n-slate-11"
+                >
+                  {{
+                    group.code
+                      ? t(i18nKey('LICENSES.GROUP_TITLE'), { code: group.code })
+                      : t(i18nKey('LICENSES.NO_CODE'))
+                  }}
+                  <span class="ltr:ml-1 rtl:mr-1 font-normal text-n-slate-10">
+                    {{ '·' }}
+                    {{
+                      t(
+                        i18nKey('LICENSES.GROUP_COUNT'),
+                        { count: group.items.length },
+                        group.items.length
+                      )
+                    }}
                   </span>
-                </div>
-              </td>
-              <td
-                class="px-3 py-2.5 border-t tabular-nums border-n-weak text-n-slate-12"
+                </td>
+              </tr>
+              <tr
+                v-for="license in group.items"
+                :key="license.id"
+                class="cursor-pointer group hover:bg-n-alpha-1"
+                :class="{ 'opacity-60': !license.active }"
+                @click="startEdit(license)"
               >
-                {{ license.code }}
-              </td>
-              <td class="px-3 py-2.5 border-t border-n-weak text-n-slate-12">
-                {{ license.license_type }}
-              </td>
-              <td class="px-3 py-2.5 border-t border-n-weak">
-                <div class="flex flex-wrap gap-1">
-                  <UpdateServerModuleChip
-                    v-for="mod in modulesOfLicense(license, modules)"
-                    :key="mod.id"
-                    :code="mod.code"
-                    :name="mod.name"
-                    :inactive="!mod.active"
+                <td
+                  class="sticky px-3 py-2.5 border-t ltr:left-0 rtl:right-0 border-n-weak bg-n-solid-1 group-hover:bg-n-solid-2"
+                >
+                  <div class="flex items-center gap-2.5 min-w-[9rem]">
+                    <Avatar :name="license.user_name" :size="28" rounded-full />
+                    <span class="font-medium truncate text-n-slate-12">
+                      {{ license.user_name }}
+                    </span>
+                  </div>
+                </td>
+                <td
+                  class="px-3 py-2.5 border-t tabular-nums border-n-weak text-n-slate-12"
+                >
+                  {{ license.code }}
+                </td>
+                <td class="px-3 py-2.5 border-t border-n-weak text-n-slate-12">
+                  {{ license.license_type }}
+                </td>
+                <td class="px-3 py-2.5 border-t border-n-weak">
+                  <div class="flex flex-wrap gap-1">
+                    <UpdateServerModuleChip
+                      v-for="mod in modulesOfLicense(license, modules)"
+                      :key="mod.id"
+                      :code="mod.code"
+                      :name="mod.name"
+                      :inactive="!mod.active"
+                    />
+                  </div>
+                </td>
+                <td class="px-3 py-2.5 border-t border-n-weak">
+                  <UpdateServerStatusSwitch
+                    :active="license.active"
+                    :busy="togglingId === license.id"
+                    :label="
+                      t(i18nKey('LICENSES.TOGGLE'), { user: license.user_name })
+                    "
+                    @toggle="toggleActive(license, $event)"
                   />
-                </div>
-              </td>
-              <td class="px-3 py-2.5 border-t border-n-weak">
-                <UpdateServerStatusSwitch
-                  :active="license.active"
-                  :busy="togglingId === license.id"
-                  :label="
-                    t(i18nKey('LICENSES.TOGGLE'), { user: license.user_name })
-                  "
-                  @toggle="toggleActive(license, $event)"
-                />
-              </td>
-              <td class="px-2 py-2.5 text-right border-t border-n-weak">
-                <Button
-                  v-tooltip.top="t(i18nKey('EDIT'))"
-                  :aria-label="t(i18nKey('EDIT'))"
-                  icon="i-lucide-pencil"
-                  ghost
-                  slate
-                  xs
-                  @click.stop="startEdit(license)"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+                <td class="px-2 py-2.5 text-right border-t border-n-weak">
+                  <Button
+                    v-tooltip.top="t(i18nKey('EDIT'))"
+                    :aria-label="t(i18nKey('EDIT'))"
+                    icon="i-lucide-pencil"
+                    ghost
+                    slate
+                    xs
+                    @click.stop="startEdit(license)"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </template>
+    </div>
   </InfoCard>
 </template>

@@ -71,8 +71,8 @@ const CARD_TABS = computed(() =>
     { key: 'dados', label: 'Visão geral' },
     canViewFinanceiro.value && { key: 'financeiro', label: 'Contrato' },
     { key: 'contabilidade', label: 'Contabilidade' },
-    { key: 'documentos', label: 'Documentos' },
     { key: 'update_server', label: 'Update Server' },
+    { key: 'documentos', label: 'Documentos' },
   ].filter(Boolean)
 );
 const activeTabKey = ref('dados');
@@ -1370,15 +1370,15 @@ const contabilidadeItems = computed(() => [
       </template>
     </InfoCard>
 
-    <!-- Aba: Documentos - arquivos moram no Portal -->
-    <CompanyDocuments
-      v-if="activeTabKey === 'documentos'"
-      :company-id="company.id"
-    />
-
     <!-- Aba: Update Server - bases e licenças moram no Portal -->
     <CompanyUpdateServer
       v-if="activeTabKey === 'update_server'"
+      :company-id="company.id"
+    />
+
+    <!-- Aba: Documentos - arquivos moram no Portal -->
+    <CompanyDocuments
+      v-if="activeTabKey === 'documentos'"
       :company-id="company.id"
     />
   </div>

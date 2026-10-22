@@ -9,6 +9,7 @@ const props = defineProps({
   activeKey: { type: String, default: null },
   direction: { type: String, default: 'asc' },
   sticky: { type: Boolean, default: false },
+  numeric: { type: Boolean, default: false },
 });
 defineEmits(['sort']);
 
@@ -29,8 +30,11 @@ const icon = computed(() => {
   <th
     scope="col"
     :aria-sort="ariaSort"
-    class="sticky top-0 z-10 px-3 py-2 text-xs font-medium text-left whitespace-nowrap bg-n-solid-2 text-n-slate-11"
-    :class="{ 'ltr:left-0 rtl:right-0 z-20': sticky }"
+    class="sticky top-0 z-10 px-3 py-2 text-xs font-medium whitespace-nowrap bg-n-solid-2 text-n-slate-11"
+    :class="[
+      numeric ? 'ltr:text-right rtl:text-left' : 'text-left',
+      { 'ltr:left-0 rtl:right-0 z-20': sticky },
+    ]"
   >
     <button
       v-if="sortKey"

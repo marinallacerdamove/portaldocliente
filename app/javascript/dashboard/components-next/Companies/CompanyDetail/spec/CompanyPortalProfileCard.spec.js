@@ -58,3 +58,17 @@ describe('CompanyPortalProfileCard account companies', () => {
     );
   });
 });
+
+describe('CompanyPortalProfileCard tabs', () => {
+  it('keeps the same tab order as the Portal, with Update Server before Documentos', async () => {
+    const wrapper = await mountCard();
+
+    expect(wrapper.vm.CARD_TABS.map(tab => tab.key)).toEqual([
+      'dados',
+      'financeiro',
+      'contabilidade',
+      'update_server',
+      'documentos',
+    ]);
+  });
+});

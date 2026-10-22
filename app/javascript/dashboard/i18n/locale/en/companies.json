@@ -243,6 +243,8 @@
           "GROUP_TITLE": "License {code}",
           "NO_CODE": "No license code",
           "GROUP_COUNT": "{count} user | {count} users",
+          "SHOWING_ALL": "Showing all users",
+          "SHOWING_COUNT": "Showing {shown} of {total} user | Showing {shown} of {total} users",
           "MODULE_FILTER": "Filtering by module:",
           "CLEAR_MODULE_FILTER": "Remove the module filter",
           "DUPLICATE_USER": "This user already has an active license in this company. You can still save.",
@@ -290,7 +292,6 @@
           }
         },
         "SUMMARY": {
-          "TITLE": "Licenses in use",
           "EMPTY": "No active licenses.",
           "TOTAL": "active licenses",
           "COMBINATIONS": "Module combinations",

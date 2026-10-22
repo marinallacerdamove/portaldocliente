@@ -11,7 +11,6 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import InfoCard from 'dashboard/components-next/InfoCard/InfoCard.vue';
 import CompanyUpdateServerBases from './CompanyUpdateServerBases.vue';
 import CompanyUpdateServerLicenses from './CompanyUpdateServerLicenses.vue';
-import CompanyUpdateServerSummary from './CompanyUpdateServerSummary.vue';
 
 const props = defineProps({
   companyId: { type: [Number, String], required: true },
@@ -232,13 +231,9 @@ watch(
         :save="saveBase"
         @busy-change="openSections.bases = $event"
       />
-      <CompanyUpdateServerSummary
-        :summary="data.summary"
-        :selected="moduleFilter"
-        @select="moduleFilter = $event"
-      />
       <CompanyUpdateServerLicenses
         v-model:module-filter="moduleFilter"
+        :summary="data.summary"
         :licenses="data.licenses"
         :modules="data.modules"
         :is-saving="isSaving"

@@ -172,3 +172,22 @@ describe('CompanyUpdateServerLicenses', () => {
     expect(wrapper.emitted('busyChange')).toEqual([[true], [false]]);
   });
 });
+
+describe('CompanyUpdateServerLicenses showing text', () => {
+  const licenses = [
+    { id: 1, user_name: 'ana', active: true, license_module_ids: [1] },
+    { id: 2, user_name: 'bia', active: true, license_module_ids: [2] },
+  ];
+
+  it('says all users when nothing is filtered and "N of M" when a module filters', async () => {
+    const wrapper = mountLicenses({ licenses });
+    expect(wrapper.vm.showingText).toBe(
+      'COMPANIES.DETAIL.UPDATE_SERVER.LICENSES.SHOWING_ALL'
+    );
+
+    await wrapper.setProps({ moduleFilter: 'STK' });
+    expect(wrapper.vm.showingText).toBe(
+      'COMPANIES.DETAIL.UPDATE_SERVER.LICENSES.SHOWING_COUNT'
+    );
+  });
+});

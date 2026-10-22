@@ -282,6 +282,7 @@ const exportCsv = () => {
                 :active-key="list.sortBy.value"
                 :direction="list.sortDirection.value"
                 :sticky="index === 0"
+                :numeric="field.type === 'number'"
                 @sort="list.toggleSort"
               />
               <UpdateServerSortableTh
@@ -303,12 +304,12 @@ const exportCsv = () => {
               @click="startEdit(base)"
             >
               <td
-                class="sticky px-3 py-3 font-medium tabular-nums border-t ltr:left-0 rtl:right-0 border-n-weak bg-n-solid-1 text-n-slate-12 group-hover:bg-n-solid-2"
+                class="sticky px-3 py-3 font-medium tabular-nums border-t ltr:left-0 ltr:text-right rtl:right-0 rtl:text-left border-n-weak bg-n-solid-1 text-n-slate-12 group-hover:bg-n-solid-2"
               >
                 {{ base.albatross_id }}
               </td>
               <td
-                class="px-3 py-3 border-t tabular-nums border-n-weak text-n-slate-12"
+                class="px-3 py-3 border-t tabular-nums ltr:text-right rtl:text-left border-n-weak text-n-slate-12"
               >
                 {{ base.display_code ?? '' }}
               </td>
