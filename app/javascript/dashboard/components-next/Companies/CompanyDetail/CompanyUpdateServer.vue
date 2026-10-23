@@ -1,5 +1,5 @@
 <script setup>
-// PATCH LOCAL (fork) - aba Update Server da empresa, igual à do Portal: bases
+// PATCH LOCAL (fork) - aba Updater Server da empresa, igual à do Portal: bases
 // do Albatross e licenças por usuário, com o total por módulo somado sozinho.
 // Os dados moram no Portal do Cliente (repasse em
 // Companies::PortalUpdateServerController); aqui não há exclusão, só inativar.

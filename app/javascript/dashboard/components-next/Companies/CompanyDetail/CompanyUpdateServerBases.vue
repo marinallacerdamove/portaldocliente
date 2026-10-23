@@ -1,5 +1,5 @@
 <script setup>
-// Tabela de bases do Update Server (Albatross) com busca, filtro, ordenação,
+// Tabela de bases do Updater Server (Albatross) com busca, filtro, ordenação,
 // copiar banco, exportar CSV e formulário de adicionar e editar. Sem exclusão:
 // a base sai de uso desligando "Ativa".
 import { ref, watch } from 'vue';

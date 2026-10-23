@@ -171,7 +171,7 @@
         "DOWNLOAD_ERROR": "Could not download the file."
       },
       "UPDATE_SERVER": {
-        "TITLE": "Update Server",
+        "TITLE": "Updater Server",
         "ACTIVE": "Active",
         "YES": "Yes",
         "NO": "No",
@@ -180,12 +180,12 @@
         "SAVE": "Save",
         "SAVING": "Saving…",
         "NOT_LINKED": "This company is not linked to a Customer Portal company yet (linked by CPF/CNPJ).",
-        "LOAD_ERROR": "Could not load the Update Server data.",
+        "LOAD_ERROR": "Could not load the Updater Server data.",
         "SAVE_ERROR": "Could not save.",
         "BASES": {
           "TITLE": "Bases",
           "ADD": "Add base",
-          "EMPTY": "Add the databases this company uses in the Update Server.",
+          "EMPTY": "Add the databases this company uses in the Updater Server.",
           "COLUMNS": {
             "display_code": "Disp. code"
           },
@@ -198,7 +198,7 @@
             "link": "Link",
             "documento": "Document"
           },
-          "DESCRIPTION": "Databases this company uses in the Albatross Update Server.",
+          "DESCRIPTION": "Databases this company uses in the Albatross Updater Server.",
           "EMPTY_TITLE": "No bases yet",
           "EMPTY_CTA": "Add first base",
           "SEARCH": "Search ID, name, database or document",
@@ -218,8 +218,8 @@
             "documento": "CPF or CNPJ"
           },
           "HELP": {
-            "albatross_id": "The base ID in the Update Server. It cannot repeat inside this company.",
-            "display_code": "Optional. The order shown in the Update Server list.",
+            "albatross_id": "The base ID in the Updater Server. It cannot repeat inside this company.",
+            "display_code": "Optional. The order shown in the Updater Server list.",
             "database_name": "Exact database name, used to find the base.",
             "link": "Optional. Must start with http:// or https://.",
             "documento": "Optional. CPF or CNPJ of the base owner."

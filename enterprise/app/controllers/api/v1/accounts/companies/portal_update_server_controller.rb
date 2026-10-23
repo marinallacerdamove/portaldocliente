@@ -1,4 +1,4 @@
-# PATCH LOCAL (fork) - aba Update Server da empresa (bases + licenças),
+# PATCH LOCAL (fork) - aba Updater Server da empresa (bases + licenças),
 # repassada pro Portal do Cliente (ver PortalUpdateServer::Client). Ver: quem
 # vê a empresa; gravar: quem edita a empresa. Sem exclusão: base, licença e
 # módulo de licença saem de uso inativando (campo active).

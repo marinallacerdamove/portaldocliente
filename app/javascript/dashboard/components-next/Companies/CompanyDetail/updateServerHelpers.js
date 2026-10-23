@@ -1,4 +1,4 @@
-// PATCH LOCAL (fork) - lógica pura das listas da aba Update Server (bases e
+// PATCH LOCAL (fork) - lógica pura das listas da aba Updater Server (bases e
 // licenças): busca, filtro de status, ordenação, agrupamento, CSV e o lote de
 // usuários. Fica fora dos componentes pra ser testada sem montar tela.
 

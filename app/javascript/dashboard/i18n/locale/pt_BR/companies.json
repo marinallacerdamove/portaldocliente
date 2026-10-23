@@ -238,7 +238,7 @@
         "DOWNLOAD_ERROR": "Não foi possível baixar o arquivo."
       },
       "UPDATE_SERVER": {
-        "TITLE": "Update Server",
+        "TITLE": "Updater Server",
         "ACTIVE": "Ativo",
         "YES": "Sim",
         "NO": "Não",
@@ -247,12 +247,12 @@
         "SAVE": "Salvar",
         "SAVING": "Salvando…",
         "NOT_LINKED": "Esta empresa ainda não está vinculada a uma empresa do Portal do Cliente (o vínculo é pelo CPF/CNPJ).",
-        "LOAD_ERROR": "Não foi possível carregar os dados do Update Server.",
+        "LOAD_ERROR": "Não foi possível carregar os dados do Updater Server.",
         "SAVE_ERROR": "Não foi possível salvar.",
         "BASES": {
           "TITLE": "Bases",
           "ADD": "Adicionar base",
-          "EMPTY": "Cadastre as bases que esta empresa usa no Update Server.",
+          "EMPTY": "Cadastre as bases que esta empresa usa no Updater Server.",
           "COLUMNS": {
             "display_code": "Cód. exib."
           },
@@ -265,7 +265,7 @@
             "link": "Link",
             "documento": "Documento"
           },
-          "DESCRIPTION": "Bases que esta empresa usa no Update Server do Albatross.",
+          "DESCRIPTION": "Bases que esta empresa usa no Updater Server do Albatross.",
           "EMPTY_TITLE": "Nenhuma base ainda",
           "EMPTY_CTA": "Adicionar primeira base",
           "SEARCH": "Buscar ID, nome, banco ou documento",
@@ -285,8 +285,8 @@
             "documento": "CPF ou CNPJ"
           },
           "HELP": {
-            "albatross_id": "O ID da base no Update Server. Não pode repetir dentro desta empresa.",
-            "display_code": "Opcional. A ordem em que aparece na lista do Update Server.",
+            "albatross_id": "O ID da base no Updater Server. Não pode repetir dentro desta empresa.",
+            "display_code": "Opcional. A ordem em que aparece na lista do Updater Server.",
             "database_name": "Nome exato do banco, usado para achar a base.",
             "link": "Opcional. Precisa começar com http:// ou https://.",
             "documento": "Opcional. CPF ou CNPJ do dono da base."

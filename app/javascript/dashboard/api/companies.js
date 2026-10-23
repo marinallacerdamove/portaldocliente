@@ -87,7 +87,7 @@ class CompanyAPI extends ApiClient {
     });
   }
 
-  // PATCH LOCAL (fork) - aba Update Server (bases e licenças moram no Portal)
+  // PATCH LOCAL (fork) - aba Updater Server (bases e licenças moram no Portal)
   getUpdateServer(id) {
     return axios.get(`${this.url}/${id}/portal_update_server`);
   }

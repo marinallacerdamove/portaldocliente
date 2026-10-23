@@ -40,7 +40,7 @@ en:
   portal_documents:
     portal_unavailable: 'Documents are unavailable right now (Portal did not respond). Try again in a moment.'
   portal_update_server:
-    portal_unavailable: 'Update Server is unavailable right now (Portal did not respond). Try again in a moment.'
+    portal_unavailable: 'Updater Server is unavailable right now (Portal did not respond). Try again in a moment.'
   inbox:
     reauthorization:
       success: 'Channel reauthorized successfully'

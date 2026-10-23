@@ -1,5 +1,5 @@
 <script setup>
-// PATCH LOCAL (fork) - barra única das listas do Update Server: busca à
+// PATCH LOCAL (fork) - barra única das listas do Updater Server: busca à
 // esquerda, filtro de status em controle segmentado e as ações à direita
 // (slot). Os contadores ficam discretos embaixo.
 import { useId } from 'vue';

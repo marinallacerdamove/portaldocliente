@@ -1,5 +1,5 @@
 <script setup>
-// PATCH LOCAL (fork) - estado vazio das listas do Update Server (sem registro
+// PATCH LOCAL (fork) - estado vazio das listas do Updater Server (sem registro
 // ainda, ou filtro sem resultado), com o botão de ação no slot.
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 

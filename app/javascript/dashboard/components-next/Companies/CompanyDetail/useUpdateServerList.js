@@ -1,4 +1,4 @@
-// PATCH LOCAL (fork) - estado de lista das tabelas do Update Server: busca,
+// PATCH LOCAL (fork) - estado de lista das tabelas do Updater Server: busca,
 // filtro de status e ordenação, iguais pra Bases e Licenças.
 import { computed, ref } from 'vue';
 import {

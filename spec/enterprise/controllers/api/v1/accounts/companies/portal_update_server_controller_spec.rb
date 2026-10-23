@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Company Portal Update Server API', type: :request do
+RSpec.describe 'Company Portal Updater Server API', type: :request do
   let(:account) { create(:account) }
   let(:admin) { create(:user, account: account, role: :administrator) }
   let(:agent) { create(:user, account: account, role: :agent) }
