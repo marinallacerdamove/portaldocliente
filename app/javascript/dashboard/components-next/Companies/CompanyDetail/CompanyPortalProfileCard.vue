@@ -40,7 +40,12 @@ import {
   TIPO_EMPRESA_OPTIONS,
   ESTADOS_BR,
   REGIME_TRIBUTARIO,
+  CONTRATO_STATUS_CANCELADO,
+  CONTRATO_TIPOS,
+  CONTRATO_CONCEITOS,
+  CONTRATO_PERIODOS_MESES,
 } from 'dashboard/constants/portalCompanyFields';
+import { nextContractUpdate } from 'dashboard/helper/contractUpdate';
 
 const props = defineProps({
   company: { type: Object, default: () => ({}) },
@@ -141,9 +146,18 @@ const FIELD_GROUPS = [
     tab: 'financeiro',
     fields: [
       { key: 'contrato_status', type: 'select', options: CONTRATO_STATUSES },
+      // Só com o contrato cancelado (ver contratoFields).
+      { key: 'contrato_data_cancelamento', type: 'date' },
+      { key: 'contrato_tipo', type: 'select', options: CONTRATO_TIPOS },
+      { key: 'contrato_conceito', type: 'select', options: CONTRATO_CONCEITOS },
       { key: 'contrato_valor', type: 'number' },
       { key: 'contrato_inicio', type: 'date' },
       { key: 'contrato_fim', type: 'date' },
+      {
+        key: 'contrato_periodo_meses',
+        type: 'select',
+        options: CONTRATO_PERIODOS_MESES,
+      },
     ],
   },
   {
@@ -654,15 +668,20 @@ const readField = (key, extra = {}) => ({
   value: attrs.value[key] || '',
   ...extra,
 });
+// Locale do Chatwoot vem como "pt_BR"; o Intl só aceita "pt-BR" (com "_"
+// dava RangeError e a aba Contrato quebrava com qualquer data ou valor).
+const intlLocale = computed(() => locale.value.replace('_', '-'));
 const formatDate = value =>
-  value ? new Date(`${value}T00:00:00`).toLocaleDateString(locale.value) : '';
+  value
+    ? new Date(`${value}T00:00:00`).toLocaleDateString(intlLocale.value)
+    : '';
 const formatCurrency = value =>
   value === '' ||
   value === null ||
   value === undefined ||
   Number.isNaN(Number(value))
     ? ''
-    : Number(value).toLocaleString(locale.value, {
+    : Number(value).toLocaleString(intlLocale.value, {
         style: 'currency',
         currency: 'BRL',
       });
@@ -750,33 +769,101 @@ const observacoesItems = computed(() => [
   },
 ]);
 
-const contratoItems = computed(() => [
-  {
-    key: 'contrato_status',
-    label: labelOf('contrato_status'),
-    value: optionLabel(CONTRATO_STATUSES, attrs.value.contrato_status),
-  },
-  {
-    key: 'contrato_valor',
-    label: labelOf('contrato_valor'),
-    value: formatCurrency(attrs.value.contrato_valor),
-  },
-  {
-    key: 'contrato_inicio',
-    label: labelOf('contrato_inicio'),
-    value: formatDate(attrs.value.contrato_inicio),
-  },
-  {
-    key: 'contrato_fim',
-    label: labelOf('contrato_fim'),
-    value: formatDate(attrs.value.contrato_fim),
-  },
-  readField('modulos_contratados', {
-    value: splitList(attrs.value.modulos_contratados),
-    kind: 'chips',
-    full: true,
-  }),
-]);
+const isCancelado = status => status === CONTRATO_STATUS_CANCELADO;
+// Rota e empresas da rota são só leitura aqui: entrar e sair da rota é pela
+// ficha da empresa no Portal (o Portal ignora essas chaves na volta).
+const contratoFields = computed(() =>
+  fieldsOf('CONTRATO').filter(
+    field =>
+      field.key !== 'contrato_data_cancelamento' ||
+      isCancelado(customAttrs.contrato_status)
+  )
+);
+// Cancelar já sugere a data de hoje (o Portal grava hoje se ficar vazia).
+watch(
+  () => customAttrs.contrato_status,
+  status => {
+    if (isCancelado(status) && !customAttrs.contrato_data_cancelamento) {
+      const today = new Date();
+      customAttrs.contrato_data_cancelamento = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, '0'),
+        String(today.getDate()).padStart(2, '0'),
+      ].join('-');
+    }
+  }
+);
+
+const contratoItems = computed(() =>
+  [
+    {
+      key: 'contrato_status',
+      label: labelOf('contrato_status'),
+      value: optionLabel(CONTRATO_STATUSES, attrs.value.contrato_status),
+    },
+    isCancelado(attrs.value.contrato_status) && {
+      key: 'contrato_data_cancelamento',
+      label: labelOf('contrato_data_cancelamento'),
+      value: formatDate(attrs.value.contrato_data_cancelamento),
+    },
+    {
+      key: 'contrato_tipo',
+      label: labelOf('contrato_tipo'),
+      value: optionLabel(CONTRATO_TIPOS, attrs.value.contrato_tipo),
+    },
+    {
+      key: 'contrato_conceito',
+      label: labelOf('contrato_conceito'),
+      value: optionLabel(CONTRATO_CONCEITOS, attrs.value.contrato_conceito),
+    },
+    {
+      key: 'contrato_valor',
+      label: labelOf('contrato_valor'),
+      value: formatCurrency(attrs.value.contrato_valor),
+    },
+    {
+      key: 'contrato_inicio',
+      label: labelOf('contrato_inicio'),
+      value: formatDate(attrs.value.contrato_inicio),
+    },
+    {
+      key: 'contrato_fim',
+      label: labelOf('contrato_fim'),
+      value: formatDate(attrs.value.contrato_fim),
+    },
+    {
+      key: 'contrato_periodo_meses',
+      label: labelOf('contrato_periodo_meses'),
+      value: optionLabel(
+        CONTRATO_PERIODOS_MESES,
+        attrs.value.contrato_periodo_meses
+      ),
+    },
+    {
+      key: 'contrato_proxima_atualizacao',
+      label: labelOf('contrato_proxima_atualizacao'),
+      value: formatDate(
+        nextContractUpdate({
+          inicio: attrs.value.contrato_inicio,
+          periodoMeses: attrs.value.contrato_periodo_meses,
+          fim: attrs.value.contrato_fim,
+          status: attrs.value.contrato_status,
+        })
+      ),
+    },
+    readField('contrato_rota'),
+    readField('contrato_rota_empresas', {
+      value: splitList(attrs.value.contrato_rota_empresas),
+      kind: 'chips',
+      full: true,
+    }),
+    readField('modulos_contratados', {
+      value: splitList(attrs.value.modulos_contratados),
+      kind: 'chips',
+      full: true,
+    }),
+  ].filter(Boolean)
+);
 
 // Igual ao Portal: URL do painel só pra acesso Nuvem, IP/Usuário/Senha só
 // pra acesso Remoto.
@@ -1276,7 +1363,7 @@ const contabilidadeItems = computed(() => [
       <template #edit>
         <div class="flex flex-col w-full gap-4">
           <div class="grid w-full gap-4 sm:grid-cols-2">
-            <template v-for="field in fieldsOf('CONTRATO')" :key="field.key">
+            <template v-for="field in contratoFields" :key="field.key">
               <Select
                 v-if="field.type === 'select'"
                 v-model="customAttrs[field.key]"

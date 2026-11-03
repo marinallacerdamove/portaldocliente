@@ -11,4 +11,6 @@ json.custom_attributes resource.custom_attributes if resource.custom_attributes.
 json.name resource.name
 json.role resource.role
 json.thumbnail resource.avatar_url
+# PATCH LOCAL (fork) - lido pela tela do agente e pelo Portal (aviso de contrato).
+json.contracts_access resource.current_account_user&.contracts_access || false
 json.custom_role_id resource.current_account_user&.custom_role_id if ChatwootApp.enterprise?

@@ -10,7 +10,10 @@ class Api::V1::Accounts::CompaniesController < Api::V1::Accounts::EnterpriseAcco
 
   # PATCH LOCAL (fork) - ver CompanyPolicy#financeiro_manage? e
   # _company.json.jbuilder (lê @can_view_financeiro pra filtrar a resposta).
-  FINANCEIRO_KEYS = %w[contrato_status contrato_inicio contrato_fim contrato_valor modulos_contratados].freeze
+  FINANCEIRO_KEYS = %w[
+    contrato_status contrato_inicio contrato_fim contrato_valor modulos_contratados
+    contrato_conceito contrato_tipo contrato_data_cancelamento contrato_periodo_meses contrato_rota contrato_rota_empresas
+  ].freeze
 
   before_action :ensure_companies_enabled!
   before_action :check_authorization

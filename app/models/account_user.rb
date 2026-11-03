@@ -25,6 +25,9 @@
 #
 
 class AccountUser < ApplicationRecord
+  # PATCH LOCAL (fork) - permissão da aba Contrato da empresa.
+  CONTRACTS_PERMISSION = 'financeiro_manage'.freeze
+
   include AvailabilityStatusable
 
   belongs_to :account
@@ -55,8 +58,11 @@ class AccountUser < ApplicationRecord
     ::Agents::DestroyJob.perform_later(account, user)
   end
 
+  # PATCH LOCAL (fork) - contracts_access soma financeiro_manage (aba
+  # Contrato da empresa, CompanyPolicy#financeiro_manage?).
   def permissions
-    administrator? ? ['administrator'] : ['agent']
+    base = administrator? ? ['administrator'] : ['agent']
+    contracts_access? ? base + [CONTRACTS_PERMISSION] : base
   end
 
   def push_event_data

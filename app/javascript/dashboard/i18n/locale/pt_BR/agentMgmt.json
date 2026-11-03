@@ -82,6 +82,10 @@
           "PLACEHOLDER": "Por favor, selecione a disponibilidade do agente",
           "ERROR": "A disponibilidade é necessária"
         },
+        "CONTRACTS_ACCESS": {
+          "LABEL": "Acesso a contratos",
+          "HELP": "Vê e edita a aba Contrato das empresas e recebe por e-mail o aviso de atualização e de fim do contrato."
+        },
         "SUBMIT": "Editar agente"
       },
       "BUTTON_TEXT": "Alterar",

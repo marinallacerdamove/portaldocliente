@@ -19,6 +19,19 @@ RSpec.describe AccountUser, type: :model do
       end
     end
 
+    # PATCH LOCAL (fork) - "Acesso a contratos" soma financeiro_manage sem trocar o resto.
+    context 'when contracts_access is on' do
+      it 'adds financeiro_manage to the default role and to the custom role' do
+        account = create(:account)
+        custom_role = create(:custom_role, account: account)
+        plain = create(:account_user, account: account, contracts_access: true)
+        with_role = create(:account_user, account: account, custom_role: custom_role, contracts_access: true)
+
+        expect(plain.permissions).to eq(%w[agent financeiro_manage])
+        expect(with_role.permissions).to eq(custom_role.permissions + %w[custom_role financeiro_manage])
+      end
+    end
+
     context 'when custom role is not assigned' do
       it 'returns permissions of the default role' do
         account = create(:account)

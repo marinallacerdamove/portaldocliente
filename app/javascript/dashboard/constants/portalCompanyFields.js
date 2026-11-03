@@ -31,6 +31,26 @@ export const CONTRATO_STATUSES = [
   { value: 'inadimplente', label: 'Inadimplente' },
 ];
 
+export const CONTRATO_STATUS_CANCELADO = 'cancelado';
+
+// Mesmas listas do Portal (frontend/src/constants/empresa.js e
+// EmpresaContrato no backend): mexeu lá, mexe aqui.
+export const CONTRATO_TIPOS = ['CDUT', 'CDU'].map(value => ({
+  value,
+  label: value,
+}));
+
+export const CONTRATO_CONCEITOS = [
+  { value: 'gerencial', label: 'Gerencial' },
+  { value: 'fiscal', label: 'Fiscal' },
+  { value: 'ambas', label: 'Gerencial e fiscal' },
+];
+
+// Valor em texto: custom attribute da Company guarda string.
+export const CONTRATO_PERIODOS_MESES = [6, 12, 18, 24, 36, 48, 60].map(
+  months => ({ value: String(months), label: `A cada ${months} meses` })
+);
+
 export const ALBATROSS_MODULOS = [
   '01. Stakeholders',
   '02. Suprimentos',

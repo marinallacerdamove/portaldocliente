@@ -153,6 +153,24 @@ RSpec.describe 'Agents API', type: :request do
         expect(response_data['auto_offline']).to be(false)
         expect(other_agent.account_users.first.role).to eq('administrator')
       end
+
+      # PATCH LOCAL (fork) - "Acesso a contratos" pela tela do agente.
+      it 'turns contracts access on and off, and returns it in the agent payload' do
+        put "/api/v1/accounts/#{account.id}/agents/#{other_agent.id}",
+            params: { contracts_access: true },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response.parsed_body['contracts_access']).to be(true)
+        expect(other_agent.account_users.first.permissions).to include('financeiro_manage')
+
+        put "/api/v1/accounts/#{account.id}/agents/#{other_agent.id}",
+            params: { contracts_access: false },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(other_agent.account_users.first.reload.contracts_access).to be(false)
+      end
     end
   end
 

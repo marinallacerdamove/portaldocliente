@@ -72,3 +72,65 @@ describe('CompanyPortalProfileCard tabs', () => {
     ]);
   });
 });
+
+// PATCH LOCAL (fork) - campos novos do contrato vindos do Portal.
+describe('CompanyPortalProfileCard contract', () => {
+  const mountWith = async customAttributes => {
+    CompanyAPI.get.mockResolvedValue({
+      data: { payload: [], meta: { total_count: 0 } },
+    });
+    const wrapper = shallowMount(CompanyPortalProfileCard, {
+      props: { company: { id: 1, name: 'Matriz', customAttributes } },
+    });
+    await flushPromises();
+    return wrapper;
+  };
+  const itemValue = (wrapper, key) =>
+    wrapper.vm.contratoItems.find(item => item.key === key)?.value;
+
+  it('shows type, concept, period, route (read only) and the next update', async () => {
+    const wrapper = await mountWith({
+      contrato_status: 'ativo',
+      contrato_tipo: 'CDUT',
+      contrato_conceito: 'ambas',
+      contrato_periodo_meses: '12',
+      contrato_inicio: '2025-01-10',
+      contrato_rota: 'Rota Sul',
+      contrato_rota_empresas: 'Filial A, Filial B',
+    });
+
+    expect(itemValue(wrapper, 'contrato_tipo')).toBe('CDUT');
+    expect(itemValue(wrapper, 'contrato_conceito')).toBe('Gerencial e fiscal');
+    expect(itemValue(wrapper, 'contrato_periodo_meses')).toBe(
+      'A cada 12 meses'
+    );
+    expect(itemValue(wrapper, 'contrato_proxima_atualizacao')).not.toBe('');
+    expect(itemValue(wrapper, 'contrato_rota')).toBe('Rota Sul');
+    expect(itemValue(wrapper, 'contrato_rota_empresas')).toEqual([
+      'Filial A',
+      'Filial B',
+    ]);
+    expect(itemValue(wrapper, 'contrato_data_cancelamento')).toBeUndefined();
+    expect(wrapper.vm.contratoFields.map(field => field.key)).not.toContain(
+      'contrato_rota'
+    );
+  });
+
+  it('asks for the cancellation date only when cancelled, suggesting today', async () => {
+    const wrapper = await mountWith({ contrato_status: 'ativo' });
+    wrapper.vm.startEdit('contrato');
+    expect(wrapper.vm.contratoFields.map(field => field.key)).not.toContain(
+      'contrato_data_cancelamento'
+    );
+
+    wrapper.vm.customAttrs.contrato_status = 'cancelado';
+    await flushPromises();
+
+    expect(wrapper.vm.contratoFields.map(field => field.key)).toContain(
+      'contrato_data_cancelamento'
+    );
+    expect(wrapper.vm.customAttrs.contrato_data_cancelamento).toMatch(
+      /^\d{4}-\d{2}-\d{2}$/
+    );
+  });
+});

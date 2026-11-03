@@ -82,6 +82,10 @@
           "PLACEHOLDER": "Please select an availability status",
           "ERROR": "Availability is required"
         },
+        "CONTRACTS_ACCESS": {
+          "LABEL": "Contracts access",
+          "HELP": "Sees and edits the company Contract tab and receives contract renewal/end notices by email."
+        },
         "SUBMIT": "Edit Agent"
       },
       "BUTTON_TEXT": "Edit",

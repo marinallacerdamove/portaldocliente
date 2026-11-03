@@ -6,6 +6,7 @@ import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Button from 'dashboard/components-next/button/Button.vue';
+import Switch from 'next/switch/Switch.vue';
 import Auth from '../../../../api/auth';
 import wootConstants from 'dashboard/constants/globals';
 
@@ -38,6 +39,12 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  // PATCH LOCAL (fork) - "Acesso a contratos": vê e edita a aba Contrato da
+  // empresa e recebe o aviso de atualização/fim do contrato (pelo Portal).
+  contractsAccess: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['close']);
@@ -51,6 +58,7 @@ const agentName = ref(props.name);
 const agentAvailability = ref(props.availability);
 const selectedRoleId = ref(props.customRoleId || props.type);
 const agentCredentials = ref({ email: props.email });
+const contractsAccess = ref(props.contractsAccess);
 
 const rules = {
   agentName: { required, minLength: minLength(1) },
@@ -126,6 +134,7 @@ const editAgent = async () => {
       id: props.id,
       name: agentName.value,
       availability: agentAvailability.value,
+      contracts_access: contractsAccess.value,
     };
 
     if (selectedRole.value.name.startsWith('custom_')) {
@@ -202,6 +211,18 @@ const resetPassword = async () => {
             {{ $t('AGENT_MGMT.EDIT.FORM.AGENT_AVAILABILITY.ERROR') }}
           </span>
         </label>
+      </div>
+
+      <div class="flex items-center justify-between w-full gap-4 pb-4">
+        <div>
+          <p class="mb-0.5 text-sm text-n-slate-12">
+            {{ $t('AGENT_MGMT.EDIT.FORM.CONTRACTS_ACCESS.LABEL') }}
+          </p>
+          <p class="mb-0 text-xs text-n-slate-11">
+            {{ $t('AGENT_MGMT.EDIT.FORM.CONTRACTS_ACCESS.HELP') }}
+          </p>
+        </div>
+        <Switch v-model="contractsAccess" />
       </div>
 
       <div class="flex flex-row justify-start w-full gap-2 px-0 py-2">

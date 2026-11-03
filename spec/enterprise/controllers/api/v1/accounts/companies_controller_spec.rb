@@ -440,6 +440,27 @@ RSpec.describe 'Companies API', type: :request do
       expect(company.reload.custom_attributes).to eq('contrato_valor' => '100')
     end
 
+    it 'hides the new contract fields from agents without access and shows them with contracts access' do
+      company.update!(custom_attributes: { 'contrato_tipo' => 'CDU', 'contrato_rota' => 'Rota Sul', 'contrato_periodo_meses' => '12',
+                                           'plan' => 'pro' })
+
+      get "/api/v1/accounts/#{account.id}/companies/#{company.id}", headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['payload']['custom_attributes']).to eq('plan' => 'pro')
+
+      agent.account_users.find_by(account: account).update!(contracts_access: true)
+      get "/api/v1/accounts/#{account.id}/companies/#{company.id}", headers: agent.create_new_auth_token, as: :json
+      expect(response.parsed_body['payload']['custom_attributes']).to include('contrato_tipo' => 'CDU', 'contrato_rota' => 'Rota Sul')
+    end
+
+    it 'lets an agent with contracts access write the contract fields' do
+      agent.account_users.find_by(account: account).update!(contracts_access: true)
+      patch "/api/v1/accounts/#{account.id}/companies/#{company.id}",
+            params: { company: { custom_attributes: { contrato_conceito: 'ambas' } } },
+            headers: agent.create_new_auth_token, as: :json
+
+      expect(company.reload.custom_attributes).to include('contrato_conceito' => 'ambas', 'contrato_valor' => '100')
+    end
+
     it 'lets an administrator delete them' do
       post "/api/v1/accounts/#{account.id}/companies/#{company.id}/destroy_custom_attributes",
            params: { custom_attributes: ['contrato_valor'] },
