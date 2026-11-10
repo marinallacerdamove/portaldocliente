@@ -112,13 +112,8 @@ describe('PortalGroupContactsPanel', () => {
         id: 'todos',
         automatic: true,
         recipients: [
-          { partner_id: 5, name: 'Zé', phone: '+5511', chatwoot_contact_id: 1 },
-          {
-            partner_id: 4,
-            name: 'Bia',
-            phone: '+5512',
-            chatwoot_contact_id: 2,
-          },
+          { chatwoot_contact_id: 1, name: 'Zé', phone: '+5511' },
+          { chatwoot_contact_id: 2, name: 'Bia', phone: '+5512' },
         ],
       },
     });

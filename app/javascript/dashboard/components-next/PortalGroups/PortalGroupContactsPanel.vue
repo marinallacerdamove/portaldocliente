@@ -12,8 +12,8 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import PortalGroupContactStatusBadge from './PortalGroupContactStatusBadge.vue';
 
 const props = defineProps({
-  // detalhe do grupo como o Portal devolve (empresas com contatos, contatos
-  // avulsos e, no automático, recipients)
+  // detalhe do grupo como o Portal devolve (empresas com contatos e contatos
+  // avulsos); no automático, recipients: [{ chatwoot_contact_id, name, phone }]
   group: { type: Object, required: true },
   canEdit: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
@@ -35,7 +35,7 @@ const rows = computed(() => {
   if (props.group.automatic) {
     return (props.group.recipients || [])
       .map(recipient => ({
-        id: recipient.partner_id,
+        id: recipient.chatwoot_contact_id,
         name: recipient.name,
         phone: recipient.phone,
         empresas: [],

@@ -117,6 +117,40 @@ RSpec.describe 'Portal Groups API', type: :request do
     end
   end
 
+  describe 'GET /api/v1/accounts/{account.id}/portal_groups/:id/recipients' do
+    let(:recipients) do
+      [{ 'chatwoot_contact_id' => 41, 'name' => 'Ana', 'phone' => '+5511999990000' },
+       { 'chatwoot_contact_id' => 42, 'name' => 'Caio', 'phone' => '+5511999991111' }]
+    end
+
+    it 'relays who receives the automatic group to any agent' do
+      stub = stub_request(:get, "#{portal_url}/client_groups/todos/recipients").with(headers: portal_headers)
+                                                                               .to_return(status: 200, body: { data: recipients }.to_json)
+
+      get "#{base_path}/todos/recipients", headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['data']).to eq(recipients)
+      expect(stub).to have_been_requested
+    end
+
+    it 'does not let an agent from another account see who receives' do
+      other_agent = create(:user, account: create(:account), role: :agent)
+
+      get "#{base_path}/todos/recipients", headers: other_agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'answers 502 when the Portal is down' do
+      stub_request(:get, "#{portal_url}/client_groups/todos/recipients").to_timeout
+
+      get "#{base_path}/todos/recipients", headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:bad_gateway)
+    end
+  end
+
   describe 'GET /api/v1/accounts/{account.id}/portal_groups/options' do
     let(:options) do
       { 'empresas' => [{ 'id' => 1, 'nome' => 'Acme', 'cnpj' => '11222333000181', 'active' => true, 'contatos_count' => 1, 'recebem_count' => 1,

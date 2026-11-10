@@ -14,6 +14,11 @@ class PortalGroupPolicy < ApplicationPolicy
     true
   end
 
+  # quem recebe (o grupo automático só tem essa lista pra mostrar)
+  def recipients?
+    true
+  end
+
   def create?
     @account_user.administrator?
   end

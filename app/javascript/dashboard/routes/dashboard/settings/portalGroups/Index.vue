@@ -65,11 +65,17 @@ const canEditGroup = group => isAdmin.value && !group.automatic;
 
 const loadGroups = () => fetchGroups({ all: true });
 
+// O detalhe do Portal não traz quem recebe; o grupo automático (sem empresas
+// nem avulsos) mostra essa lista, então busca à parte.
 const fetchDetail = async id => {
   loadingDetailId.value = id;
   detailError.value = '';
   try {
     const { data } = await PortalGroupsAPI.show(id);
+    if (data.automatic) {
+      const { data: recipients } = await PortalGroupsAPI.recipients(id);
+      data.recipients = recipients.data;
+    }
     details.value = { ...details.value, [id]: data };
   } catch (error) {
     detailError.value =

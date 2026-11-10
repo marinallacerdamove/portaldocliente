@@ -25,6 +25,12 @@ class Api::V1::Accounts::PortalGroupsController < Api::V1::Accounts::BaseControl
     render json: client.options
   end
 
+  # Quem recebe, como o Portal calcula na hora do envio. A tela usa no grupo
+  # automático, que não tem empresas nem contatos avulsos pra mostrar.
+  def recipients
+    render json: { data: client.recipients(params[:id]) }
+  end
+
   def create
     render json: client.create(group_params.to_h), status: :created
   end

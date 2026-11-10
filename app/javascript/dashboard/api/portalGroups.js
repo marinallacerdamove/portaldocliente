@@ -20,6 +20,12 @@ class PortalGroupsAPI extends ApiClient {
     return axios.get(`${this.url}/options`);
   }
 
+  // Quem recebe, como o Portal calcula na hora do envio:
+  // [{ chatwoot_contact_id, name, phone }].
+  recipients(id) {
+    return axios.get(`${this.url}/${id}/recipients`);
+  }
+
   create(attributes) {
     return axios.post(this.url, { client_group: attributes });
   }

@@ -30,6 +30,7 @@ vi.mock('dashboard/composables/usePortalGroups', () => ({
 vi.mock('dashboard/api/portalGroups', () => ({
   default: {
     show: vi.fn(),
+    recipients: vi.fn(),
     memberOptions: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
@@ -170,6 +171,7 @@ describe('Settings > Groups list', () => {
     mockIsAdmin.value = true;
     PortalGroupsAPI.show.mockResolvedValue({ data: detail });
     PortalGroupsAPI.memberOptions.mockResolvedValue({ data: options });
+    PortalGroupsAPI.recipients.mockResolvedValue({ data: { data: [] } });
   });
 
   it('loads every group, active or not, and lists them with their numbers', async () => {
@@ -193,6 +195,14 @@ describe('Settings > Groups list', () => {
     expect(panel(wrapper).exists()).toBe(false);
   });
 
+  it('does not ask who receives for a regular group', async () => {
+    const wrapper = await mountPage();
+
+    await openGroup(wrapper);
+
+    expect(PortalGroupsAPI.recipients).not.toHaveBeenCalled();
+  });
+
   it('opens one group at a time and fetches again on every open', async () => {
     const wrapper = await mountPage();
 
@@ -204,13 +214,18 @@ describe('Settings > Groups list', () => {
     expect(PortalGroupsAPI.show).toHaveBeenCalledTimes(3);
   });
 
-  it('never edits the automatic group', async () => {
-    PortalGroupsAPI.show.mockResolvedValue({
-      data: { ...groups[0], recipients: [] },
+  it('fetches who receives when the automatic group opens and never edits it', async () => {
+    const recipients = [{ chatwoot_contact_id: 41, name: 'Ana', phone: '+55' }];
+    PortalGroupsAPI.show.mockResolvedValue({ data: { ...groups[0] } });
+    PortalGroupsAPI.recipients.mockResolvedValue({
+      data: { data: recipients },
     });
     const wrapper = await mountPage();
 
     await openGroup(wrapper, 'Todos os clientes ativos');
+
+    expect(PortalGroupsAPI.recipients).toHaveBeenCalledWith('todos');
+    expect(panel(wrapper).props('group').recipients).toEqual(recipients);
 
     expect(panel(wrapper).props('canEdit')).toBe(false);
     expect(

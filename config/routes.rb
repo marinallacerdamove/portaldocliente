@@ -233,6 +233,7 @@ Rails.application.routes.draw do
           # PATCH LOCAL (fork) - tela Grupos (dados no Portal; só administrador cria e altera)
           resources :portal_groups, only: [:index, :show, :create, :update] do
             get :options, on: :collection
+            get :recipients, on: :member
           end
 
           resources :companies, only: [:index, :show, :create, :update, :destroy] do
