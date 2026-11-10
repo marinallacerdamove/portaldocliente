@@ -1,13 +1,16 @@
 {
   "PORTAL_GROUPS": {
     "TITLE": "Grupos",
-    "SUBTITLE": "Os grupos de clientes são cadastrados no Portal do Cliente. Aqui você só consulta e usa como público das campanhas de WhatsApp.",
+    "DESCRIPTION": "Os grupos de clientes são o público das campanhas de WhatsApp. Um grupo junta empresas inteiras e contatos avulsos. Empresa inteira significa todos os contatos ativos dela. Quem for inativado (empresa ou contato) sai do público sozinho.",
+    "NEW": "Novo grupo",
     "LOADING": "Carregando grupos...",
+    "LOADING_GROUP": "Carregando grupo...",
     "LOAD_ERROR": "Não foi possível carregar os grupos.",
     "RETRY": "Tentar de novo",
-    "BACK": "Voltar para os grupos",
-    "EMPTY": "Nenhum grupo ativo ainda. Crie os grupos no Portal do Cliente.",
+    "EMPTY": "Nenhum grupo ainda.",
     "AUTOMATIC": "Automático",
+    "EDIT_TOOLTIP": "Editar grupo",
+    "VIEW_TOOLTIP": "Ver grupo",
     "STATUS": {
       "ACTIVE": "Ativo",
       "INACTIVE": "Inativo"
@@ -16,27 +19,68 @@
       "NAME": "Grupo",
       "COMPANIES": "Empresas",
       "CONTACTS": "Contatos",
-      "RECIPIENTS": "Recebem agora"
+      "RECIPIENTS": "Recebem agora",
+      "STATUS": "Situação",
+      "ACTIONS": "Ações"
+    },
+    "NAME_DIALOG": {
+      "LABEL": "Nome do grupo",
+      "PLACEHOLDER": "Ex.: Clientes VIP"
+    },
+    "CREATE": {
+      "TITLE": "Novo grupo",
+      "SUBMIT": "Criar grupo",
+      "SUCCESS": "Grupo criado. Agora escolha as empresas e os contatos dele.",
+      "ERROR": "Não foi possível criar o grupo."
     },
     "DETAIL": {
-      "AUTOMATIC_HINT": "Grupo automático: inclui todos os clientes ativos.",
-      "RECIPIENTS": "Contatos que recebem agora",
-      "RECIPIENTS_HINT": "Calculado pelo Portal ao abrir esta página: empresa ativa, contato ativo e com telefone.",
-      "EXCLUDED_TITLE": "Ficaram de fora do público",
+      "NAME_LABEL": "Nome do grupo",
+      "AUTOMATIC_HINT": "Grupo automático: inclui todos os clientes ativos e não pode ser editado.",
+      "READ_ONLY": "Só administradores editam os grupos.",
+      "ACTIVE_LABEL": "Ativo",
+      "ACTIVE_HINT": "Grupo inativo não aparece nas campanhas e não recebe nada.",
+      "RECIPIENTS_TOTAL": "Nenhum contato recebe | 1 contato recebe | {count} contatos recebem",
+      "RECIPIENTS_HINT": "Calculado pelo Portal: empresa ativa, contato ativo e com telefone.",
+      "ESTIMATE_HINT": "Estimativa pelas empresas e contatos escolhidos. Salve para confirmar.",
+      "EXCLUDED_TITLE": "Ficaram de fora:",
       "EXCLUDED": {
         "NO_PHONE": "sem telefone",
-        "NO_CHATWOOT_CONTACT": "sem contato nesta conta do Chatwoot",
-        "INACTIVE": "inativos (empresa ou contato)"
+        "NO_CHATWOOT_CONTACT": "sem cadastro nesta conta do Chatwoot",
+        "INACTIVE": "inativos"
       },
-      "COMPANIES_TITLE": "Empresas ({count})",
-      "COMPANY_NAME": "Empresa",
-      "CONTACTS_TITLE": "Contatos avulsos ({count})",
-      "CONTACT_NAME": "Contato",
-      "PHONE": "Telefone",
+      "SAVE": "Salvar",
+      "DISCARD": "Descartar alterações",
+      "SAVE_SUCCESS": "Grupo salvo.",
+      "SAVE_ERROR": "Não foi possível salvar o grupo."
+    },
+    "CONTACT_STATUS": {
+      "RECEIVES": "Recebe",
+      "INACTIVE": "Inativo",
       "NO_PHONE": "Sem telefone",
-      "COMPANIES_OF_CONTACT": "Empresas",
-      "STATUS": "Situação",
-      "NO_MEMBERS": "Este grupo não tem empresas nem contatos avulsos."
+      "NO_CHATWOOT": "Sem cadastro no Chatwoot"
+    },
+    "SEARCH": {
+      "ADD": "Adicionar",
+      "LOADING": "Carregando a lista de empresas e contatos...",
+      "ERROR": "Não foi possível carregar as empresas e os contatos.",
+      "NO_MATCH": "Nada encontrado, ou já está no grupo."
+    },
+    "COMPANY": {
+      "TITLE": "Empresas ({count})",
+      "HINT": "Empresa inteira: todos os contatos ativos dela recebem. Contato novo da empresa entra sozinho, e contato inativado aparece como não recebe.",
+      "SEARCH": "Adicionar empresa (buscar por nome ou CNPJ)",
+      "EMPTY": "Nenhuma empresa neste grupo ainda.",
+      "INACTIVE": "Empresa inativa",
+      "RECEIVE_OF": "{receive} de {total} recebem",
+      "REMOVE": "Remover",
+      "NO_PHONE": "Sem telefone",
+      "NO_CONTACTS": "Esta empresa não tem contatos."
+    },
+    "INDIVIDUAL": {
+      "TITLE": "Contatos avulsos ({count})",
+      "ADD": "Adicionar contato avulso",
+      "SEARCH": "Buscar contato por nome, e-mail ou telefone",
+      "REMOVE": "Tirar do grupo"
     }
   }
 }

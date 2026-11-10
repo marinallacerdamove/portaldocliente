@@ -19,6 +19,8 @@ import templates from './templates/templates.routes';
 import integrations from './integrations/integrations.routes';
 import labels from './labels/labels.routes';
 import macros from './macros/macros.routes';
+// PATCH LOCAL (fork) - Grupos de clientes (dados no Portal).
+import portalGroups from './portalGroups/portalGroups.routes';
 // PATCH LOCAL (fork) - cadastros de atendimento (Serviços, Categorias, Status,
 // Justificativas).
 import ticketCatalog from './ticketCatalog/ticketCatalog.routes';
@@ -68,6 +70,7 @@ export default {
     ...data.routes,
     ...labels.routes,
     ...macros.routes,
+    ...portalGroups.routes,
     ...ticketCatalog.routes,
     ...reports.routes,
     ...sla.routes,

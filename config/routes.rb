@@ -230,8 +230,10 @@ Rails.application.routes.draw do
             end
           end
 
-          # PATCH LOCAL (fork) - tela Grupos, só leitura (cadastro mora no Portal)
-          resources :portal_groups, only: [:index, :show]
+          # PATCH LOCAL (fork) - tela Grupos (dados no Portal; só administrador cria e altera)
+          resources :portal_groups, only: [:index, :show, :create, :update] do
+            get :options, on: :collection
+          end
 
           resources :companies, only: [:index, :show, :create, :update, :destroy] do
             collection do

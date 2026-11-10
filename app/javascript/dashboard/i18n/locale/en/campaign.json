@@ -189,7 +189,7 @@
             "ERROR": "Audience is required",
             "GROUP_OPTION": "Group: {name} ({count})",
             "LABEL_OPTION": "Label: {name}",
-            "INFO": "Groups are registered in the Customer Portal. The contacts are checked when the campaign is sent. A contact in more than one selection receives it once.",
+            "INFO": "Groups are managed in Settings > Groups. The contacts are checked when the campaign is sent. A contact in more than one selection receives it once.",
             "GROUPS_ERROR": "Groups are unavailable right now (Portal did not respond). You can still use labels, or try again in a moment."
           },
           "SCHEDULED_AT": {

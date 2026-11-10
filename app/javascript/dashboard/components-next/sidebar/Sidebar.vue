@@ -694,14 +694,6 @@ const menuItems = computed(() => {
         },
       ],
     },
-    // PATCH LOCAL (fork) - Grupos de clientes (só leitura, cadastro no Portal).
-    {
-      name: 'Groups',
-      label: t('SIDEBAR.PORTAL_GROUPS'),
-      icon: 'i-lucide-users-round',
-      to: accountScopedRoute('portal_groups_index'),
-      activeOn: ['portal_groups_index', 'portal_groups_show'],
-    },
     {
       name: 'Reports',
       label: t('SIDEBAR.REPORTS'),
@@ -887,6 +879,15 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.LABELS'),
           icon: 'i-lucide-tags',
           to: accountScopedRoute('labels_list'),
+        },
+        // PATCH LOCAL (fork) - Grupos de clientes (dados no Portal; só
+        // administrador edita, agente vê em modo leitura).
+        {
+          name: 'Settings Groups',
+          label: t('SIDEBAR.PORTAL_GROUPS'),
+          icon: 'i-lucide-group',
+          activeOn: ['portal_groups_show'],
+          to: accountScopedRoute('portal_groups_list'),
         },
         {
           name: 'Settings Custom Attributes',

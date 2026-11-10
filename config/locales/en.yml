@@ -41,7 +41,8 @@ en:
     portal_unavailable: 'Documents are unavailable right now (Portal did not respond). Try again in a moment.'
   portal_groups:
     portal_unavailable: 'Groups are unavailable right now (Portal did not respond). Try again in a moment.'
-    not_found: 'Group not found. It may have been deactivated in the Portal.'
+    not_found: 'Group not found.'
+    invalid: 'Could not save the group.'
   portal_update_server:
     portal_unavailable: 'Updater Server is unavailable right now (Portal did not respond). Try again in a moment.'
   inbox:

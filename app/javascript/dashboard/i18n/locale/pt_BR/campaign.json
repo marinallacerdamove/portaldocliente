@@ -188,7 +188,7 @@
             "ERROR": "Público é necessário",
             "GROUP_OPTION": "Grupo: {name} ({count})",
             "LABEL_OPTION": "Etiqueta: {name}",
-            "INFO": "Os grupos são cadastrados no Portal do Cliente. Os contatos são conferidos na hora do envio. Quem estiver em mais de uma seleção recebe uma vez só.",
+            "INFO": "Os grupos são cadastrados em Configurações > Grupos. Os contatos são conferidos na hora do envio. Quem estiver em mais de uma seleção recebe uma vez só.",
             "GROUPS_ERROR": "Os grupos estão indisponíveis agora (o Portal não respondeu). Você ainda pode usar etiquetas ou tentar de novo em instantes."
           },
           "SCHEDULED_AT": {

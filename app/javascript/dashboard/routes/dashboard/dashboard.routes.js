@@ -5,7 +5,6 @@ import { routes as callRoutes } from './calls/routes';
 import { routes as contactRoutes } from './contacts/routes';
 import { routes as companyRoutes } from './companies/routes';
 import { routes as portalAssistantRoutes } from './portalAssistant/routes';
-import { routes as portalGroupsRoutes } from './portalGroups/routes';
 import { routes as inboxRoutes } from './inbox/routes';
 import { frontendURL } from '../../helper/URLHelper';
 import helpcenterRoutes from './helpcenter/helpcenter.routes';
@@ -31,7 +30,6 @@ export default {
         ...contactRoutes,
         ...companyRoutes,
         ...portalAssistantRoutes,
-        ...portalGroupsRoutes,
         ...searchRoutes,
         ...helpcenterRoutes.routes,
         ...campaignsRoutes.routes,
