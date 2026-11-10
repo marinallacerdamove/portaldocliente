@@ -1,0 +1,42 @@
+{
+  "PORTAL_GROUPS": {
+    "TITLE": "Grupos",
+    "SUBTITLE": "Os grupos de clientes são cadastrados no Portal do Cliente. Aqui você só consulta e usa como público das campanhas de WhatsApp.",
+    "LOADING": "Carregando grupos...",
+    "LOAD_ERROR": "Não foi possível carregar os grupos.",
+    "RETRY": "Tentar de novo",
+    "BACK": "Voltar para os grupos",
+    "EMPTY": "Nenhum grupo ativo ainda. Crie os grupos no Portal do Cliente.",
+    "AUTOMATIC": "Automático",
+    "STATUS": {
+      "ACTIVE": "Ativo",
+      "INACTIVE": "Inativo"
+    },
+    "TABLE": {
+      "NAME": "Grupo",
+      "COMPANIES": "Empresas",
+      "CONTACTS": "Contatos",
+      "RECIPIENTS": "Recebem agora"
+    },
+    "DETAIL": {
+      "AUTOMATIC_HINT": "Grupo automático: inclui todos os clientes ativos.",
+      "RECIPIENTS": "Contatos que recebem agora",
+      "RECIPIENTS_HINT": "Calculado pelo Portal ao abrir esta página: empresa ativa, contato ativo e com telefone.",
+      "EXCLUDED_TITLE": "Ficaram de fora do público",
+      "EXCLUDED": {
+        "NO_PHONE": "sem telefone",
+        "NO_CHATWOOT_CONTACT": "sem contato nesta conta do Chatwoot",
+        "INACTIVE": "inativos (empresa ou contato)"
+      },
+      "COMPANIES_TITLE": "Empresas ({count})",
+      "COMPANY_NAME": "Empresa",
+      "CONTACTS_TITLE": "Contatos avulsos ({count})",
+      "CONTACT_NAME": "Contato",
+      "PHONE": "Telefone",
+      "NO_PHONE": "Sem telefone",
+      "COMPANIES_OF_CONTACT": "Empresas",
+      "STATUS": "Situação",
+      "NO_MEMBERS": "Este grupo não tem empresas nem contatos avulsos."
+    }
+  }
+}

@@ -3,7 +3,7 @@ class Whatsapp::OneoffCampaignService
 
   def perform
     validate_campaign!
-    process_audience(extract_audience_labels)
+    process_audience
     campaign.completed!
   end
 
@@ -39,9 +39,28 @@ class Whatsapp::OneoffCampaignService
     validate_feature_flag!
   end
 
+  def audience_ids_of(type)
+    campaign.audience.select { |audience| audience['type'] == type }.pluck('id')
+  end
+
   def extract_audience_labels
-    audience_label_ids = campaign.audience.select { |audience| audience['type'] == 'Label' }.pluck('id')
-    campaign.account.labels.where(id: audience_label_ids).pluck(:title)
+    campaign.account.labels.where(id: audience_ids_of('Label')).pluck(:title)
+  end
+
+  # PATCH LOCAL (fork) - quem recebe agora em cada Grupo do Portal (o Portal
+  # decide: empresa ativa, contato ativo, com telefone). Só entram contatos
+  # desta conta. Se o Portal falhar, o erro sobe ANTES de qualquer envio, pra
+  # campanha não sair pela metade.
+  def portal_group_contact_ids
+    client = PortalGroups::Client.new(account: campaign.account)
+    audience_ids_of('PortalGroup').uniq.flat_map { |group_id| client.recipients(group_id).pluck('chatwoot_contact_id') }.uniq
+  end
+
+  # PATCH LOCAL (fork) - união (sem repetir contato) das etiquetas com os Grupos do Portal.
+  def audience_contacts
+    contacts = campaign.account.contacts
+    tagged = contacts.tagged_with(extract_audience_labels, any: true)
+    contacts.where(id: tagged.reselect(:id)).or(contacts.where(id: portal_group_contact_ids))
   end
 
   def process_contact(contact)
@@ -63,8 +82,8 @@ class Whatsapp::OneoffCampaignService
     send_whatsapp_template_message(to: contact.phone_number, template_params: processed_template_params)
   end
 
-  def process_audience(audience_labels)
-    contacts = campaign.account.contacts.tagged_with(audience_labels, any: true)
+  def process_audience
+    contacts = audience_contacts
     Rails.logger.info "Processing #{contacts.count} contacts for campaign #{campaign.id}"
 
     contacts.each { |contact| process_contact(contact) }

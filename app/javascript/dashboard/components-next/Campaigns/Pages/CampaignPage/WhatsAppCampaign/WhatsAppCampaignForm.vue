@@ -1,9 +1,15 @@
 <script setup>
-import { reactive, computed, watch, ref } from 'vue';
+import { reactive, computed, watch, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useVuelidate } from '@vuelidate/core';
 import { required, minLength } from '@vuelidate/validators';
 import { useMapGetter } from 'dashboard/composables/store';
+import { usePortalGroups } from 'dashboard/composables/usePortalGroups';
+import {
+  AUDIENCE_TYPES,
+  audienceKey,
+  serializeAudience,
+} from 'dashboard/helper/campaignAudience';
 
 import Input from 'dashboard/components-next/input/Input.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
@@ -14,6 +20,15 @@ import WhatsAppTemplateParser from 'dashboard/components-next/whatsapp/WhatsAppT
 const emit = defineEmits(['submit', 'cancel']);
 
 const { t } = useI18n();
+
+// PATCH LOCAL (fork) - o público também pode ser Grupo do Portal (sem precisar
+// de etiquetas). Se o Portal estiver fora do ar, as etiquetas continuam
+// disponíveis e o formulário avisa.
+const {
+  groups: portalGroups,
+  hasError: portalGroupsFailed,
+  fetchGroups: fetchPortalGroups,
+} = usePortalGroups();
 
 const formState = {
   uiFlags: useMapGetter('campaigns/getUIFlags'),
@@ -60,9 +75,21 @@ const mapToOptions = (items, valueKey, labelKey) =>
     label: item[labelKey],
   })) ?? [];
 
-const audienceList = computed(() =>
-  mapToOptions(formState.labels.value, 'id', 'title')
-);
+const audienceList = computed(() => [
+  ...portalGroups.value.map(group => ({
+    value: audienceKey(AUDIENCE_TYPES.PORTAL_GROUP, group.id),
+    label: t('CAMPAIGN.WHATSAPP.CREATE.FORM.AUDIENCE.GROUP_OPTION', {
+      name: group.name,
+      count: group.recipients_count,
+    }),
+  })),
+  ...mapToOptions(formState.labels.value, 'id', 'title').map(option => ({
+    value: audienceKey(AUDIENCE_TYPES.LABEL, option.value),
+    label: t('CAMPAIGN.WHATSAPP.CREATE.FORM.AUDIENCE.LABEL_OPTION', {
+      name: option.label,
+    }),
+  })),
+]);
 
 const inboxOptions = computed(() =>
   mapToOptions(formState.inboxes.value, 'id', 'name')
@@ -145,10 +172,7 @@ const prepareCampaignDetails = () => {
     template_params: templateParams,
     inbox_id: state.inboxId,
     scheduled_at: formatToUTCString(state.scheduledAt),
-    audience: state.selectedAudience?.map(id => ({
-      id,
-      type: 'Label',
-    })),
+    audience: serializeAudience(state.selectedAudience),
   };
 };
 
@@ -160,6 +184,8 @@ const handleSubmit = async () => {
   resetState();
   handleCancel();
 };
+
+onMounted(fetchPortalGroups);
 
 // Reset template selection when inbox changes
 watch(
@@ -233,6 +259,12 @@ watch(
         :message="formErrors.audience"
         class="[&>div>button]:bg-n-alpha-black2"
       />
+      <p v-if="portalGroupsFailed" class="mt-1 text-xs text-n-amber-11">
+        {{ t('CAMPAIGN.WHATSAPP.CREATE.FORM.AUDIENCE.GROUPS_ERROR') }}
+      </p>
+      <p v-else class="mt-1 text-xs text-n-slate-11">
+        {{ t('CAMPAIGN.WHATSAPP.CREATE.FORM.AUDIENCE.INFO') }}
+      </p>
     </div>
 
     <Input

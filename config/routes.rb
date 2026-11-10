@@ -230,6 +230,9 @@ Rails.application.routes.draw do
             end
           end
 
+          # PATCH LOCAL (fork) - tela Grupos, só leitura (cadastro mora no Portal)
+          resources :portal_groups, only: [:index, :show]
+
           resources :companies, only: [:index, :show, :create, :update, :destroy] do
             collection do
               get :search

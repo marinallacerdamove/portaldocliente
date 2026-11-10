@@ -694,6 +694,14 @@ const menuItems = computed(() => {
         },
       ],
     },
+    // PATCH LOCAL (fork) - Grupos de clientes (só leitura, cadastro no Portal).
+    {
+      name: 'Groups',
+      label: t('SIDEBAR.PORTAL_GROUPS'),
+      icon: 'i-lucide-users-round',
+      to: accountScopedRoute('portal_groups_index'),
+      activeOn: ['portal_groups_index', 'portal_groups_show'],
+    },
     {
       name: 'Reports',
       label: t('SIDEBAR.REPORTS'),

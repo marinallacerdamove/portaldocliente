@@ -1,0 +1,42 @@
+{
+  "PORTAL_GROUPS": {
+    "TITLE": "Groups",
+    "SUBTITLE": "Customer groups are registered in the Customer Portal. Here you can only view them and use them as the audience of WhatsApp campaigns.",
+    "LOADING": "Loading groups...",
+    "LOAD_ERROR": "Could not load the groups.",
+    "RETRY": "Try again",
+    "BACK": "Back to groups",
+    "EMPTY": "No active group yet. Create groups in the Customer Portal.",
+    "AUTOMATIC": "Automatic",
+    "STATUS": {
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive"
+    },
+    "TABLE": {
+      "NAME": "Group",
+      "COMPANIES": "Companies",
+      "CONTACTS": "Contacts",
+      "RECIPIENTS": "Receive now"
+    },
+    "DETAIL": {
+      "AUTOMATIC_HINT": "Automatic group: includes every active customer.",
+      "RECIPIENTS": "Contacts that receive now",
+      "RECIPIENTS_HINT": "Calculated by the Portal when you open this page: active company, active contact, with a phone number.",
+      "EXCLUDED_TITLE": "Left out of the audience",
+      "EXCLUDED": {
+        "NO_PHONE": "without a phone number",
+        "NO_CHATWOOT_CONTACT": "without a contact in this Chatwoot account",
+        "INACTIVE": "inactive (company or contact)"
+      },
+      "COMPANIES_TITLE": "Companies ({count})",
+      "COMPANY_NAME": "Company",
+      "CONTACTS_TITLE": "Individual contacts ({count})",
+      "CONTACT_NAME": "Contact",
+      "PHONE": "Phone",
+      "NO_PHONE": "No phone",
+      "COMPANIES_OF_CONTACT": "Companies",
+      "STATUS": "Status",
+      "NO_MEMBERS": "This group has no companies or individual contacts."
+    }
+  }
+}

@@ -221,6 +221,103 @@ describe Whatsapp::OneoffCampaignService do
       end
     end
 
+    # PATCH LOCAL (fork) - Grupos do Portal como público
+    context 'when the audience has Portal groups' do
+      let(:portal_recipients_url) { 'http://portal.test/api/internal/client_groups/%s/recipients' }
+      let(:portal_headers) { { 'X-Internal-Token' => 'segredo', 'X-Chatwoot-Account-Id' => account.id.to_s } }
+      let(:group_contact) { create(:contact, :with_phone_number, account: account) }
+      let(:label_contact) { create(:contact, :with_phone_number, account: account) }
+      let(:group_campaign) do
+        create(:campaign, inbox: whatsapp_inbox, account: account, template_params: template_params,
+                          audience: [{ type: 'PortalGroup', id: 'todos' }, { type: 'PortalGroup', id: '7' }, { type: 'Label', id: label1.id }])
+      end
+
+      def stub_group_recipients(group_id, contact_ids)
+        data = contact_ids.map { |id| { chatwoot_contact_id: id } }
+        stub_request(:get, format(portal_recipients_url, group_id)).with(headers: portal_headers)
+                                                                   .to_return(status: 200, body: { data: data }.to_json)
+      end
+
+      around do |example|
+        with_modified_env(PORTAL_INTERNAL_API_URL: 'http://portal.test', PORTAL_INTERNAL_API_TOKEN: 'segredo') { example.run }
+      end
+
+      it 'sends to the contacts the Portal says receive now' do
+        stub_group_recipients('todos', [group_contact.id])
+        stub_group_recipients('7', [])
+
+        expect(whatsapp_channel).to receive(:send_template).with(group_contact.phone_number, anything, nil).once
+
+        described_class.new(campaign: group_campaign).perform
+
+        expect(group_campaign.reload.completed?).to be true
+      end
+
+      it 'sends once to a contact that is in a label and in two groups, and also to the other ones' do
+        label_contact.update_labels([label1.title])
+        group_only_contact = create(:contact, :with_phone_number, account: account)
+        stub_group_recipients('todos', [label_contact.id, group_only_contact.id])
+        stub_group_recipients('7', [label_contact.id])
+
+        expect(whatsapp_channel).to receive(:send_template).with(label_contact.phone_number, anything, nil).once
+        expect(whatsapp_channel).to receive(:send_template).with(group_only_contact.phone_number, anything, nil).once
+
+        described_class.new(campaign: group_campaign).perform
+      end
+
+      it 'asks the Portal once per group even when the group is repeated in the audience' do
+        repeated_campaign = create(:campaign, inbox: whatsapp_inbox, account: account, template_params: template_params,
+                                              audience: [{ type: 'PortalGroup', id: '7' }, { type: 'PortalGroup', id: '7' }])
+        stub = stub_group_recipients('7', [group_contact.id])
+
+        expect(whatsapp_channel).to receive(:send_template).once
+
+        described_class.new(campaign: repeated_campaign).perform
+
+        expect(stub).to have_been_requested.once
+      end
+
+      it 'ignores contact ids from another account' do
+        other_contact = create(:contact, :with_phone_number, account: create(:account))
+        stub_group_recipients('todos', [other_contact.id, group_contact.id])
+        stub_group_recipients('7', [])
+
+        expect(whatsapp_channel).to receive(:send_template).with(group_contact.phone_number, anything, nil).once
+
+        described_class.new(campaign: group_campaign).perform
+      end
+
+      it 'does not call the Portal when the audience only has labels' do
+        label_contact.update_labels([label1.title])
+
+        expect(whatsapp_channel).to receive(:send_template).with(label_contact.phone_number, anything, nil).once
+
+        described_class.new(campaign: campaign).perform
+
+        expect(a_request(:get, /portal\.test/)).not_to have_been_made
+      end
+
+      it 'fails loudly before sending anything when the Portal is down' do
+        label_contact.update_labels([label1.title])
+        stub_group_recipients('todos', [group_contact.id])
+        stub_request(:get, format(portal_recipients_url, '7')).to_raise(Errno::ECONNREFUSED)
+
+        expect(whatsapp_channel).not_to receive(:send_template)
+
+        expect { described_class.new(campaign: group_campaign).perform }.to raise_error(PortalGroups::Client::Error)
+        expect(group_campaign.reload.completed?).to be false
+      end
+
+      it 'fails loudly when the Portal answers an error for a group' do
+        stub_request(:get, format(portal_recipients_url, 'todos')).to_return(status: 404, body: '')
+
+        expect(whatsapp_channel).not_to receive(:send_template)
+
+        expect { described_class.new(campaign: group_campaign).perform }.to raise_error(PortalGroups::Client::Error)
+        expect(group_campaign.reload.completed?).to be false
+      end
+    end
+
     context 'when template_params is missing' do
       let(:template_params) { nil }
 

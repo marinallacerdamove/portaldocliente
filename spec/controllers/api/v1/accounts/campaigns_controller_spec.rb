@@ -150,6 +150,26 @@ RSpec.describe 'Campaigns API', type: :request do
         expect(response_data[:scheduled_at]).to eq(scheduled_at.to_i)
         expect(response_data[:audience].pluck(:id)).to include(label1.id, label2.id)
       end
+
+      # PATCH LOCAL (fork) - público de campanha também aceita Grupo do Portal ('todos' é o grupo automático)
+      it 'creates a oneoff campaign with Portal groups and labels as audience' do
+        twilio_sms = create(:channel_twilio_sms, account: account)
+        twilio_inbox = create(:inbox, channel: twilio_sms, account: account)
+        label = create(:label, account: account)
+
+        post "/api/v1/accounts/#{account.id}/campaigns",
+             params: {
+               inbox_id: twilio_inbox.id, title: 'test', message: 'test message', scheduled_at: 2.days.from_now,
+               audience: [{ type: 'Label', id: label.id }, { type: 'PortalGroup', id: 'todos' }, { type: 'PortalGroup', id: '7' }]
+             },
+             headers: administrator.create_new_auth_token,
+             as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(JSON.parse(response.body, symbolize_names: true)[:audience]).to eq(
+          [{ type: 'Label', id: label.id }, { type: 'PortalGroup', id: 'todos' }, { type: 'PortalGroup', id: '7' }]
+        )
+      end
     end
   end
 

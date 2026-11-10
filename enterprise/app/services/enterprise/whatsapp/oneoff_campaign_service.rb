@@ -1,7 +1,7 @@
 module Enterprise::Whatsapp::OneoffCampaignService
   def perform
     validate_campaign!
-    recipients = create_recipients(extract_audience_labels)
+    recipients = portal_retryable { create_recipients }
     process_recipients(recipients)
     campaign.completed!
   end
@@ -35,8 +35,20 @@ module Enterprise::Whatsapp::OneoffCampaignService
     send_whatsapp_template_message(recipient: recipient, to: contact.phone_number, template_params: processed_template_params)
   end
 
-  def create_recipients(audience_labels)
-    contacts = campaign.account.contacts.tagged_with(audience_labels, any: true)
+  # PATCH LOCAL (fork) - Portal fora do ar ao montar o público: nada foi
+  # enviado ainda, então a campanha volta pra ativa e a varredura agendada
+  # (TriggerScheduledItemsJob) tenta de novo, em vez de ficar presa em
+  # "processando". O erro continua subindo (log/GlitchTip).
+  def portal_retryable
+    yield
+  rescue PortalGroups::Client::Error
+    campaign.update!(campaign_status: :active, started_at: nil)
+    raise
+  end
+
+  # PATCH LOCAL (fork) - o público (etiquetas + Grupos do Portal) vem de audience_contacts (OSS).
+  def create_recipients
+    contacts = audience_contacts
     Rails.logger.info "Processing #{contacts.count} contacts for campaign #{campaign.id}"
 
     contacts.find_each.map do |contact|
