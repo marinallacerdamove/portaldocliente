@@ -1,7 +1,7 @@
 {
   "PORTAL_GROUPS": {
     "TITLE": "Grupos",
-    "DESCRIPTION": "Os grupos de clientes são o público das campanhas de WhatsApp. Um grupo junta empresas inteiras e contatos avulsos. Empresa inteira significa todos os contatos ativos dela. Quem for inativado (empresa ou contato) sai do público sozinho.",
+    "DESCRIPTION": "Público das campanhas de WhatsApp. Um grupo junta empresas inteiras e contatos avulsos, e quem for inativado sai sozinho.",
     "NEW": "Novo grupo",
     "LOADING": "Carregando grupos...",
     "LOADING_GROUP": "Carregando grupo...",
@@ -35,21 +35,12 @@
     },
     "DETAIL": {
       "NAME_LABEL": "Nome do grupo",
+      "ACTIVE": "Ativo",
+      "RECIPIENTS": "Nenhum contato recebe as mensagens deste grupo | 1 contato recebe as mensagens deste grupo | {count} contatos recebem as mensagens deste grupo",
       "AUTOMATIC_HINT": "Grupo automático: inclui todos os clientes ativos e não pode ser editado.",
       "READ_ONLY": "Só administradores editam os grupos.",
-      "ACTIVE_LABEL": "Ativo",
-      "ACTIVE_HINT": "Grupo inativo não aparece nas campanhas e não recebe nada.",
-      "RECIPIENTS_TOTAL": "Nenhum contato recebe | 1 contato recebe | {count} contatos recebem",
-      "RECIPIENTS_HINT": "Calculado pelo Portal: empresa ativa, contato ativo e com telefone.",
-      "ESTIMATE_HINT": "Estimativa pelas empresas e contatos escolhidos. Salve para confirmar.",
-      "EXCLUDED_TITLE": "Ficaram de fora:",
-      "EXCLUDED": {
-        "NO_PHONE": "sem telefone",
-        "NO_CHATWOOT_CONTACT": "sem cadastro nesta conta do Chatwoot",
-        "INACTIVE": "inativos"
-      },
       "SAVE": "Salvar",
-      "DISCARD": "Descartar alterações",
+      "DISCARD": "Descartar",
       "SAVE_SUCCESS": "Grupo salvo.",
       "SAVE_ERROR": "Não foi possível salvar o grupo."
     },
@@ -59,28 +50,31 @@
       "NO_PHONE": "Sem telefone",
       "NO_CHATWOOT": "Sem cadastro no Chatwoot"
     },
-    "SEARCH": {
-      "ADD": "Adicionar",
-      "LOADING": "Carregando a lista de empresas e contatos...",
-      "ERROR": "Não foi possível carregar as empresas e os contatos.",
-      "NO_MATCH": "Nada encontrado, ou já está no grupo."
-    },
     "COMPANY": {
-      "TITLE": "Empresas ({count})",
-      "HINT": "Empresa inteira: todos os contatos ativos dela recebem. Contato novo da empresa entra sozinho, e contato inativado aparece como não recebe.",
-      "SEARCH": "Adicionar empresa (buscar por nome ou CNPJ)",
-      "EMPTY": "Nenhuma empresa neste grupo ainda.",
       "INACTIVE": "Empresa inativa",
       "RECEIVE_OF": "{receive} de {total} recebem",
-      "REMOVE": "Remover",
-      "NO_PHONE": "Sem telefone",
+      "CONTACTS": "Nenhum contato | 1 contato | {count} contatos",
+      "NO_DOCUMENT": "Sem CPF/CNPJ",
       "NO_CONTACTS": "Esta empresa não tem contatos."
     },
-    "INDIVIDUAL": {
-      "TITLE": "Contatos avulsos ({count})",
-      "ADD": "Adicionar contato avulso",
-      "SEARCH": "Buscar contato por nome, e-mail ou telefone",
-      "REMOVE": "Tirar do grupo"
+    "TABS": {
+      "MEMBERS": "No grupo",
+      "COMPANIES": "Todas as empresas",
+      "CONTACTS": "Contatos avulsos"
+    },
+    "LIST": {
+      "SEARCH_MEMBERS": "Buscar no grupo",
+      "SEARCH_COMPANIES": "Buscar empresa por nome ou CNPJ",
+      "SEARCH_CONTACTS": "Buscar contato por nome, telefone ou e-mail",
+      "EMPTY_MEMBERS": "Nenhuma empresa ou contato no grupo ainda. Marque em Todas as empresas ou Contatos avulsos.",
+      "EMPTY_MEMBERS_READ_ONLY": "Nenhuma empresa ou contato no grupo.",
+      "EMPTY_OPTIONS": "Nada cadastrado nesta conta.",
+      "NO_MATCH": "Nada encontrado.",
+      "OPTIONS_LOADING": "Carregando empresas e contatos...",
+      "OPTIONS_ERROR": "Não foi possível carregar as empresas e os contatos."
+    },
+    "CONTACT": {
+      "INDIVIDUAL": "Contato avulso"
     }
   }
 }

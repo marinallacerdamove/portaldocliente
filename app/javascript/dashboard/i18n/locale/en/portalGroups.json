@@ -1,7 +1,7 @@
 {
   "PORTAL_GROUPS": {
     "TITLE": "Groups",
-    "DESCRIPTION": "Customer groups are the audience of WhatsApp campaigns. A group joins whole companies and individual contacts. A whole company means all of its active contacts. Whoever is deactivated (company or contact) leaves the audience on its own.",
+    "DESCRIPTION": "WhatsApp campaign audiences. A group combines whole companies and individual contacts, and anyone deactivated leaves on their own.",
     "NEW": "New group",
     "LOADING": "Loading groups...",
     "LOADING_GROUP": "Loading group...",
@@ -35,21 +35,12 @@
     },
     "DETAIL": {
       "NAME_LABEL": "Group name",
-      "AUTOMATIC_HINT": "Automatic group: includes every active customer and cannot be edited.",
+      "ACTIVE": "Active",
+      "RECIPIENTS": "No contact receives this group's messages | 1 contact receives this group's messages | {count} contacts receive this group's messages",
+      "AUTOMATIC_HINT": "Automatic group: includes every active client and cannot be edited.",
       "READ_ONLY": "Only administrators can edit groups.",
-      "ACTIVE_LABEL": "Active",
-      "ACTIVE_HINT": "An inactive group does not appear in campaigns and receives nothing.",
-      "RECIPIENTS_TOTAL": "No contact receives | 1 contact receives | {count} contacts receive",
-      "RECIPIENTS_HINT": "Calculated by the Portal: active company, active contact, with a phone number.",
-      "ESTIMATE_HINT": "Estimate from the companies and contacts chosen. Save to confirm.",
-      "EXCLUDED_TITLE": "Left out:",
-      "EXCLUDED": {
-        "NO_PHONE": "without a phone number",
-        "NO_CHATWOOT_CONTACT": "not registered in this Chatwoot account",
-        "INACTIVE": "inactive"
-      },
       "SAVE": "Save",
-      "DISCARD": "Discard changes",
+      "DISCARD": "Discard",
       "SAVE_SUCCESS": "Group saved.",
       "SAVE_ERROR": "Could not save the group."
     },
@@ -59,28 +50,31 @@
       "NO_PHONE": "No phone",
       "NO_CHATWOOT": "Not in Chatwoot"
     },
-    "SEARCH": {
-      "ADD": "Add",
-      "LOADING": "Loading the list of companies and contacts...",
-      "ERROR": "Could not load the companies and contacts.",
-      "NO_MATCH": "Nothing found, or it is already in the group."
-    },
     "COMPANY": {
-      "TITLE": "Companies ({count})",
-      "HINT": "Whole company: all of its active contacts receive. A new contact of the company joins on its own, and an inactive contact shows as not receiving.",
-      "SEARCH": "Add company (search by name or CNPJ)",
-      "EMPTY": "No company in this group yet.",
       "INACTIVE": "Inactive company",
       "RECEIVE_OF": "{receive} of {total} receive",
-      "REMOVE": "Remove",
-      "NO_PHONE": "No phone",
+      "CONTACTS": "No contacts | 1 contact | {count} contacts",
+      "NO_DOCUMENT": "No document",
       "NO_CONTACTS": "This company has no contacts."
     },
-    "INDIVIDUAL": {
-      "TITLE": "Individual contacts ({count})",
-      "ADD": "Add individual contact",
-      "SEARCH": "Search a contact by name, e-mail or phone",
-      "REMOVE": "Remove from group"
+    "TABS": {
+      "MEMBERS": "In the group",
+      "COMPANIES": "All companies",
+      "CONTACTS": "Individual contacts"
+    },
+    "LIST": {
+      "SEARCH_MEMBERS": "Search in the group",
+      "SEARCH_COMPANIES": "Search company by name or document",
+      "SEARCH_CONTACTS": "Search contact by name, phone or email",
+      "EMPTY_MEMBERS": "No company or contact in the group yet. Check them in All companies or Individual contacts.",
+      "EMPTY_MEMBERS_READ_ONLY": "No company or contact in the group.",
+      "EMPTY_OPTIONS": "Nothing registered in this account.",
+      "NO_MATCH": "Nothing found.",
+      "OPTIONS_LOADING": "Loading companies and contacts...",
+      "OPTIONS_ERROR": "Could not load companies and contacts."
+    },
+    "CONTACT": {
+      "INDIVIDUAL": "Individual contact"
     }
   }
 }

@@ -1,31 +1,39 @@
 <script setup>
 // PATCH LOCAL (fork) - ficha de um Grupo de clientes (Configurações). Os dados
-// moram no Portal. Fluxo: dar nome, adicionar empresas (busca) e, na hora, ver
-// os contatos de cada uma com a situação (recebe / inativo / sem telefone /
-// sem cadastro no Chatwoot), e salvar. Contato novo na empresa entra sozinho;
-// contato inativado vira "não recebe". Contatos avulsos ficam numa seção
-// discreta no fim. Tudo é rascunho até o Salvar (um PATCH com nome, ativo e as
-// listas COMPLETAS); o total "N contatos recebem" é estimado enquanto há
-// mudança não salva. Só administrador edita; agente vê a mesma tela sem os
-// controles, e o grupo automático "Todos os clientes ativos" nunca edita.
+// moram no Portal. Uma lista só, com três abas:
+// - "No grupo": empresas e contatos avulsos que estão no grupo;
+// - "Todas as empresas": marcar a caixa põe a empresa inteira no grupo;
+// - "Contatos avulsos": marcar a caixa põe só aquele contato.
+// Clicar numa empresa abre os contatos dela logo abaixo, com a situação de
+// cada um (recebe / inativo / sem telefone / sem cadastro no Chatwoot).
+// Contato novo na empresa entra sozinho; contato inativado para de receber.
+// Tudo é rascunho até o Salvar (um PATCH com nome, ativo e as listas
+// COMPLETAS). Só administrador edita; agente vê só "No grupo", sem caixas, e o
+// grupo automático "Todos os clientes ativos" nunca edita.
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import { picoSearch } from '@chatwoot/pico-search';
 import { useAlert } from 'dashboard/composables';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { portalGroupsErrorMessage } from 'dashboard/composables/usePortalGroups';
 import PortalGroupsAPI from 'dashboard/api/portalGroups';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
-import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
+import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import PortalGroupActiveBadge from 'dashboard/components-next/PortalGroups/PortalGroupActiveBadge.vue';
-import PortalGroupCompanyBlock from 'dashboard/components-next/PortalGroups/PortalGroupCompanyBlock.vue';
-import PortalGroupIndividualContacts from 'dashboard/components-next/PortalGroups/PortalGroupIndividualContacts.vue';
-import PortalGroupMemberSearch from 'dashboard/components-next/PortalGroups/PortalGroupMemberSearch.vue';
+import PortalGroupCompanyRow from 'dashboard/components-next/PortalGroups/PortalGroupCompanyRow.vue';
+import PortalGroupContactRow from 'dashboard/components-next/PortalGroups/PortalGroupContactRow.vue';
 
-// Status de contato de empresa que conta como "recebe" (vem do Portal).
+// Status de contato que conta como "recebe" (vem do Portal).
 const RECEIVES = 'recebe';
+const TABS = {
+  MEMBERS: 'members',
+  COMPANIES: 'companies',
+  CONTACTS: 'contacts',
+};
 
 const { t } = useI18n();
 const route = useRoute();
@@ -49,9 +57,12 @@ const options = ref({ empresas: [], contatos: [] });
 const isLoadingOptions = ref(false);
 const optionsError = ref('');
 
+const activeTab = ref(TABS.MEMBERS);
+const query = ref('');
+const expandedIds = ref(new Set());
+
 const canEdit = computed(() => isAdmin.value && !group.value?.automatic);
 
-const joinText = parts => parts.filter(Boolean).join(' · ');
 const sameIds = (first, second) =>
   first.length === second.length &&
   [...first].sort().join() === [...second].sort().join();
@@ -70,50 +81,92 @@ const contatoLookup = computed(() => {
   return lookup;
 });
 
-const empresaBlocks = computed(() =>
+const memberEmpresas = computed(() =>
   draft.empresaIds.map(id => empresaLookup.value.get(id)).filter(Boolean)
 );
 
-const avulsos = computed(() =>
+const memberContatos = computed(() =>
   draft.partnerIds.map(id => contatoLookup.value.get(id)).filter(Boolean)
 );
 
-const avulsoRows = computed(() =>
-  avulsos.value.map(contato => ({
-    id: contato.id,
-    primary: contato.name,
-    secondary: joinText([
-      contato.phone || t('PORTAL_GROUPS.COMPANY.NO_PHONE'),
-      (contato.empresas || []).join(', '),
-    ]),
-    active: contato.active,
-  }))
+const empresaIdSet = computed(() => new Set(draft.empresaIds));
+const partnerIdSet = computed(() => new Set(draft.partnerIds));
+
+const search = (items, fields) => {
+  const term = query.value.trim();
+  return term ? picoSearch(items, term, fields) : items;
+};
+
+const EMPRESA_FIELDS = ['nome', 'cnpj'];
+const CONTATO_FIELDS = ['name', 'phone', 'email', 'empresasText'];
+
+const withEmpresasText = contatos =>
+  contatos.map(contato => ({
+    ...contato,
+    empresasText: (contato.empresas || []).join(' '),
+  }));
+
+const visibleEmpresas = computed(() => {
+  if (activeTab.value === TABS.CONTACTS) return [];
+  const source =
+    activeTab.value === TABS.MEMBERS
+      ? memberEmpresas.value
+      : options.value.empresas;
+  return search(source, EMPRESA_FIELDS);
+});
+
+const visibleContatos = computed(() => {
+  if (activeTab.value === TABS.COMPANIES) return [];
+  const source =
+    activeTab.value === TABS.MEMBERS
+      ? memberContatos.value
+      : options.value.contatos;
+  return search(withEmpresasText(source), CONTATO_FIELDS);
+});
+
+const isEmpty = computed(
+  () => !visibleEmpresas.value.length && !visibleContatos.value.length
 );
 
-const empresaCandidates = computed(() =>
-  options.value.empresas.map(empresa => ({
-    id: empresa.id,
-    primary: empresa.nome,
-    secondary: joinText([
-      empresa.cnpj,
-      t('PORTAL_GROUPS.COMPANY.RECEIVE_OF', {
-        receive: empresa.recebem_count,
-        total: empresa.contatos_count,
-      }),
-    ]),
-  }))
+const emptyMessage = computed(() => {
+  if (query.value.trim()) return t('PORTAL_GROUPS.LIST.NO_MATCH');
+  if (activeTab.value === TABS.MEMBERS) {
+    return canEdit.value
+      ? t('PORTAL_GROUPS.LIST.EMPTY_MEMBERS')
+      : t('PORTAL_GROUPS.LIST.EMPTY_MEMBERS_READ_ONLY');
+  }
+  return t('PORTAL_GROUPS.LIST.EMPTY_OPTIONS');
+});
+
+const tabs = computed(() => [
+  {
+    key: TABS.MEMBERS,
+    label: t('PORTAL_GROUPS.TABS.MEMBERS'),
+    count: memberEmpresas.value.length + memberContatos.value.length,
+  },
+  {
+    key: TABS.COMPANIES,
+    label: t('PORTAL_GROUPS.TABS.COMPANIES'),
+    count: options.value.empresas.length,
+  },
+  {
+    key: TABS.CONTACTS,
+    label: t('PORTAL_GROUPS.TABS.CONTACTS'),
+    count: options.value.contatos.length,
+  },
+]);
+
+const activeTabIndex = computed(() =>
+  tabs.value.findIndex(tab => tab.key === activeTab.value)
 );
 
-const contatoCandidates = computed(() =>
-  options.value.contatos.map(contato => ({
-    id: contato.id,
-    primary: contato.name,
-    secondary: joinText([
-      contato.email,
-      contato.phone,
-      (contato.empresas || []).join(', '),
-    ]),
-  }))
+const searchPlaceholder = computed(
+  () =>
+    ({
+      [TABS.MEMBERS]: t('PORTAL_GROUPS.LIST.SEARCH_MEMBERS'),
+      [TABS.COMPANIES]: t('PORTAL_GROUPS.LIST.SEARCH_COMPANIES'),
+      [TABS.CONTACTS]: t('PORTAL_GROUPS.LIST.SEARCH_CONTACTS'),
+    })[activeTab.value]
 );
 
 const listsChanged = computed(
@@ -139,42 +192,32 @@ const canSave = computed(
   () => canEdit.value && isDirty.value && !!draft.name.trim() && !isSaving.value
 );
 
-// Enquanto há mudança nas listas, soma os contatos que recebem das empresas
-// escolhidas e os avulsos que recebem (status do Portal), sem repetir contato
-// (pelo id). Sem mudança, vale o número que o Portal calculou.
-const estimatedRecipients = computed(() => {
+// Contatos que recebem: os que recebem nas empresas do grupo e os avulsos que
+// recebem, sem repetir contato (pelo id). Mesma regra do Portal, então vale
+// antes e depois de salvar. O grupo automático usa o número do Portal.
+const recipientsCount = computed(() => {
+  if (group.value?.automatic) return group.value.recipients_count ?? 0;
   const ids = new Set();
-  empresaBlocks.value.forEach(empresa =>
+  memberEmpresas.value.forEach(empresa =>
     (empresa.contatos || [])
       .filter(contato => contato.status === RECEIVES)
       .forEach(contato => ids.add(contato.id))
   );
-  avulsos.value
+  memberContatos.value
     .filter(contato => contato.status === RECEIVES)
     .forEach(contato => ids.add(contato.id));
   return ids.size;
 });
 
-const recipientsCount = computed(() =>
-  listsChanged.value
-    ? estimatedRecipients.value
-    : (group.value?.recipients_count ?? 0)
-);
-
-const excludedText = computed(() => {
-  const excluded = group.value?.excluded || {};
-  return [
-    [excluded.sem_telefone, t('PORTAL_GROUPS.DETAIL.EXCLUDED.NO_PHONE')],
-    [
-      excluded.sem_contato_no_chatwoot,
-      t('PORTAL_GROUPS.DETAIL.EXCLUDED.NO_CHATWOOT_CONTACT'),
-    ],
-    [excluded.inativos, t('PORTAL_GROUPS.DETAIL.EXCLUDED.INACTIVE')],
+const contatoSubtitle = contato =>
+  [
+    partnerIdSet.value.has(contato.id) && activeTab.value === TABS.MEMBERS
+      ? t('PORTAL_GROUPS.CONTACT.INDIVIDUAL')
+      : '',
+    ...(contato.empresas || []),
   ]
-    .filter(([count]) => count > 0)
-    .map(([count, label]) => `${count} ${label}`)
+    .filter(Boolean)
     .join(' · ');
-});
 
 const resetDraft = () => {
   draft.name = group.value.name;
@@ -191,7 +234,7 @@ const fetchOptions = async () => {
     ({ data: options.value } = await PortalGroupsAPI.memberOptions());
   } catch (error) {
     optionsError.value =
-      portalGroupsErrorMessage(error) || t('PORTAL_GROUPS.SEARCH.ERROR');
+      portalGroupsErrorMessage(error) || t('PORTAL_GROUPS.LIST.OPTIONS_ERROR');
   } finally {
     isLoadingOptions.value = false;
   }
@@ -214,20 +257,27 @@ const fetchGroup = async id => {
   if (canEdit.value) fetchOptions();
 };
 
-const addEmpresa = id => {
-  draft.empresaIds = [id, ...draft.empresaIds];
+const selectTab = tab => {
+  activeTab.value = tab.key;
+  query.value = '';
 };
 
-const removeEmpresa = id => {
-  draft.empresaIds = draft.empresaIds.filter(empresaId => empresaId !== id);
+const toggleId = (list, id) =>
+  list.includes(id) ? list.filter(item => item !== id) : [...list, id];
+
+const toggleEmpresa = id => {
+  draft.empresaIds = toggleId(draft.empresaIds, id);
 };
 
-const addContato = id => {
-  draft.partnerIds = [id, ...draft.partnerIds];
+const toggleContato = id => {
+  draft.partnerIds = toggleId(draft.partnerIds, id);
 };
 
-const removeContato = id => {
-  draft.partnerIds = draft.partnerIds.filter(partnerId => partnerId !== id);
+const toggleExpanded = id => {
+  const next = new Set(expandedIds.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  expandedIds.value = next;
 };
 
 // Um único PATCH com tudo; o Portal devolve o detalhe já recalculado.
@@ -255,7 +305,13 @@ const save = async () => {
 
 watch(
   () => route.params.groupId,
-  id => id && fetchGroup(id),
+  id => {
+    if (!id) return;
+    activeTab.value = TABS.MEMBERS;
+    query.value = '';
+    expandedIds.value = new Set();
+    fetchGroup(id);
+  },
   { immediate: true }
 );
 </script>
@@ -278,132 +334,56 @@ watch(
       />
     </div>
 
-    <div v-else-if="group" class="flex flex-col w-full max-w-4xl gap-5 py-6">
-      <p
-        v-if="group.automatic"
-        class="px-3 py-2 mb-0 text-sm border rounded-xl bg-n-blue-3 border-n-blue-4 text-n-blue-11"
-      >
-        {{ t('PORTAL_GROUPS.DETAIL.AUTOMATIC_HINT') }}
-      </p>
-      <p
-        v-else-if="!isAdmin"
-        class="px-3 py-2 mb-0 text-sm border rounded-xl bg-n-amber-3 border-n-amber-4 text-n-amber-11"
-      >
-        {{ t('PORTAL_GROUPS.DETAIL.READ_ONLY') }}
-      </p>
-
-      <section
-        class="flex flex-col gap-4 p-4 border rounded-xl border-n-weak bg-n-solid-1"
-      >
-        <Input
-          v-if="canEdit"
-          id="portal-group-name"
-          v-model="draft.name"
-          :label="t('PORTAL_GROUPS.DETAIL.NAME_LABEL')"
-          :placeholder="t('PORTAL_GROUPS.NAME_DIALOG.PLACEHOLDER')"
-          :disabled="isSaving"
-        />
-        <div v-else class="flex items-center gap-3">
-          <h1 class="my-0 text-xl font-semibold text-n-slate-12">
-            {{ group.name }}
-          </h1>
-          <PortalGroupActiveBadge :active="group.active" />
-        </div>
-
-        <SettingsToggleSection
-          v-if="canEdit"
-          v-model="draft.active"
-          :header="t('PORTAL_GROUPS.DETAIL.ACTIVE_LABEL')"
-          :description="t('PORTAL_GROUPS.DETAIL.ACTIVE_HINT')"
-        />
-
-        <div class="flex flex-col gap-1">
-          <span class="text-2xl font-semibold text-n-slate-12">
+    <div v-else-if="group" class="flex flex-col w-full max-w-5xl gap-5 py-6">
+      <header class="flex items-start justify-between gap-6">
+        <div class="flex flex-col flex-1 min-w-0 gap-1">
+          <div class="flex items-center min-w-0 gap-3">
+            <input
+              v-if="canEdit"
+              v-model="draft.name"
+              :aria-label="t('PORTAL_GROUPS.DETAIL.NAME_LABEL')"
+              :placeholder="t('PORTAL_GROUPS.NAME_DIALOG.PLACEHOLDER')"
+              :disabled="isSaving"
+              class="w-full max-w-md px-2 py-1 -ms-2 text-xl font-semibold bg-transparent border border-transparent rounded-lg outline-none text-n-slate-12 hover:border-n-weak focus:border-n-brand"
+            />
+            <h1
+              v-else
+              class="my-0 text-xl font-semibold truncate text-n-slate-12"
+            >
+              {{ group.name }}
+            </h1>
+            <span
+              v-if="group.automatic"
+              class="px-2 py-0.5 text-xs rounded-md shrink-0 bg-n-blue-3 text-n-blue-11"
+            >
+              {{ t('PORTAL_GROUPS.AUTOMATIC') }}
+            </span>
+            <PortalGroupActiveBadge
+              v-else-if="!canEdit"
+              :active="group.active"
+            />
+          </div>
+          <span class="text-sm text-n-slate-11">
             {{
               t(
-                'PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL',
+                'PORTAL_GROUPS.DETAIL.RECIPIENTS',
                 { count: recipientsCount },
                 recipientsCount
               )
             }}
           </span>
-          <span class="text-xs text-n-slate-11">
-            {{
-              listsChanged
-                ? t('PORTAL_GROUPS.DETAIL.ESTIMATE_HINT')
-                : t('PORTAL_GROUPS.DETAIL.RECIPIENTS_HINT')
-            }}
-          </span>
-          <span
-            v-if="!listsChanged && excludedText"
-            class="text-xs text-n-slate-11"
-          >
-            {{ t('PORTAL_GROUPS.DETAIL.EXCLUDED_TITLE') }} {{ excludedText }}
-          </span>
-        </div>
-      </section>
-
-      <section v-if="!group.automatic" class="flex flex-col gap-3">
-        <div class="flex flex-col gap-1">
-          <h2 class="my-0 text-base font-semibold text-n-slate-12">
-            {{
-              t('PORTAL_GROUPS.COMPANY.TITLE', { count: empresaBlocks.length })
-            }}
-          </h2>
-          <p class="mb-0 text-sm text-n-slate-11">
-            {{ t('PORTAL_GROUPS.COMPANY.HINT') }}
-          </p>
         </div>
 
-        <PortalGroupMemberSearch
-          v-if="canEdit"
-          :candidates="empresaCandidates"
-          :excluded-ids="draft.empresaIds"
-          :placeholder="t('PORTAL_GROUPS.COMPANY.SEARCH')"
-          :is-loading="isLoadingOptions"
-          :error="optionsError"
-          :disabled="isSaving"
-          @add="addEmpresa"
-          @retry="fetchOptions"
-        />
-
-        <PortalGroupCompanyBlock
-          v-for="empresa in empresaBlocks"
-          :key="empresa.id"
-          :empresa="empresa"
-          :can-edit="canEdit && !isSaving"
-          @remove="removeEmpresa"
-        />
-        <p v-if="!empresaBlocks.length" class="mb-0 text-sm text-n-slate-11">
-          {{ t('PORTAL_GROUPS.COMPANY.EMPTY') }}
-        </p>
-      </section>
-
-      <PortalGroupIndividualContacts
-        v-if="!group.automatic && (canEdit || avulsoRows.length)"
-        :rows="avulsoRows"
-        :candidates="contatoCandidates"
-        :can-edit="canEdit && !isSaving"
-        :is-loading-candidates="isLoadingOptions"
-        :candidates-error="optionsError"
-        @add="addContato"
-        @remove="removeContato"
-        @retry="fetchOptions"
-      />
-
-      <footer
-        v-if="canEdit"
-        class="flex flex-col gap-2 pt-4 border-t border-n-weak"
-      >
-        <p v-if="saveError" class="mb-0 text-sm text-n-ruby-11">
-          {{ saveError }}
-        </p>
-        <div class="flex items-center justify-end gap-2">
+        <div v-if="canEdit" class="flex items-center gap-3 shrink-0 h-9">
+          <label class="flex items-center gap-2 text-sm text-n-slate-11">
+            <Switch v-model="draft.active" :disabled="isSaving" />
+            {{ t('PORTAL_GROUPS.DETAIL.ACTIVE') }}
+          </label>
           <Button
             v-if="isDirty"
             :label="t('PORTAL_GROUPS.DETAIL.DISCARD')"
-            ghost
-            slate
+            variant="ghost"
+            color="slate"
             size="sm"
             :disabled="isSaving"
             @click="resetDraft"
@@ -416,7 +396,93 @@ watch(
             @click="save"
           />
         </div>
-      </footer>
+      </header>
+
+      <p v-if="saveError" class="mb-0 -mt-2 text-sm text-n-ruby-11">
+        {{ saveError }}
+      </p>
+
+      <p
+        v-if="group.automatic"
+        class="px-4 py-3 mb-0 text-sm border rounded-xl border-n-weak bg-n-solid-1 text-n-slate-11"
+      >
+        {{ t('PORTAL_GROUPS.DETAIL.AUTOMATIC_HINT') }}
+      </p>
+
+      <section
+        v-else
+        class="flex flex-col overflow-hidden border rounded-xl border-n-weak bg-n-solid-1"
+      >
+        <div
+          class="flex items-center justify-between gap-4 px-4 py-3 border-b border-n-weak"
+        >
+          <TabBar
+            v-if="canEdit"
+            :tabs="tabs"
+            :initial-active-tab="activeTabIndex"
+            @tab-changed="selectTab"
+          />
+          <span v-else class="text-sm text-n-slate-11">
+            {{ t('PORTAL_GROUPS.DETAIL.READ_ONLY') }}
+          </span>
+          <div class="w-72 shrink-0">
+            <Input
+              v-model="query"
+              type="search"
+              size="sm"
+              :placeholder="searchPlaceholder"
+            />
+          </div>
+        </div>
+
+        <div
+          v-if="activeTab !== TABS.MEMBERS && isLoadingOptions"
+          class="flex items-center gap-2 px-4 py-6 text-sm text-n-slate-11"
+        >
+          <Spinner :size="16" />
+          {{ t('PORTAL_GROUPS.LIST.OPTIONS_LOADING') }}
+        </div>
+
+        <div
+          v-else-if="activeTab !== TABS.MEMBERS && optionsError"
+          class="flex flex-col items-start gap-2 px-4 py-6"
+        >
+          <p class="mb-0 text-sm text-n-ruby-11">{{ optionsError }}</p>
+          <Button
+            :label="t('PORTAL_GROUPS.RETRY')"
+            variant="faded"
+            color="slate"
+            size="xs"
+            @click="fetchOptions"
+          />
+        </div>
+
+        <p v-else-if="isEmpty" class="px-4 py-6 mb-0 text-sm text-n-slate-11">
+          {{ emptyMessage }}
+        </p>
+
+        <div v-else class="flex flex-col divide-y divide-n-weak">
+          <PortalGroupCompanyRow
+            v-for="empresa in visibleEmpresas"
+            :key="`empresa-${empresa.id}`"
+            :empresa="empresa"
+            :checked="empresaIdSet.has(empresa.id)"
+            :can-edit="canEdit && !isSaving"
+            :expanded="expandedIds.has(empresa.id)"
+            @toggle="toggleEmpresa"
+            @expand="toggleExpanded"
+          />
+          <PortalGroupContactRow
+            v-for="contato in visibleContatos"
+            :key="`contato-${contato.id}`"
+            :contato="contato"
+            :subtitle="contatoSubtitle(contato)"
+            :checked="partnerIdSet.has(contato.id)"
+            :can-edit="canEdit && !isSaving"
+            @toggle="toggleContato"
+          />
+        </div>
+      </section>
     </div>
   </div>
 </template>

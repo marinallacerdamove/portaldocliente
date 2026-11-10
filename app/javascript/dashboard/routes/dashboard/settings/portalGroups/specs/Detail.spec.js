@@ -3,10 +3,10 @@ import { shallowMount, flushPromises } from '@vue/test-utils';
 import PortalGroupDetail from '../Detail.vue';
 import PortalGroupsAPI from 'dashboard/api/portalGroups';
 import Input from 'dashboard/components-next/input/Input.vue';
-import SettingsToggleSection from 'dashboard/components-next/Settings/SettingsToggleSection.vue';
-import PortalGroupCompanyBlock from 'dashboard/components-next/PortalGroups/PortalGroupCompanyBlock.vue';
-import PortalGroupIndividualContacts from 'dashboard/components-next/PortalGroups/PortalGroupIndividualContacts.vue';
-import PortalGroupMemberSearch from 'dashboard/components-next/PortalGroups/PortalGroupMemberSearch.vue';
+import Switch from 'dashboard/components-next/switch/Switch.vue';
+import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
+import PortalGroupCompanyRow from 'dashboard/components-next/PortalGroups/PortalGroupCompanyRow.vue';
+import PortalGroupContactRow from 'dashboard/components-next/PortalGroups/PortalGroupContactRow.vue';
 import { useAlert } from 'dashboard/composables';
 
 const mockIsAdmin = ref(true);
@@ -127,21 +127,30 @@ const mountPage = async () => {
   return wrapper;
 };
 
-const blocks = wrapper => wrapper.findAllComponents(PortalGroupCompanyBlock);
-const companySearch = wrapper => wrapper.findComponent(PortalGroupMemberSearch);
-const individual = wrapper =>
-  wrapper.findComponent(PortalGroupIndividualContacts);
-const nameInput = wrapper => wrapper.findComponent(Input);
-const footerButtons = wrapper =>
+const companyRows = wrapper => wrapper.findAllComponents(PortalGroupCompanyRow);
+const contactRows = wrapper => wrapper.findAllComponents(PortalGroupContactRow);
+const companyNames = wrapper =>
+  companyRows(wrapper).map(row => row.props('empresa').nome);
+const contactNames = wrapper =>
+  contactRows(wrapper).map(row => row.props('contato').name);
+const nameInput = wrapper =>
+  wrapper.find('input[aria-label="PORTAL_GROUPS.DETAIL.NAME_LABEL"]');
+const buttonByLabel = (wrapper, label) =>
   wrapper
     .findAllComponents({ name: 'Button' })
-    .filter(button => button.attributes('label') !== undefined);
-const buttonByLabel = (wrapper, label) =>
-  footerButtons(wrapper).find(button => button.attributes('label') === label);
+    .find(button => button.attributes('label') === label);
 const isSaveEnabled = wrapper =>
   buttonByLabel(wrapper, 'PORTAL_GROUPS.DETAIL.SAVE').attributes('disabled') !==
   'true';
-const total = wrapper => wrapper.find('span.text-2xl').text();
+const recipients = count => `PORTAL_GROUPS.DETAIL.RECIPIENTS ${count}`;
+const openTab = async (wrapper, key) => {
+  wrapper.findComponent(TabBar).vm.$emit('tabChanged', { key });
+  await flushPromises();
+};
+const search = async (wrapper, term) => {
+  wrapper.findComponent(Input).vm.$emit('update:modelValue', term);
+  await flushPromises();
+};
 
 describe('Settings > Group detail', () => {
   beforeEach(() => {
@@ -158,116 +167,167 @@ describe('Settings > Group detail', () => {
     expect(PortalGroupsAPI.memberOptions).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the saved companies with their contacts and the total calculated by the Portal', async () => {
+  it('lists only what is in the group on the first tab, companies first, all checked', async () => {
     const wrapper = await mountPage();
 
-    expect(blocks(wrapper)).toHaveLength(1);
-    expect(blocks(wrapper)[0].props('empresa')).toEqual(acme);
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 3');
-    expect(wrapper.text()).toContain('PORTAL_GROUPS.DETAIL.RECIPIENTS_HINT');
-    expect(wrapper.text()).toContain(
-      '1 PORTAL_GROUPS.DETAIL.EXCLUDED.NO_PHONE'
+    expect(companyNames(wrapper)).toEqual(['Acme']);
+    expect(contactNames(wrapper)).toEqual(['Dora']);
+    expect(companyRows(wrapper)[0].props('checked')).toBe(true);
+    expect(contactRows(wrapper)[0].props('checked')).toBe(true);
+    expect(contactRows(wrapper)[0].props('subtitle')).toBe(
+      'PORTAL_GROUPS.CONTACT.INDIVIDUAL · Zeta'
     );
-    expect(individual(wrapper).props('rows')).toMatchObject([
-      { id: 20, primary: 'Dora', active: true },
+    expect(wrapper.text()).toContain(recipients(3));
+  });
+
+  it('counts members and options on the tabs', async () => {
+    const wrapper = await mountPage();
+
+    expect(
+      wrapper
+        .findComponent(TabBar)
+        .props('tabs')
+        .map(tab => [tab.key, tab.count])
+    ).toEqual([
+      ['members', 2],
+      ['companies', 3],
+      ['contacts', 3],
     ]);
   });
 
-  it('shows the contacts of a company as soon as it is added, before saving', async () => {
+  it('shows every company of the account on its tab, checked when in the group', async () => {
     const wrapper = await mountPage();
+    await openTab(wrapper, 'companies');
 
-    companySearch(wrapper).vm.$emit('add', 7);
-    await flushPromises();
-
-    expect(blocks(wrapper).map(block => block.props('empresa').nome)).toEqual([
-      'Delta',
-      'Acme',
+    expect(companyNames(wrapper)).toEqual(['Acme', 'Delta', 'Omega']);
+    expect(companyRows(wrapper).map(row => row.props('checked'))).toEqual([
+      true,
+      false,
+      false,
     ]);
-    expect(PortalGroupsAPI.update).not.toHaveBeenCalled();
+    expect(contactRows(wrapper)).toHaveLength(0);
   });
 
-  it('estimates the total before saving without repeating a contact that is in two companies', async () => {
+  it('checking a company puts it in the group and counts its contacts at once, without repeating a contact', async () => {
     const wrapper = await mountPage();
+    await openTab(wrapper, 'companies');
 
-    companySearch(wrapper).vm.$emit('add', 7);
+    companyRows(wrapper)[1].vm.$emit('toggle', 7);
     await flushPromises();
 
     // Acme: Ana, Caio. Delta: Eva, Ana (repetida). Avulso: Dora. = 4
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 4');
-    expect(wrapper.text()).toContain('PORTAL_GROUPS.DETAIL.ESTIMATE_HINT');
-    expect(wrapper.text()).not.toContain('PORTAL_GROUPS.DETAIL.EXCLUDED_TITLE');
+    expect(wrapper.text()).toContain(recipients(4));
+    expect(companyRows(wrapper)[1].props('checked')).toBe(true);
+    expect(PortalGroupsAPI.update).not.toHaveBeenCalled();
+
+    await openTab(wrapper, 'members');
+    expect(companyNames(wrapper)).toEqual(['Acme', 'Delta']);
   });
 
   it('counts nobody from an inactive company', async () => {
     const wrapper = await mountPage();
+    await openTab(wrapper, 'companies');
 
-    companySearch(wrapper).vm.$emit('add', 8);
+    companyRows(wrapper)[2].vm.$emit('toggle', 8);
     await flushPromises();
 
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 3');
-    expect(blocks(wrapper)[0].props('empresa').active).toBe(false);
+    expect(wrapper.text()).toContain(recipients(3));
   });
 
-  it('updates the estimate when a company is removed', async () => {
+  it('unchecking a company takes it out of the group and of the count', async () => {
     const wrapper = await mountPage();
 
-    blocks(wrapper)[0].vm.$emit('remove', 1);
+    companyRows(wrapper)[0].vm.$emit('toggle', 1);
     await flushPromises();
 
-    expect(blocks(wrapper)).toHaveLength(0);
+    expect(companyNames(wrapper)).toEqual([]);
     // só o avulso Dora
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 1');
-    expect(wrapper.text()).toContain('PORTAL_GROUPS.COMPANY.EMPTY');
+    expect(wrapper.text()).toContain(recipients(1));
   });
 
-  it('adds an individual contact to the estimate only when the Portal says it receives', async () => {
+  it('opens and closes the contacts of a company', async () => {
     const wrapper = await mountPage();
 
-    individual(wrapper).vm.$emit('add', 22);
+    companyRows(wrapper)[0].vm.$emit('expand', 1);
     await flushPromises();
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 3');
+    expect(companyRows(wrapper)[0].props('expanded')).toBe(true);
 
-    individual(wrapper).vm.$emit('add', 21);
+    companyRows(wrapper)[0].vm.$emit('expand', 1);
     await flushPromises();
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 4');
-    expect(
-      individual(wrapper)
-        .props('rows')
-        .map(row => row.id)
-    ).toEqual([21, 22, 20]);
+    expect(companyRows(wrapper)[0].props('expanded')).toBe(false);
+  });
+
+  it('adds an individual contact to the count only when the Portal says it receives', async () => {
+    const wrapper = await mountPage();
+    await openTab(wrapper, 'contacts');
+
+    expect(contactNames(wrapper)).toEqual(['Dora', 'Fábio', 'Gus']);
+
+    contactRows(wrapper)[2].vm.$emit('toggle', 22);
+    await flushPromises();
+    expect(wrapper.text()).toContain(recipients(3));
+
+    contactRows(wrapper)[1].vm.$emit('toggle', 21);
+    await flushPromises();
+    expect(wrapper.text()).toContain(recipients(4));
+  });
+
+  it('filters the open tab by the search and clears it when the tab changes', async () => {
+    const wrapper = await mountPage();
+    await openTab(wrapper, 'companies');
+
+    await search(wrapper, 'delta');
+    expect(companyNames(wrapper)).toEqual(['Delta']);
+
+    await search(wrapper, '55.666');
+    expect(companyNames(wrapper)).toEqual(['Delta']);
+
+    await search(wrapper, 'nada disso');
+    expect(companyRows(wrapper)).toHaveLength(0);
+    expect(wrapper.text()).toContain('PORTAL_GROUPS.LIST.NO_MATCH');
+
+    await openTab(wrapper, 'contacts');
+    expect(wrapper.findComponent(Input).props('modelValue')).toBe('');
+    expect(contactNames(wrapper)).toEqual(['Dora', 'Fábio', 'Gus']);
+  });
+
+  it('finds a contact by the name of a company of theirs', async () => {
+    const wrapper = await mountPage();
+    await openTab(wrapper, 'contacts');
+
+    await search(wrapper, 'zeta');
+    expect(contactNames(wrapper)).toEqual(['Dora']);
   });
 
   it('keeps Save disabled while nothing changed or the name is empty', async () => {
     const wrapper = await mountPage();
     expect(isSaveEnabled(wrapper)).toBe(false);
 
-    nameInput(wrapper).vm.$emit('update:modelValue', 'Novo nome');
-    await flushPromises();
+    await nameInput(wrapper).setValue('Novo nome');
     expect(isSaveEnabled(wrapper)).toBe(true);
 
-    nameInput(wrapper).vm.$emit('update:modelValue', '   ');
-    await flushPromises();
+    await nameInput(wrapper).setValue('   ');
     expect(isSaveEnabled(wrapper)).toBe(false);
   });
 
-  it('saves everything in a single PATCH with the complete lists and goes back to the Portal numbers', async () => {
+  it('saves everything in a single PATCH with the complete lists', async () => {
     PortalGroupsAPI.update.mockResolvedValue({
       data: {
         ...group,
         name: 'VIP 2',
         active: false,
-        empresas: [delta, acme],
-        recipients_count: 4,
+        empresas: [acme, delta],
+        contatos: [],
+        recipients_count: 3,
       },
     });
     const wrapper = await mountPage();
 
-    nameInput(wrapper).vm.$emit('update:modelValue', '  VIP 2 ');
-    wrapper
-      .findComponent(SettingsToggleSection)
-      .vm.$emit('update:modelValue', false);
-    companySearch(wrapper).vm.$emit('add', 7);
-    individual(wrapper).vm.$emit('remove', 20);
+    await nameInput(wrapper).setValue('  VIP 2 ');
+    wrapper.findComponent(Switch).vm.$emit('update:modelValue', false);
+    contactRows(wrapper)[0].vm.$emit('toggle', 20);
+    await openTab(wrapper, 'companies');
+    companyRows(wrapper)[1].vm.$emit('toggle', 7);
     await flushPromises();
     await wrapper.vm.save();
     await flushPromises();
@@ -276,20 +336,19 @@ describe('Settings > Group detail', () => {
     expect(PortalGroupsAPI.update).toHaveBeenCalledWith(3, {
       name: 'VIP 2',
       active: false,
-      empresa_ids: [7, 1],
+      empresa_ids: [1, 7],
       partner_ids: [],
     });
     expect(useAlert).toHaveBeenCalledWith('PORTAL_GROUPS.DETAIL.SAVE_SUCCESS');
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 4');
-    expect(wrapper.text()).toContain('PORTAL_GROUPS.DETAIL.RECIPIENTS_HINT');
+    expect(wrapper.text()).toContain(recipients(3));
     expect(wrapper.vm.isDirty).toBe(false);
   });
 
-  it('sends an empty complete list when the last company is removed', async () => {
+  it('sends an empty complete list when the last company is unchecked', async () => {
     PortalGroupsAPI.update.mockResolvedValue({ data: group });
     const wrapper = await mountPage();
 
-    blocks(wrapper)[0].vm.$emit('remove', 1);
+    companyRows(wrapper)[0].vm.$emit('toggle', 1);
     await flushPromises();
     await wrapper.vm.save();
 
@@ -301,63 +360,52 @@ describe('Settings > Group detail', () => {
     });
   });
 
-  it('shows the Portal errors next to Save and keeps what was typed when the name is repeated', async () => {
+  it('shows the Portal error and keeps what was typed when the name is repeated', async () => {
     PortalGroupsAPI.update.mockRejectedValue({
       response: { data: { errors: ['Nome já está em uso'] } },
     });
     const wrapper = await mountPage();
 
-    nameInput(wrapper).vm.$emit('update:modelValue', 'Outro');
-    await flushPromises();
+    await nameInput(wrapper).setValue('Outro');
     await wrapper.vm.save();
     await flushPromises();
 
     expect(wrapper.text()).toContain('Nome já está em uso');
     expect(useAlert).toHaveBeenCalledWith('Nome já está em uso');
-    expect(nameInput(wrapper).props('modelValue')).toBe('Outro');
+    expect(nameInput(wrapper).element.value).toBe('Outro');
     expect(wrapper.vm.isDirty).toBe(true);
   });
 
   it('discards the changes and goes back to the saved group', async () => {
     const wrapper = await mountPage();
 
-    companySearch(wrapper).vm.$emit('add', 7);
-    nameInput(wrapper).vm.$emit('update:modelValue', 'Outro');
-    await flushPromises();
+    companyRows(wrapper)[0].vm.$emit('toggle', 1);
+    await nameInput(wrapper).setValue('Outro');
     await buttonByLabel(wrapper, 'PORTAL_GROUPS.DETAIL.DISCARD').vm.$emit(
       'click'
     );
     await flushPromises();
 
-    expect(blocks(wrapper)).toHaveLength(1);
-    expect(nameInput(wrapper).props('modelValue')).toBe('Clientes VIP');
-    expect(total(wrapper)).toBe('PORTAL_GROUPS.DETAIL.RECIPIENTS_TOTAL 3');
+    expect(companyNames(wrapper)).toEqual(['Acme']);
+    expect(nameInput(wrapper).element.value).toBe('Clientes VIP');
+    expect(wrapper.text()).toContain(recipients(3));
   });
 
-  it('is the same screen without edit controls for an agent', async () => {
+  it('is the same list without tabs, boxes or Save for an agent', async () => {
     mockIsAdmin.value = false;
     const wrapper = await mountPage();
 
     expect(PortalGroupsAPI.memberOptions).not.toHaveBeenCalled();
-    expect(blocks(wrapper)).toHaveLength(1);
-    expect(blocks(wrapper)[0].props('canEdit')).toBe(false);
-    expect(companySearch(wrapper).exists()).toBe(false);
+    expect(companyNames(wrapper)).toEqual(['Acme']);
+    expect(contactNames(wrapper)).toEqual(['Dora']);
+    expect(companyRows(wrapper)[0].props('canEdit')).toBe(false);
+    expect(contactRows(wrapper)[0].props('canEdit')).toBe(false);
+    expect(wrapper.findComponent(TabBar).exists()).toBe(false);
     expect(nameInput(wrapper).exists()).toBe(false);
-    expect(wrapper.findComponent(SettingsToggleSection).exists()).toBe(false);
-    expect(wrapper.find('footer').exists()).toBe(false);
+    expect(wrapper.findComponent(Switch).exists()).toBe(false);
+    expect(buttonByLabel(wrapper, 'PORTAL_GROUPS.DETAIL.SAVE')).toBeUndefined();
     expect(wrapper.text()).toContain('PORTAL_GROUPS.DETAIL.READ_ONLY');
     expect(wrapper.text()).toContain('Clientes VIP');
-    expect(individual(wrapper).props('canEdit')).toBe(false);
-  });
-
-  it('hides the individual contacts section for an agent when there is none', async () => {
-    mockIsAdmin.value = false;
-    PortalGroupsAPI.show.mockResolvedValue({
-      data: { ...group, contatos: [] },
-    });
-    const wrapper = await mountPage();
-
-    expect(individual(wrapper).exists()).toBe(false);
   });
 
   it('is read only for the automatic group even for an administrator', async () => {
@@ -368,15 +416,17 @@ describe('Settings > Group detail', () => {
         automatic: true,
         empresas: [],
         contatos: [],
+        recipients_count: 120,
       },
     });
     const wrapper = await mountPage();
 
     expect(PortalGroupsAPI.memberOptions).not.toHaveBeenCalled();
-    expect(blocks(wrapper)).toHaveLength(0);
+    expect(companyRows(wrapper)).toHaveLength(0);
     expect(nameInput(wrapper).exists()).toBe(false);
-    expect(wrapper.find('footer').exists()).toBe(false);
+    expect(buttonByLabel(wrapper, 'PORTAL_GROUPS.DETAIL.SAVE')).toBeUndefined();
     expect(wrapper.text()).toContain('PORTAL_GROUPS.DETAIL.AUTOMATIC_HINT');
+    expect(wrapper.text()).toContain(recipients(120));
   });
 
   it('shows the Portal message when the group cannot be loaded', async () => {
@@ -386,16 +436,19 @@ describe('Settings > Group detail', () => {
     const wrapper = await mountPage();
 
     expect(wrapper.text()).toContain('Grupo não encontrado.');
-    expect(blocks(wrapper)).toHaveLength(0);
+    expect(companyRows(wrapper)).toHaveLength(0);
   });
 
-  it('keeps the page usable when only the options fail to load', async () => {
+  it('keeps the group usable when only the options fail to load', async () => {
     PortalGroupsAPI.memberOptions.mockRejectedValue({
       response: { data: { error: 'Portal fora do ar' } },
     });
     const wrapper = await mountPage();
 
-    expect(companySearch(wrapper).props('error')).toBe('Portal fora do ar');
-    expect(blocks(wrapper)).toHaveLength(1);
+    expect(companyNames(wrapper)).toEqual(['Acme']);
+
+    await openTab(wrapper, 'companies');
+    expect(wrapper.text()).toContain('Portal fora do ar');
+    expect(companyRows(wrapper)).toHaveLength(0);
   });
 });
