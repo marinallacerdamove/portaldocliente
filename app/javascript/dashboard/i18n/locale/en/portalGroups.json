@@ -1,16 +1,17 @@
 {
   "PORTAL_GROUPS": {
     "TITLE": "Groups",
-    "DESCRIPTION": "WhatsApp campaign audiences. A group combines whole companies and individual contacts, and anyone deactivated leaves on their own.",
+    "DESCRIPTION": "WhatsApp campaign audiences. Click a group to see its contacts. New company contacts join on their own and anyone deactivated leaves on their own.",
     "NEW": "New group",
     "LOADING": "Loading groups...",
-    "LOADING_GROUP": "Loading group...",
+    "LOADING_GROUP": "Loading group contacts...",
     "LOAD_ERROR": "Could not load the groups.",
     "RETRY": "Try again",
-    "EMPTY": "No group yet.",
+    "EMPTY": "No groups yet.",
     "AUTOMATIC": "Automatic",
-    "EDIT_TOOLTIP": "Edit group",
-    "VIEW_TOOLTIP": "View group",
+    "EDIT_TOOLTIP": "Group name and status",
+    "SAVE_SUCCESS": "Group saved.",
+    "SAVE_ERROR": "Could not save the group.",
     "STATUS": {
       "ACTIVE": "Active",
       "INACTIVE": "Inactive"
@@ -19,62 +20,62 @@
       "NAME": "Group",
       "COMPANIES": "Companies",
       "CONTACTS": "Contacts",
-      "RECIPIENTS": "Receive now",
-      "STATUS": "Status",
-      "ACTIONS": "Actions"
+      "RECIPIENTS": "Receiving now",
+      "STATUS": "Status"
     },
     "NAME_DIALOG": {
       "LABEL": "Group name",
-      "PLACEHOLDER": "Ex.: VIP customers"
+      "PLACEHOLDER": "E.g.: VIP clients"
     },
     "CREATE": {
       "TITLE": "New group",
+      "DESCRIPTION": "Give it a name and check the companies. All their active contacts receive.",
       "SUBMIT": "Create group",
-      "SUCCESS": "Group created. Now choose its companies and contacts.",
-      "ERROR": "Could not create the group."
+      "SUCCESS": "Group created."
     },
-    "DETAIL": {
-      "NAME_LABEL": "Group name",
+    "EDIT": {
+      "TITLE": "Edit group",
+      "SUBMIT": "Save",
       "ACTIVE": "Active",
-      "RECIPIENTS": "No contact receives this group's messages | 1 contact receives this group's messages | {count} contacts receive this group's messages",
-      "AUTOMATIC_HINT": "Automatic group: includes every active client and cannot be edited.",
-      "READ_ONLY": "Only administrators can edit groups.",
+      "ACTIVE_HINT": "An inactive group is hidden from campaigns and receives nothing."
+    },
+    "PICKER": {
+      "LOADING": "Loading companies and contacts...",
+      "ERROR": "Could not load companies and contacts.",
+      "SELECT_ALL": "Select all",
+      "SELECTED": "None checked | 1 checked | {count} checked",
+      "NO_MATCH": "Nothing found.",
+      "EMPTY": "Nothing registered in this account.",
+      "INACTIVE_COMPANY": "inactive company",
+      "CONTACTS": "No contacts | 1 contact | {count} contacts",
+      "COMPANIES_TITLE": "Link companies · {name}",
+      "COMPANIES_DESCRIPTION": "Check the group's companies. All their active contacts receive.",
+      "CONTACTS_TITLE": "Add contacts · {name}",
+      "CONTACTS_DESCRIPTION": "Individual contacts: they join the group without the whole company.",
       "SAVE": "Save",
-      "DISCARD": "Discard",
-      "SAVE_SUCCESS": "Group saved.",
-      "SAVE_ERROR": "Could not save the group."
+      "SEARCH_COMPANIES": "Search company by name or document",
+      "SEARCH_CONTACTS": "Search contact by name, phone, email or company"
+    },
+    "PANEL": {
+      "LINK_COMPANIES": "Link companies",
+      "ADD_CONTACTS": "Add contact",
+      "COMPANIES": "Companies: {names}",
+      "NO_COMPANIES": "No linked companies",
+      "CONTACT": "Contact",
+      "COMPANY": "Company",
+      "PHONE": "Phone",
+      "STATUS": "Status",
+      "INDIVIDUAL": "Individual contact",
+      "REMOVE_CONTACT": "Remove from group",
+      "REMOVED": "Contact removed from the group.",
+      "EMPTY": "No contacts yet. Link companies or add contacts.",
+      "EMPTY_AUTOMATIC": "No active client receives right now."
     },
     "CONTACT_STATUS": {
       "RECEIVES": "Receives",
       "INACTIVE": "Inactive",
       "NO_PHONE": "No phone",
       "NO_CHATWOOT": "Not in Chatwoot"
-    },
-    "COMPANY": {
-      "INACTIVE": "Inactive company",
-      "RECEIVE_OF": "{receive} of {total} receive",
-      "CONTACTS": "No contacts | 1 contact | {count} contacts",
-      "NO_DOCUMENT": "No document",
-      "NO_CONTACTS": "This company has no contacts."
-    },
-    "TABS": {
-      "MEMBERS": "In the group",
-      "COMPANIES": "All companies",
-      "CONTACTS": "Individual contacts"
-    },
-    "LIST": {
-      "SEARCH_MEMBERS": "Search in the group",
-      "SEARCH_COMPANIES": "Search company by name or document",
-      "SEARCH_CONTACTS": "Search contact by name, phone or email",
-      "EMPTY_MEMBERS": "No company or contact in the group yet. Check them in All companies or Individual contacts.",
-      "EMPTY_MEMBERS_READ_ONLY": "No company or contact in the group.",
-      "EMPTY_OPTIONS": "Nothing registered in this account.",
-      "NO_MATCH": "Nothing found.",
-      "OPTIONS_LOADING": "Loading companies and contacts...",
-      "OPTIONS_ERROR": "Could not load companies and contacts."
-    },
-    "CONTACT": {
-      "INDIVIDUAL": "Individual contact"
     }
   }
 }

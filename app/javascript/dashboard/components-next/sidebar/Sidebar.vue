@@ -886,7 +886,6 @@ const menuItems = computed(() => {
           name: 'Settings Groups',
           label: t('SIDEBAR.PORTAL_GROUPS'),
           icon: 'i-lucide-group',
-          activeOn: ['portal_groups_show'],
           to: accountScopedRoute('portal_groups_list'),
         },
         {

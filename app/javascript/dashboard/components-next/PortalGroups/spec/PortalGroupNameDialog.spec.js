@@ -12,34 +12,37 @@ const DialogStub = {
 
 const mountDialog = () =>
   shallowMount(PortalGroupNameDialog, {
-    props: { title: 'Novo grupo', confirmLabel: 'Criar' },
     global: { stubs: { Dialog: DialogStub } },
   });
 
 describe('PortalGroupNameDialog', () => {
-  it('opens with an empty name', () => {
+  it('opens with the name and status of the group', () => {
     const wrapper = mountDialog();
-    wrapper.vm.name = 'sobra de antes';
 
-    wrapper.vm.open();
+    wrapper.vm.open({ name: 'Clientes VIP', active: false });
 
-    expect(wrapper.vm.name).toBe('');
+    expect(wrapper.vm.name).toBe('Clientes VIP');
+    expect(wrapper.vm.active).toBe(false);
   });
 
-  it('submits the trimmed name', () => {
+  it('submits the trimmed name and the status', () => {
     const wrapper = mountDialog();
-    wrapper.vm.open();
-    wrapper.vm.name = '  Clientes VIP  ';
+    wrapper.vm.open({ name: 'Clientes VIP', active: true });
+    wrapper.vm.name = '  VIP 2  ';
+    wrapper.vm.active = false;
 
     wrapper.findComponent(DialogStub).vm.$emit('confirm');
 
-    expect(wrapper.emitted('submit')).toEqual([['Clientes VIP']]);
+    expect(wrapper.emitted('submit')).toEqual([
+      [{ name: 'VIP 2', active: false }],
+    ]);
   });
 
-  it('does not submit an empty name and blocks the confirm button', () => {
+  it('does not submit an empty name and blocks the confirm button', async () => {
     const wrapper = mountDialog();
-    wrapper.vm.open();
+    wrapper.vm.open({ name: 'Clientes VIP', active: true });
     wrapper.vm.name = '   ';
+    await wrapper.vm.$nextTick();
 
     wrapper.findComponent(DialogStub).vm.$emit('confirm');
 
