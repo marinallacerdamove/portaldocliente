@@ -424,7 +424,11 @@ const splitList = value =>
     .map(s => s.trim())
     .filter(Boolean);
 
+// Ligado enquanto syncForm carrega a ficha: o watch do status do contrato
+// ignora essa troca (não é a pessoa mudando o status).
+let syncingForm = false;
 const syncForm = company => {
+  syncingForm = true;
   form.name = company?.name || '';
   form.domain = company?.domain || '';
   form.description = company?.description || '';
@@ -443,6 +447,7 @@ const syncForm = company => {
   contabilidadeObservacoes.value = attrs.contabilidade_observacoes || '';
   tipoAcesso.value = splitList(attrs.tipo_acesso);
   modulosContratados.value = splitList(attrs.modulos_contratados);
+  syncingForm = false;
 };
 
 const isCurrentCompany = companyId => Number(props.company?.id) === companyId;
@@ -779,19 +784,26 @@ const contratoFields = computed(() =>
       isCancelado(customAttrs.contrato_status)
   )
 );
-// Cancelar já sugere a data de hoje (o Portal grava hoje se ficar vazia).
+// Trocar o status na tela: virar cancelado sugere a data de hoje (mesmo se
+// sobrou a de um cancelamento antigo) e sair de cancelado limpa a data.
+// Carregar a ficha (syncForm) não mexe: a data gravada fica.
+const todayIso = () => {
+  const today = new Date();
+  return [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
+};
 watch(
   () => customAttrs.contrato_status,
-  status => {
-    if (isCancelado(status) && !customAttrs.contrato_data_cancelamento) {
-      const today = new Date();
-      customAttrs.contrato_data_cancelamento = [
-        today.getFullYear(),
-        String(today.getMonth() + 1).padStart(2, '0'),
-        String(today.getDate()).padStart(2, '0'),
-      ].join('-');
-    }
-  }
+  (status, previous) => {
+    if (syncingForm || isCancelado(status) === isCancelado(previous)) return;
+    customAttrs.contrato_data_cancelamento = isCancelado(status)
+      ? todayIso()
+      : '';
+  },
+  { flush: 'sync' }
 );
 
 const contratoItems = computed(() =>

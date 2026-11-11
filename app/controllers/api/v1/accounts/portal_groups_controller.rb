@@ -50,6 +50,6 @@ class Api::V1::Accounts::PortalGroupsController < Api::V1::Accounts::BaseControl
   end
 
   def client
-    PortalGroups::Client.new(account: Current.account, user: Current.user)
+    PortalGroups::Client.new(account: Current.account)
   end
 end

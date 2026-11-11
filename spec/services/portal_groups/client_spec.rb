@@ -13,7 +13,7 @@ describe PortalGroups::Client do
 
   describe '#list' do
     it 'asks only the active groups by default and sends no user name when there is no logged user' do
-      stub = stub_request(:get, "#{portal_url}/client_groups").with(query: {}) { |request| request.headers.keys.exclude?('X-Chatwoot-User-Name') }
+      stub = stub_request(:get, "#{portal_url}/client_groups").with(query: {})
                                                               .to_return(status: 200, body: { data: [] }.to_json)
 
       client.list
@@ -122,16 +122,24 @@ describe PortalGroups::Client do
     end
   end
 
-  describe 'agent name header' do
-    it 'sends the logged agent name without line breaks, so the Portal history says who changed' do
-      user = create(:user, account: account, name: "Jos\u00e9\r\nInjected: x")
-      stub = stub_request(:patch, "#{portal_url}/client_groups/5")
-             .with(headers: portal_headers.merge('X-Chatwoot-User-Name' => 'José Injected: x'))
-             .to_return(status: 200, body: '{}')
+  describe 'transport failures' do
+    [Errno::EHOSTUNREACH, Errno::ETIMEDOUT, EOFError, OpenSSL::SSL::SSLError, Net::HTTPBadResponse].each do |failure|
+      it "turns #{failure} into an Error without status, so the campaign can retry" do
+        stub_request(:get, "#{portal_url}/client_groups/7/recipients").to_raise(failure)
 
-      described_class.new(account: account, user: user).update(5, name: 'x')
+        expect { client.recipients(7) }.to raise_error(described_class::Error) { |error|
+          expect(error.status).to be_nil
+          expect(error).not_to be_permanent
+        }
+      end
+    end
 
-      expect(stub).to have_been_requested
+    it 'treats a 4xx answer as permanent and a 5xx as temporary' do
+      stub_request(:get, "#{portal_url}/client_groups/7/recipients").to_return(status: 404, body: '')
+      expect { client.recipients(7) }.to raise_error(described_class::Error, &:permanent?)
+
+      stub_request(:get, "#{portal_url}/client_groups/7/recipients").to_return(status: 503, body: '')
+      expect { client.recipients(7) }.to raise_error(described_class::Error) { |error| expect(error).not_to be_permanent }
     end
   end
 

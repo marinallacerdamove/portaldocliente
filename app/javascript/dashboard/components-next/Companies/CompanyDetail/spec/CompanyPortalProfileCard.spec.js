@@ -133,4 +133,32 @@ describe('CompanyPortalProfileCard contract', () => {
       /^\d{4}-\d{2}-\d{2}$/
     );
   });
+
+  it('cancelling again replaces an old cancellation date, and leaving cancelled clears it', async () => {
+    const wrapper = await mountWith({
+      contrato_status: 'ativo',
+      contrato_data_cancelamento: '2026-03-01',
+    });
+    wrapper.vm.startEdit('contrato');
+
+    wrapper.vm.customAttrs.contrato_status = 'cancelado';
+    expect(wrapper.vm.customAttrs.contrato_data_cancelamento).not.toBe(
+      '2026-03-01'
+    );
+
+    wrapper.vm.customAttrs.contrato_status = 'ativo';
+    expect(wrapper.vm.customAttrs.contrato_data_cancelamento).toBe('');
+  });
+
+  it('keeps the saved cancellation date when a cancelled contract is loaded', async () => {
+    const wrapper = await mountWith({
+      contrato_status: 'cancelado',
+      contrato_data_cancelamento: '2026-03-01',
+    });
+    wrapper.vm.startEdit('contrato');
+
+    expect(wrapper.vm.customAttrs.contrato_data_cancelamento).toBe(
+      '2026-03-01'
+    );
+  });
 });

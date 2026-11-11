@@ -308,13 +308,23 @@ describe Whatsapp::OneoffCampaignService do
         expect(group_campaign.reload.completed?).to be false
       end
 
-      it 'fails loudly when the Portal answers an error for a group' do
-        stub_request(:get, format(portal_recipients_url, 'todos')).to_return(status: 404, body: '')
+      it 'fails loudly when the Portal has a server error for a group' do
+        stub_request(:get, format(portal_recipients_url, 'todos')).to_return(status: 500, body: '')
 
         expect(whatsapp_channel).not_to receive(:send_template)
 
         expect { described_class.new(campaign: group_campaign).perform }.to raise_error(PortalGroups::Client::Error)
         expect(group_campaign.reload.completed?).to be false
+      end
+
+      it 'leaves out a group the Portal refuses (inactivated or gone) and keeps the others' do
+        stub_request(:get, format(portal_recipients_url, 'todos')).to_return(status: 404, body: '')
+        stub_group_recipients('7', [group_contact.id])
+
+        described_class.new(campaign: group_campaign).perform
+
+        expect(group_campaign.reload.completed?).to be true
+        expect(group_campaign.campaign_recipients.pluck(:contact_id)).to contain_exactly(group_contact.id)
       end
     end
 

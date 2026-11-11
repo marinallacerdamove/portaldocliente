@@ -17,15 +17,23 @@ class PortalGroups::Client
       @status = status
       @errors = errors
     end
+
+    # Recusa do Portal (grupo inativo/inexistente, conta não atendida, dado
+    # inválido): tentar de novo não muda nada. Rede e 5xx podem passar.
+    def permanent?
+      status.present? && status < 500
+    end
   end
 
-  TIMEOUT_SECONDS = 60
+  # Igual aos outros clientes do Portal: a tela não fica presa um minuto.
+  TIMEOUT_SECONDS = 30
+  # Qualquer falha de transporte vira Error (status nil): campanha reagenda e a
+  # tela responde 502, em vez de 500 ou campanha presa em "processando".
+  NETWORK_ERRORS = [Timeout::Error, SocketError, SystemCallError, IOError, OpenSSL::SSL::SSLError,
+                    Net::HTTPBadResponse, Net::ProtocolError].freeze
 
-  # user (opcional): o nome do agente vai no cabeçalho X-Chatwoot-User-Name; o
-  # envio de campanha roda em job, sem usuário logado.
-  def initialize(account:, user: nil)
+  def initialize(account:)
     @account = account
-    @user = user
   end
 
   # [{ 'id', 'name', 'automatic', 'active', 'empresas_count', 'contatos_count', 'recipients_count' }]
@@ -69,7 +77,7 @@ class PortalGroups::Client
     JSON.parse(response.body)
   rescue JSON::ParserError => e
     raise Error, "Portal devolveu uma resposta inválida em #{path}: #{e.message}"
-  rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError => e
+  rescue *NETWORK_ERRORS => e
     raise Error, "#{e.class}: #{e.message}"
   end
 
@@ -90,12 +98,6 @@ class PortalGroups::Client
   end
 
   def headers
-    base = { 'X-Internal-Token' => ENV.fetch('PORTAL_INTERNAL_API_TOKEN'), 'X-Chatwoot-Account-Id' => @account.id.to_s }
-    @user ? base.merge('X-Chatwoot-User-Name' => agent_name) : base
-  end
-
-  # Sem quebra de linha: o nome vai num cabeçalho HTTP.
-  def agent_name
-    @user.name.to_s.gsub(/[\r\n]+/, ' ').strip
+    { 'X-Internal-Token' => ENV.fetch('PORTAL_INTERNAL_API_TOKEN'), 'X-Chatwoot-Account-Id' => @account.id.to_s }
   end
 end

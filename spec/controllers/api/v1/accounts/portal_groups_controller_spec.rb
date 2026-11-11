@@ -180,10 +180,9 @@ RSpec.describe 'Portal Groups API', type: :request do
   end
 
   describe 'POST /api/v1/accounts/{account.id}/portal_groups' do
-    it 'creates the group in the Portal for an administrator, sending the agent name' do
-      administrator.update!(name: 'Ana Paula')
+    it 'creates the group in the Portal for an administrator' do
       stub = stub_request(:post, "#{portal_url}/client_groups")
-             .with(headers: portal_headers.merge('X-Chatwoot-User-Name' => 'Ana Paula', 'Content-Type' => 'application/json'),
+             .with(headers: portal_headers.merge('Content-Type' => 'application/json'),
                    body: { client_group: { name: 'Clientes VIP' } }.to_json)
              .to_return(status: 201, body: detail.to_json)
 

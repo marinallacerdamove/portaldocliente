@@ -52,6 +52,23 @@ describe Whatsapp::OneoffCampaignService do
     expect(campaign.reload.completed?).to be false
   end
 
+  it 'leaves out a group the Portal refuses (inactivated or gone) and sends to the rest, without retrying' do
+    stub_request(:get, portal_group_url).to_return(status: 404, body: { error: 'Grupo não encontrado.' }.to_json)
+
+    described_class.new(campaign: campaign).perform
+
+    expect(campaign.campaign_recipients.pluck(:contact_id)).to contain_exactly(label_contact.id)
+    expect(campaign.reload.completed?).to be true
+  end
+
+  it 'puts the campaign back to active on any network failure, not only connection refused' do
+    campaign.update!(scheduled_at: 1.minute.ago)
+    stub_request(:get, portal_group_url).to_raise(Errno::EHOSTUNREACH)
+
+    expect { campaign.trigger! }.to raise_error(PortalGroups::Client::Error)
+    expect(campaign.reload).to have_attributes(campaign_status: 'active', started_at: nil)
+  end
+
   it 'puts the campaign back to active when the Portal is down, so the scheduler tries again' do
     campaign.update!(scheduled_at: 1.minute.ago)
     stub_request(:get, portal_group_url).to_raise(Errno::ECONNREFUSED)

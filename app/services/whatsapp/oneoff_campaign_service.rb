@@ -49,11 +49,21 @@ class Whatsapp::OneoffCampaignService
 
   # PATCH LOCAL (fork) - quem recebe agora em cada Grupo do Portal (o Portal
   # decide: empresa ativa, contato ativo, com telefone). Só entram contatos
-  # desta conta. Se o Portal falhar, o erro sobe ANTES de qualquer envio, pra
-  # campanha não sair pela metade.
+  # desta conta. Falha de rede/5xx sobe ANTES de qualquer envio (campanha não
+  # sai pela metade e é reagendada). Grupo que o Portal recusa (inativado ou
+  # inexistente) fica de fora, com erro no log: tentar de novo não resolve.
   def portal_group_contact_ids
     client = PortalGroups::Client.new(account: campaign.account)
-    audience_ids_of('PortalGroup').uniq.flat_map { |group_id| client.recipients(group_id).pluck('chatwoot_contact_id') }.uniq
+    audience_ids_of('PortalGroup').uniq.flat_map { |group_id| portal_group_recipient_ids(client, group_id) }.uniq
+  end
+
+  def portal_group_recipient_ids(client, group_id)
+    client.recipients(group_id).pluck('chatwoot_contact_id')
+  rescue PortalGroups::Client::Error => e
+    raise unless e.permanent?
+
+    Rails.logger.error "[Campaign #{campaign.id}] grupo do Portal #{group_id} ficou de fora: #{e.message}"
+    []
   end
 
   # PATCH LOCAL (fork) - união (sem repetir contato) das etiquetas com os Grupos do Portal.
