@@ -13,7 +13,7 @@ class BotFlows::WebhookCaller
   def call
     url = interpolate(@node['url'])
     method = (@node['method'].presence || 'get').downcase.to_sym
-    body = method == :post ? interpolate(@node['body_template']) : nil
+    body = method == :post ? interpolate(@node['body_template'], escape: :json) : nil
     headers = node_headers.merge(body.present? ? { 'Content-Type' => 'application/json' } : {})
 
     response_body = +''
@@ -46,8 +46,8 @@ class BotFlows::WebhookCaller
     end
   end
 
-  def interpolate(template)
-    BotFlows::Interpolation.render(template, variables: @vars, conversation: @conversation)
+  def interpolate(template, escape: nil)
+    BotFlows::Interpolation.render(template, variables: @vars, conversation: @conversation, escape: escape)
   end
 
   # SafeFetch::Fetcher already raises SafeFetch::HttpError for a non-2xx response (rescued above),

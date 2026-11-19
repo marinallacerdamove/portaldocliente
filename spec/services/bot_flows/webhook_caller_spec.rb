@@ -50,4 +50,15 @@ RSpec.describe BotFlows::WebhookCaller do
 
     expect(vars['nome']).to eq('Ana')
   end
+
+  # Regressão B83 (auditoria 18/11): a resposta do cliente entrava crua no corpo JSON do webhook.
+  # Aspas no texto fechavam o campo e injetavam outros ("admin": true...) ou quebravam o JSON.
+  it 'escapa o texto do cliente dentro do corpo JSON' do
+    node['body_template'] = '{"nome":"{{nome}}"}'
+    described_class.new(node, { 'nome' => 'Ana", "admin": true, "x": "' }, conversation).call
+
+    expect(SafeFetch).to have_received(:fetch) do |_url, **options|
+      expect(JSON.parse(options[:body])).to eq('nome' => 'Ana", "admin": true, "x": "')
+    end
+  end
 end

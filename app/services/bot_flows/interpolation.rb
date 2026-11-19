@@ -1,16 +1,22 @@
 # Substitui {{variavel}} (capturadas pelo fluxo) e {{contact.*}}/{{conversation.*}}
 # num texto - usado em mensagens, corpo de webhook e URL dos nós do BotFlow.
 module BotFlows::Interpolation
-  # liquid_safe: o texto vira mensagem outgoing, que o Liquidable renderiza
+  # escape: :liquid - o texto vira mensagem outgoing, que o Liquidable renderiza
   # como template Liquid; o valor (resposta do cliente, nome do perfil,
   # retorno de webhook) não pode virar código Liquid.
-  def self.render(template, variables:, contact: nil, conversation: nil, liquid_safe: false)
+  # escape: :json - o valor vai dentro de uma string JSON do corpo do webhook, escapado para o
+  # texto do cliente não fechar a string e acrescentar campos (B83).
+  def self.render(template, variables:, contact: nil, conversation: nil, escape: nil)
     return template if template.blank?
 
     contact ||= conversation&.contact
     template.gsub(/\{\{([\w.-]+)\}\}/) do
       value = resolve(Regexp.last_match(1), variables, contact, conversation).to_s
-      liquid_safe ? liquid_literal(value) : value
+      case escape
+      when :json then value.to_json[1..-2]
+      when :liquid then liquid_literal(value)
+      else value
+      end
     end
   end
 
