@@ -12,6 +12,12 @@ module Macros::ResolveRequirements
     super
   end
 
+  def mute_conversation(params)
+    return if resolve_requirements_missing?
+
+    super
+  end
+
   def change_status(status)
     return if ['resolved', Conversation.statuses['resolved']].include?(status.first) && resolve_requirements_missing?
 

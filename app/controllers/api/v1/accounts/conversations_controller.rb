@@ -61,6 +61,8 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def mute
+    return if mute_resolve_blocked? # PATCH LOCAL (fork) - ResolveRequirementsGuard
+
     @conversation.mute!
     head :ok
   end

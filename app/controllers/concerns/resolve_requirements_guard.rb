@@ -29,8 +29,18 @@ module ResolveRequirementsGuard
   # toggle_status: pedido de resolver (status 'resolved', ou alternar uma
   # conversa aberta).
   def resolve_blocked?
-    resolving = params[:status].present? ? params[:status] == 'resolved' : @conversation.open?
+    resolving = params[:status].present? ? resolving_status?(params[:status]) : @conversation.open?
     resolving && render_resolve_blocked(resolve_requirements_missing(@conversation))
+  end
+
+  # The status may come as the enum name or its number ('resolved' or 2): both resolve.
+  def resolving_status?(value)
+    (Conversation.statuses.key(value.to_s.match?(/\A\d+\z/) ? value.to_i : value) || value.to_s) == 'resolved'
+  end
+
+  # Mute resolves the conversation (ConversationMuteHelpers#mute!), so it goes through the same check.
+  def mute_resolve_blocked?
+    !@conversation.resolved? && render_resolve_blocked(resolve_requirements_missing(@conversation))
   end
 
   # custom_attributes: status do cadastro que resolve (TicketStatusSync), com

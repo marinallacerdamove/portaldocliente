@@ -37,7 +37,7 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
   # PATCH LOCAL (fork) - ResolveRequirementsGuard: resolver em massa pula as
   # conversas que o botão Resolver travaria (a tela avisa quantas ficaram).
   def unresolvable_conversation_ids
-    return [] unless params.dig(:fields, :status) == 'resolved'
+    return [] unless params.dig(:fields, :status).present? && resolving_status?(params.dig(:fields, :status))
 
     account_data = Conversations::ResolveRequirementsService.account_data(@current_account)
     @current_account.conversations.where(display_id: params[:ids]).includes(:inbox, :team, :assignee)

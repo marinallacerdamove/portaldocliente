@@ -666,6 +666,24 @@ RSpec.describe 'Conversations API', type: :request do
           expect(blocked.reload.status).to eq('open')
         end
 
+        # Regressão B75 (auditoria 18/11): status mandado como número do enum (2) passava pela trava.
+        it 'recusa resolver mandando o status como número' do
+          post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
+               headers: agent.create_new_auth_token, params: { status: Conversation.statuses['resolved'] }, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(blocked.reload.status).to eq('open')
+        end
+
+        # Regressão B74 (auditoria 18/11): silenciar resolve a conversa e passava por fora da trava.
+        it 'recusa silenciar (que resolve) sem os requisitos do Resolver' do
+          post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/mute",
+               headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:unprocessable_entity)
+          expect(blocked.reload.status).to eq('open')
+        end
+
         it 'deixa a integração do Portal resolver pelo token' do
           with_modified_env PORTAL_INTEGRATION_USER_EMAIL: administrator.email do
             post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
@@ -1304,6 +1322,7 @@ RSpec.describe 'Conversations API', type: :request do
       end
 
       it 'mutes conversation' do
+        conversation.update!(assignee: agent, priority: :medium) # PATCH LOCAL (fork): mute resolves, so the Resolver requirements apply
         post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/mute",
              headers: agent.create_new_auth_token,
              as: :json
