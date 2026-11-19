@@ -24,6 +24,15 @@ RSpec.describe TicketStatusSync do
       account.ticket_statuses.create!(name: 'Fechado', base: 'fechado', position: 4)
     end
 
+    # Regressão B81 (auditoria 18/11): a trava do Resolver só olhava o nome do status. Gravar só o
+    # código de um status que resolve passava e o cadastro convertia o código em nome no save.
+    it 'reconhece o status que resolve escolhido só pelo código' do
+      account.ticket_statuses.find_by(name: 'Resolvido').tap { |status| status.assign_code('RES') }.save!
+      conversation.custom_attributes = conversation.custom_attributes.merge('status_atendimento_codigo' => 'RES')
+
+      expect(conversation.resolving_by_ticket_status?).to be(true)
+    end
+
     it 'gives a new open conversation the "novo" status' do
       expect(ticket_status(create(:conversation, account: account))).to eq('Novo')
     end

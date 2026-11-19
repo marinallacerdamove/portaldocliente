@@ -25,7 +25,7 @@ module TicketStatusSync
   # O status do cadastro escolhido (ainda não gravado) vai resolver a conversa
   # no próximo save - a trava do Resolver vale pra esse caminho também.
   def resolving_by_ticket_status?
-    !resolved? && ticket_status_picked? && account.ticket_statuses.resolving.exists?(name: custom_attributes[TicketContract::STATUS_KEY])
+    !resolved? && ticket_status_picked? && account.ticket_statuses.resolving.exists?(name: picked_ticket_status_name)
   end
 
   private
@@ -47,8 +47,20 @@ module TicketStatusSync
 
   # Status escolhido (lista, automação, API) sem mexer no nativo no mesmo save.
   def ticket_status_picked?
-    value = custom_attributes.to_h[TicketContract::STATUS_KEY]
+    value = picked_ticket_status_name
     value.present? && value != custom_attributes_was.to_h[TicketContract::STATUS_KEY] && !status_changed?
+  end
+
+  # PATCH LOCAL: the status may be picked by its code only (status_atendimento_codigo); the name is
+  # filled from the code later in the save (TicketCatalogCodes), so the guard resolves it here (B81).
+  def picked_ticket_status_name
+    attrs = custom_attributes.to_h
+    code = attrs[TicketContract::STATUS_CODE_KEY].to_s.strip
+    if code.present? && code != custom_attributes_was.to_h[TicketContract::STATUS_CODE_KEY].to_s.strip
+      item = account&.ticket_statuses&.find_by(code: code)
+      return item.attribute_value if item
+    end
+    attrs[TicketContract::STATUS_KEY]
   end
 
   def clear_close_reason_on_reopen
