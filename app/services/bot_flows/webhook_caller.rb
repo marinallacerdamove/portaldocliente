@@ -14,7 +14,7 @@ class BotFlows::WebhookCaller
     url = interpolate(@node['url'])
     method = (@node['method'].presence || 'get').downcase.to_sym
     body = method == :post ? interpolate(@node['body_template']) : nil
-    headers = (@node['headers'] || {}).merge(body.present? ? { 'Content-Type' => 'application/json' } : {})
+    headers = node_headers.merge(body.present? ? { 'Content-Type' => 'application/json' } : {})
 
     response_body = +''
     SafeFetch.fetch(
@@ -35,6 +35,17 @@ class BotFlows::WebhookCaller
 
   private
 
+  # The flow builder saves headers as a list of {key, value} rows (blank rows included);
+  # internal callers (CnpjLookup) pass a ready Hash.
+  def node_headers
+    headers = @node['headers']
+    return headers.to_h.transform_keys(&:to_s) if headers.is_a?(Hash)
+
+    Array(headers).each_with_object({}) do |row, acc|
+      acc[row['key'].to_s.strip] = row['value'].to_s if row.is_a?(Hash) && row['key'].present?
+    end
+  end
+
   def interpolate(template)
     BotFlows::Interpolation.render(template, variables: @vars, conversation: @conversation)
   end
@@ -48,15 +59,18 @@ class BotFlows::WebhookCaller
     rescue JSON::ParserError
       {}
     end
+    parsed = {} unless parsed.is_a?(Hash)
 
     check = @node['success_check']
-    ok = check.blank? || parsed.dig(*check['field'].to_s.split('.')) == check['equals']
+    ok = check.blank? || check['field'].blank? || parsed.dig(*check['field'].to_s.split('.')) == check['equals']
 
     [ok ? 'success' : 'error', @vars.merge(mapped_variables(parsed))]
   end
 
   def mapped_variables(parsed)
     (@node['response_mappings'] || []).each_with_object({}) do |mapping, acc|
+      next if mapping['json_path'].blank?
+
       acc[mapping['variable_name']] = parsed.dig(*mapping['json_path'].to_s.split('.'))
     end
   end
