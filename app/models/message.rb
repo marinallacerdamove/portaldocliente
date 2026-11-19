@@ -398,6 +398,10 @@ class Message < ApplicationRecord
   end
 
   def send_reply
+    # PATCH LOCAL: history copied into a ticket (Conversations::CopyMessagesService) is a record of
+    # the old conversation, never a new reply: it must not reach the customer's channel again.
+    return if content_attributes['imported_ticket_history']
+
     # FIXME: Giving it few seconds for the attachment to be uploaded to the service
     # active storage attaches the file only after commit
     attachments.blank? ? ::SendReplyJob.perform_later(id) : ::SendReplyJob.set(wait: 2.seconds).perform_later(id)
