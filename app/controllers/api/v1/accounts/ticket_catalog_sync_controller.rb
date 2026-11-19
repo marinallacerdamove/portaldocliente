@@ -10,8 +10,10 @@ class Api::V1::Accounts::TicketCatalogSyncController < Api::V1::Accounts::BaseCo
   # Colunas que chegam como lista.
   LIST_COLUMNS = %w[allowed_priorities options].freeze
 
+  # error_code: the Portal retries only this case (the reference is still on its way); any other
+  # 422 is rejected data and goes dead with the reason.
   rescue_from UnknownCode do |error|
-    render json: { error: error.message }, status: :unprocessable_entity
+    render json: { error: error.message, error_code: 'unknown_code' }, status: :unprocessable_entity
   end
 
   before_action :check_authorization

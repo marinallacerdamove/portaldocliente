@@ -121,6 +121,8 @@ RSpec.describe 'Ticket catalog sync API (Portal writes the catalog by code)', ty
       put_sync({ code: 'SRV-0002', name: 'Boletos', parent_code: 'SRV-9999' }, path: "/api/v1/accounts/#{account.id}/ticket_catalog_sync/servico")
 
       expect(response).to have_http_status(:unprocessable_entity)
+      # B55: the Portal retries only this case, so it is tagged apart from validation errors.
+      expect(response.parsed_body['error_code']).to eq('unknown_code')
       expect(account.ticket_services.count).to eq(0)
     end
 
