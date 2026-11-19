@@ -21,20 +21,25 @@ RSpec.describe TicketCatalogItem do
     expect_dispatch(item, %w[name active position])
   end
 
-  it 'dispatches only the synced fields that changed' do
+  # Regressão B38/B61 (auditoria 18/11): a edição mandava só os campos que mudaram e o Portal descarta
+  # a entrega mais velha que a já aplicada: duas edições seguidas entregues invertidas perdiam a
+  # primeira (e o push do Portal desfazia a mudança no Chatwoot). Toda entrega leva o item inteiro.
+  it 'dispatches the whole contract field list when an item is edited' do
     item = account.ticket_statuses.create!(name: 'Parado', base: 'parado')
-    item.update!(name: 'Parado 2', requires_justification: true)
+    expect(dispatcher).to receive(:dispatch)
+      .with(Events::Types::TICKET_CATALOG_UPDATED, anything, item: item, changed_keys: TicketCatalog::SyncFields.fields('status')).once
 
-    expect_dispatch(item, %w[name requires_justification])
+    item.update!(name: 'Parado 2')
   end
 
   it 'translates the parent and default type columns to the contract code fields' do
     type = account.ticket_categories.create!(name: 'A')
     root = account.ticket_services.create!(name: 'Financeiro')
     service = account.ticket_services.create!(name: 'Boletos')
-    service.update!(parent: root, default_category: type)
+    expect(dispatcher).to receive(:dispatch)
+      .with(Events::Types::TICKET_CATALOG_UPDATED, anything, item: service, changed_keys: TicketCatalog::SyncFields.fields('servico')).once
 
-    expect_dispatch(service, %w[parent_code default_category_code])
+    service.update!(parent: root, default_category: type)
   end
 
   it 'does not dispatch when only a field outside the contract changed' do

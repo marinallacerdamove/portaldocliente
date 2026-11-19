@@ -33,12 +33,14 @@ module TicketCatalogPortalEvent
     @changed_associations = nil
   end
 
-  # Item novo vai inteiro; item editado, só os campos do contrato que mudaram.
+  # Mudou algum campo do contrato: vai o item inteiro, novo ou editado. Com só os campos alterados, duas
+  # edições seguidas entregues invertidas perdiam a primeira, porque o Portal descarta a entrega mais
+  # velha que a já aplicada (B38/B61). O payload já leva o estado atual completo.
   def portal_changed_keys
     fields = TicketCatalog::SyncFields.fields(TicketCatalog::SyncFields.key_for(self.class.name))
     return fields if saved_change_to_id?
 
     changed = saved_changes.keys.map { |column| TicketCatalog::SyncFields::COLUMN_REFERENCES.fetch(column, column) }
-    (changed | Array(@changed_associations)) & fields
+    ((changed | Array(@changed_associations)) & fields).any? ? fields : []
   end
 end
