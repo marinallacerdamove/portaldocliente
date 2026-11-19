@@ -185,7 +185,7 @@ class BotFlows::Engine
   end
 
   def interpolate(template, vars)
-    BotFlows::Interpolation.render(template, variables: vars, conversation: @conversation)
+    BotFlows::Interpolation.render(template, variables: vars, conversation: @conversation, liquid_safe: true)
   end
 
   def send_text(content, private: false)

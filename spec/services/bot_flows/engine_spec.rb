@@ -103,4 +103,42 @@ RSpec.describe BotFlows::Engine do
       expect(conversation.reload.additional_attributes.keys).not_to include(*described_class::STATE_KEYS)
     end
   end
+
+  # Regressão B35 (auditoria 18/11): o texto do cliente ecoado pelo bot era
+  # avaliado como template Liquid (vazava dados de drops e um laço aninhado
+  # travava o Sidekiq).
+  describe 'customer text echoed by a message' do
+    let(:flow) do
+      account.bot_flows.create!(
+        name: 'Eco',
+        nodes: [{ 'id' => 'start', 'type' => 'start' },
+                { 'id' => 'ask', 'type' => 'ask_and_extract', 'prompt' => 'Descreva', 'variable_name' => 'detalhes' },
+                { 'id' => 'echo', 'type' => 'send_message', 'text' => 'Recebemos: {{detalhes}} ({{ contact.name }}/{{contact.name}})' }],
+        edges: [{ 'source' => 'start', 'target' => 'ask', 'sourceHandle' => 'default' },
+                { 'source' => 'ask', 'target' => 'echo', 'sourceHandle' => 'default' }]
+      )
+    end
+
+    it 'keeps the answer literal while still rendering the flow text' do
+      conversation.contact.update!(name: 'Ana {{account.name}}')
+      described_class.new(conversation).start(flow)
+      answer = '{{account.name}} {%for a in (1..3)%}x{%endfor%} {{agent.email}} {'
+      message = create(:message, conversation: conversation, account: account, message_type: :incoming, content: answer)
+
+      described_class.new(conversation.reload).resume(message)
+
+      expect(conversation.messages.where(message_type: :outgoing).last.content)
+        .to eq("Recebemos: #{answer} (Ana {{account.name}}/Ana {{account.name}})")
+    end
+
+    it 'does not let the answer close a raw block' do
+      described_class.new(conversation).start(flow)
+      answer = '{% raw %}{% endraw %}{{account.name}}'
+      message = create(:message, conversation: conversation, account: account, message_type: :incoming, content: answer)
+
+      described_class.new(conversation.reload).resume(message)
+
+      expect(conversation.messages.where(message_type: :outgoing).last.content).to start_with("Recebemos: #{answer} (")
+    end
+  end
 end
