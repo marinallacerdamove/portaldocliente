@@ -20,7 +20,9 @@ class BotFlowListener < BaseListener
     return unless whatsapp_conversation?(conversation)
 
     engine = BotFlows::Engine.new(conversation)
-    engine.stop if human_took_over?(conversation)
+    # Agent took over: stop and stay out, no new keyword flow either (B32).
+    return engine.stop if human_took_over?(conversation)
+
     if engine.running?
       engine.resume(message)
     else

@@ -37,4 +37,17 @@ describe BotFlowListener do
     expect { listener.message_created(event) }.not_to(change { outgoing_count })
     expect(conversation.reload.additional_attributes).not_to have_key(BotFlows::Engine::STATE_NODE_KEY)
   end
+
+  # Regressão B32 (auditoria 18/11): com agente atribuído, o bot parava o fluxo mas em seguida
+  # procurava fluxo por palavra-chave e começava outro na conversa que o agente atendia.
+  it 'does not start a keyword flow in a conversation an agent took over' do
+    account.bot_flows.create!(
+      name: 'Palavra', inbox_ids: [channel.inbox.id], trigger_type: 'keyword', trigger_config: { 'keywords' => ['banana'] },
+      nodes: [{ 'id' => 'start', 'type' => 'start' }, { 'id' => 'msg', 'type' => 'send_message', 'text' => 'Oi do bot' }],
+      edges: [{ 'source' => 'start', 'target' => 'msg', 'sourceHandle' => 'default' }]
+    )
+    conversation.update!(assignee: create(:user, account: account))
+
+    expect { listener.message_created(event) }.not_to(change { outgoing_count })
+  end
 end
