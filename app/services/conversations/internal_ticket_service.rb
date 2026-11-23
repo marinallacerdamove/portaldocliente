@@ -13,6 +13,9 @@
 # watcher_ids, link: { conversation:, relation: 'parent'|'child', announce: },
 # em que relation é o papel do ticket novo em relação a link[:conversation] e
 # announce deixa uma nota privada nela apontando pro ticket novo.
+# require_opening_fields: ticket aberto por uma tela (agente) cobra os campos
+# adicionais obrigatórios na abertura, igual ao Movidesk e ao Portal; a
+# automação não tem quem preencha e não passa isso.
 class Conversations::InternalTicketService
   class InvalidTicket < StandardError; end
 
@@ -45,6 +48,17 @@ class Conversations::InternalTicketService
     raise InvalidTicket, 'priority' if @params[:priority].present? && !Conversation.priorities.key?(@params[:priority].to_s)
     raise InvalidTicket, 'relation' if link.present? && RELATION_LABELS.keys.exclude?(link[:relation].to_s)
     raise InvalidTicket, 'watchers' if (watcher_ids - @inbox.assignable_agents.map(&:id)).any?
+
+    validate_opening_fields!
+  end
+
+  def validate_opening_fields!
+    return unless @params[:require_opening_fields]
+
+    draft = Conversation.new(account: @inbox.account, inbox: @inbox, team: @params[:team], assignee: @params[:assignee],
+                             custom_attributes: (@params[:custom_attributes] || {}).to_h)
+    missing = Conversations::ResolveRequirementsService.new(draft).missing_on_opening
+    raise InvalidTicket, "Preencha os campos obrigatórios: #{missing.join(', ')}" if missing.any?
   end
 
   def create_conversation

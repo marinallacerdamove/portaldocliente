@@ -10,15 +10,8 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useConversationCustomFields } from 'dashboard/composables/useConversationCustomFields';
-import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import ComboBox from 'dashboard/components-next/combobox/ComboBox.vue';
-import Input from 'dashboard/components-next/input/Input.vue';
-import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
-import {
-  FIELD_LABEL_CLASS,
-  FIELD_SIZE,
-  FIELD_INPUT_CLASS,
-} from 'dashboard/constants/ticketFieldLayout';
+import TicketCustomFieldInput from 'dashboard/components-next/ticketFields/TicketCustomFieldInput.vue';
+import { FIELD_LABEL_CLASS } from 'dashboard/constants/ticketFieldLayout';
 import {
   FIELD_GROUPS,
   itemsInGroup,
@@ -34,9 +27,6 @@ const props = defineProps({
   // Dentro de "Ações da conversa" não tem aviso de vazio nem recuo próprio.
   inline: { type: Boolean, default: false },
 });
-
-const TEXTAREA_MAX_LENGTH = 5000;
-const INPUT_TYPES = { text: 'text', date: 'date', datetime: 'datetime-local' };
 
 const { t } = useI18n();
 const currentChat = useMapGetter('getSelectedChat');
@@ -63,6 +53,13 @@ watch(values, (next, previous) => {
   });
 });
 
+// Texto e data ficam num rascunho até sair do campo; o resto grava na hora.
+const DRAFT_TYPES = ['text', 'textarea', 'date', 'datetime'];
+const valueOf = field =>
+  DRAFT_TYPES.includes(field.field_type)
+    ? drafts.value[field.key]
+    : values.value[field.key];
+
 const groupItems = computed(() => itemsInGroup(items.value, props.group));
 const editableItems = computed(() =>
   groupItems.value.filter(item => item.editable_by_agents)
@@ -70,9 +67,6 @@ const editableItems = computed(() =>
 const readOnlyItems = computed(() =>
   groupItems.value.filter(item => !item.editable_by_agents)
 );
-
-const optionsOf = field =>
-  field.options.map(option => ({ value: option, label: option }));
 
 const save = async (key, value) => {
   if (JSON.stringify(values.value[key] ?? '') === JSON.stringify(value ?? ''))
@@ -82,16 +76,6 @@ const save = async (key, value) => {
   } catch (error) {
     useAlert(t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SAVE_ERROR'));
   }
-};
-
-const toggleOption = (field, option, checked) => {
-  const selected = new Set(values.value[field.key] || []);
-  if (checked) selected.add(option);
-  else selected.delete(option);
-  save(
-    field.key,
-    field.options.filter(item => selected.has(item))
-  );
 };
 
 const displayValue = value =>
@@ -127,52 +111,11 @@ onMounted(load);
       <span v-if="field.hint" class="text-xs text-n-slate-10">
         {{ field.hint }}
       </span>
-      <ComboBox
-        v-if="
-          field.field_type === 'list' || field.field_type === 'single_select'
-        "
-        :size="FIELD_SIZE"
-        :model-value="values[field.key] || ''"
-        :options="optionsOf(field)"
-        :display-label="values[field.key] || ''"
-        :placeholder="
-          t('TICKET_CATALOG.CUSTOM_FIELDS.CONVERSATION.SELECT_PLACEHOLDER')
-        "
-        @update:model-value="value => save(field.key, value)"
-      />
-      <div
-        v-else-if="field.field_type === 'multi_select'"
-        class="flex flex-col gap-1.5"
-      >
-        <label
-          v-for="option in field.options"
-          :key="option"
-          class="flex items-start gap-2 mb-0 text-xs cursor-pointer text-n-slate-12"
-        >
-          <Checkbox
-            class="mt-0.5 shrink-0"
-            :model-value="(values[field.key] || []).includes(option)"
-            @update:model-value="
-              checked => toggleOption(field, option, checked)
-            "
-          />
-          <span class="break-words">{{ option }}</span>
-        </label>
-      </div>
-      <TextArea
-        v-else-if="field.field_type === 'textarea'"
-        v-model="drafts[field.key]"
-        :max-length="TEXTAREA_MAX_LENGTH"
-        auto-height
-        @blur="save(field.key, drafts[field.key])"
-      />
-      <Input
-        v-else
-        v-model="drafts[field.key]"
-        :size="FIELD_SIZE"
-        :custom-input-class="FIELD_INPUT_CLASS"
-        :type="INPUT_TYPES[field.field_type]"
-        @blur="save(field.key, drafts[field.key])"
+      <TicketCustomFieldInput
+        :field="field"
+        :model-value="valueOf(field)"
+        @update:model-value="value => (drafts[field.key] = value)"
+        @commit="value => save(field.key, value)"
       />
     </div>
     <div

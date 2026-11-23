@@ -29,7 +29,8 @@ class Api::V1::Accounts::InternalTicketsController < Api::V1::Accounts::BaseCont
       team: ticket_params[:team_id].presence && Current.account.teams.find(ticket_params[:team_id]),
       assignee: ticket_params[:assignee_id].presence && Current.account.users.find(ticket_params[:assignee_id]),
       priority: ticket_params[:priority], custom_attributes: ticket_params[:custom_attributes],
-      message: message_params, copy: copy_params, watcher_ids: ticket_params[:watcher_ids], link: link_params
+      message: message_params, copy: copy_params, watcher_ids: ticket_params[:watcher_ids], link: link_params,
+      require_opening_fields: true
     }
   end
 

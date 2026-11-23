@@ -22,9 +22,14 @@ import {
 } from 'dashboard/composables/useTicketCatalog';
 import {
   ASSUNTO_ATTRIBUTE_KEY,
+  EMPRESA_ATTRIBUTE_KEY,
   SERVICO_ATTRIBUTE_KEY,
   TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY,
 } from 'dashboard/constants/ticketDetailAttributes';
+import { macroFormChanges } from 'dashboard/helper/serviceMacroForm';
+import { resolveVariablesInMessage } from 'dashboard/helper/editorHelper';
+import { getPortalVariableValues } from 'shared/constants/portalVariables';
+import TicketCustomFieldInput from 'dashboard/components-next/ticketFields/TicketCustomFieldInput.vue';
 import {
   activeInScope,
   allowedCategories,
@@ -34,6 +39,10 @@ import {
 import { conversationOrigin } from 'dashboard/composables/useConversationCustomFields';
 import {
   CUSTOM_FIELDS_ATTRIBUTE_KEY,
+  OPENING_AGENT_MOMENTS,
+  isChecklistItem,
+  isEmptyValue,
+  missingRequiredFields,
   visibleCustomFields,
 } from 'dashboard/helper/ticketFieldRules';
 import {
@@ -83,6 +92,8 @@ const assignableAgentsFor = useMapGetter(
   'inboxAssignableAgents/getAssignableAgents'
 );
 const teams = useMapGetter('teams/getTeams');
+const macros = useMapGetter('macros/getMacros');
+const currentUser = useMapGetter('getCurrentUser');
 const inboxes = useMapGetter('inboxes/getInboxes');
 const { state: catalog, fetchList } = useTicketCatalog();
 
@@ -262,8 +273,7 @@ const onSelectTipo = option => {
   keepValidUrgencia();
 };
 
-// Regra única de trocar serviço (applyServiceChange, a mesma da conversa); a
-// macro do serviço só roda numa conversa existente.
+// Regra única de trocar serviço (applyServiceChange, a mesma da conversa).
 const applyCatalogChange = ({ withPriority }) => {
   const { tipo, priority } = applyServiceChange({
     service: selectedService.value,
@@ -288,40 +298,59 @@ const onSelectInbox = inbox => {
   applyCatalogChange({ withPriority: false });
 };
 
-const onSelectServico = option => {
-  formState.servico = option;
-  applyCatalogChange({ withPriority: true });
-};
-
-// Classificação/Tipo do serviço: os campos que as regras de exibição abrem pro
-// que já foi escolhido no formulário (serviço, tipo, canal, time...).
-const classificationItems = computed(() =>
-  itemsInGroup(
-    visibleCustomFields({
-      rules: catalog.fieldRules,
-      fields: catalog.customFields,
-      context: {
-        servico: formState.servico.id,
-        tipo_de_solicitacao: formState.tipo.id,
-        concluded: false,
-        origem: conversationOrigin(formState.inbox),
-        empresa: formState.contact?.additionalAttributes?.companyName,
-        equipe: formState.team?.name,
-        responsavel: formState.agent?.name,
-        values: formState.classification,
-      },
-    }),
-    FIELD_GROUPS.CLASSIFICATION
-  ).filter(item => item.editable_by_agents)
+// Campos adicionais que as regras de exibição abrem pro que já foi escolhido
+// no formulário (serviço, tipo, canal, time...), igual ao Movidesk na abertura
+// do ticket: classificação primeiro, depois os demais e por fim os checklists.
+// Os do fluxo QA/DEV têm seção própria.
+const visibleItems = computed(() =>
+  visibleCustomFields({
+    rules: catalog.fieldRules,
+    fields: catalog.customFields,
+    context: {
+      servico: formState.servico.id,
+      tipo_de_solicitacao: formState.tipo.id,
+      concluded: false,
+      origem: conversationOrigin(formState.inbox),
+      empresa: formState.contact?.additionalAttributes?.companyName,
+      equipe: formState.team?.name,
+      responsavel: formState.agent?.name,
+      values: formState.classification,
+    },
+  })
 );
 
-const fieldComboOptions = field =>
-  field.options.map(option => ({ value: option, label: option }));
+const openingItems = computed(() =>
+  [
+    ...itemsInGroup(visibleItems.value, FIELD_GROUPS.CLASSIFICATION),
+    ...itemsInGroup(visibleItems.value, FIELD_GROUPS.OTHER),
+    ...visibleItems.value.filter(isChecklistItem),
+  ].filter(item => item.editable_by_agents)
+);
+
+// Obrigatório na abertura e vazio trava o "Criar ticket" (o servidor cobra o
+// mesmo, Conversations::InternalTicketService). Campo que a regra deixou de
+// mostrar não conta.
+const isRequiredOnOpening = item =>
+  OPENING_AGENT_MOMENTS.includes(item.required_on);
+const missingOpeningFields = computed(() =>
+  missingRequiredFields(
+    openingItems.value,
+    formState.classification,
+    OPENING_AGENT_MOMENTS
+  )
+);
+
+// Lista de caixas e texto longo ocupam a largura toda.
+const STACKED_FIELD_TYPES = ['multi_select', 'checklist', 'textarea'];
+const openingFieldRowClass = field =>
+  STACKED_FIELD_TYPES.includes(field.field_type)
+    ? 'flex flex-col gap-1.5'
+    : FIELD_ROW_CLASS;
 
 const setClassification = (key, value) => {
   const next = { ...formState.classification };
-  if (value) next[key] = value;
-  else delete next[key];
+  if (isEmptyValue(value)) delete next[key];
+  else next[key] = value;
   formState.classification = next;
 };
 
@@ -446,6 +475,86 @@ const onSelectAgent = agent => {
   if (matchingTeam) formState.team = matchingTeam;
 };
 
+// Variáveis que a macro pode usar e o formulário já conhece; as outras
+// ({{ticket.numero}}...) ficam pro servidor resolver ao criar a mensagem.
+const macroVariables = () => {
+  const company = formState.contact?.additionalAttributes?.companyName;
+  return {
+    'contact.name': formState.contact?.name,
+    'contact.email': formState.contact?.email,
+    'contact.phone': formState.contact?.phoneNumber,
+    ...getPortalVariableValues({
+      custom_attributes: {
+        [SERVICO_ATTRIBUTE_KEY]: formState.servico.id,
+        [TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY]: formState.tipo.id,
+        [EMPRESA_ATTRIBUTE_KEY]: company,
+      },
+    }),
+  };
+};
+
+// Texto da macro entra no fim da mensagem, igual ao "Texto da resposta" na
+// conversa (não apaga o que o agente já escreveu).
+const appendToMessage = text => {
+  const editor = messageEditorRef.value;
+  if (!editor) return;
+  const lines = text.split('\n');
+  if ((editor.textContent || '').trim()) lines.unshift('', '');
+  lines.forEach((line, index) => {
+    if (index) editor.appendChild(document.createElement('br'));
+    editor.appendChild(document.createTextNode(line));
+  });
+  onMessageInput();
+};
+
+const MACRO_SELECTIONS = {
+  tipo: value => {
+    const option = tipoOptions.value.find(({ id }) => id === value);
+    if (option) formState.tipo = option;
+  },
+  priority: value => {
+    const option = urgenciaAll.value.find(({ id }) => id === value);
+    if (option) formState.urgencia = option;
+  },
+  agentId: value => {
+    const agentId = value === 'self' ? currentUser.value?.id : Number(value);
+    const agent = (agentsList.value || []).find(({ id }) => id === agentId);
+    if (agent) onSelectAgent(agent);
+  },
+  teamId: value => {
+    const team = (teams.value || []).find(({ id }) => id === Number(value));
+    if (team) formState.team = team;
+  },
+};
+
+// Movidesk: escolher o serviço ao abrir o ticket roda a macro ligada a ele no
+// próprio formulário. Assunto só entra se estiver vazio.
+const applyServiceMacro = async service => {
+  if (!service?.macro_id) return;
+  const findMacro = () =>
+    (macros.value || []).find(({ id }) => id === service.macro_id);
+  if (!findMacro()) await store.dispatch('macros/get');
+  const macro = findMacro();
+  if (!macro) return;
+  const { subject, messages, ...selections } = macroFormChanges(macro);
+  const variables = macroVariables();
+  if (subject && !formState.subject.trim())
+    formState.subject = resolveVariablesInMessage(subject, variables);
+  messages.forEach(text =>
+    appendToMessage(resolveVariablesInMessage(text, variables))
+  );
+  Object.entries(selections).forEach(([key, value]) =>
+    MACRO_SELECTIONS[key](value)
+  );
+  keepValidUrgencia();
+};
+
+const onSelectServico = async option => {
+  formState.servico = option;
+  applyCatalogChange({ withPriority: true });
+  await applyServiceMacro(selectedService.value);
+};
+
 const toggleCcAgent = agentId => {
   const idx = formState.ccAgentIds.indexOf(agentId);
   if (idx === -1) {
@@ -462,7 +571,8 @@ const canSubmit = computed(
     !!formState.team &&
     (messageHasContent.value ||
       attachedFiles.value.length > 0 ||
-      selectedMessages.value.length > 0)
+      selectedMessages.value.length > 0) &&
+    !missingOpeningFields.value.length
 );
 
 const reset = () => {
@@ -538,11 +648,11 @@ const buildCustomAttributes = () => {
     customAttributes[TIPO_DE_SOLICITACAO_ATTRIBUTE_KEY] = formState.tipo.id;
   if (formState.prazoResolucao)
     customAttributes.prazo_resolucao = formState.prazoResolucao;
-  // Só vai classificação de campo que ainda está aparecendo (trocar o
-  // serviço esconde as antigas).
+  // Só vai valor de campo que ainda está aparecendo (trocar o serviço
+  // esconde os antigos).
   const customFieldValues = Object.fromEntries(
-    classificationItems.value
-      .filter(({ field }) => formState.classification[field.key])
+    openingItems.value
+      .filter(({ field }) => !isEmptyValue(formState.classification[field.key]))
       .map(({ field }) => [field.key, formState.classification[field.key]])
   );
   const qaDevValues = {
@@ -757,20 +867,22 @@ defineExpose({ open });
             />
           </div>
           <div
-            v-for="{ field } in classificationItems"
-            :key="field.id"
-            :class="FIELD_ROW_CLASS"
+            v-for="item in openingItems"
+            :key="item.field.id"
+            :class="openingFieldRowClass(item.field)"
           >
-            <span :class="FIELD_LABEL_CLASS">{{
-              fieldDisplayName(field)
-            }}</span>
-            <ComboBox
-              :size="FIELD_SIZE"
-              :model-value="formState.classification[field.key] || ''"
-              :options="fieldComboOptions(field)"
-              :display-label="formState.classification[field.key] || ''"
-              :placeholder="t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')"
-              @update:model-value="value => setClassification(field.key, value)"
+            <span :class="FIELD_LABEL_CLASS">
+              {{ fieldDisplayName(item.field) }}
+              <span v-if="isRequiredOnOpening(item)" class="text-n-ruby-9">
+                *
+              </span>
+            </span>
+            <TicketCustomFieldInput
+              :field="item.field"
+              :model-value="formState.classification[item.field.key]"
+              @update:model-value="
+                value => setClassification(item.field.key, value)
+              "
             />
           </div>
         </section>

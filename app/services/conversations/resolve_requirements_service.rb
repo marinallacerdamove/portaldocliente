@@ -37,9 +37,18 @@ class Conversations::ResolveRequirementsService
     @account_data = account_data || self.class.account_data(@account)
   end
 
+  # Obrigatórios "na abertura" para quem abre pela tela do agente (Movidesk: "Na abertura").
+  OPENING_MOMENTS = %w[abertura_agente abertura].freeze
+
   # Nomes do que falta, na ordem em que a tela cobra.
   def missing
-    missing_actions + missing_custom_fields + missing_close_reason
+    missing_actions + missing_custom_fields(['conclusao']) + missing_close_reason
+  end
+
+  # Campos adicionais obrigatórios na abertura que faltam num ticket ainda não gravado (B31):
+  # mesma avaliação da conclusão, com os momentos da abertura.
+  def missing_on_opening
+    missing_custom_fields(OPENING_MOMENTS)
   end
 
   private
@@ -68,9 +77,9 @@ class Conversations::ResolveRequirementsService
     labels
   end
 
-  def missing_custom_fields
+  def missing_custom_fields(moments)
     items = @account_data.evaluator.visible_items(context).select { |item| item['editable_by_agents'] }
-    TicketFieldRulesEvaluator.missing_required(items, custom_field_values, ['conclusao']).map { |item| item['field'].name }
+    TicketFieldRulesEvaluator.missing_required(items, custom_field_values, moments).map { |item| item['field'].name }
   end
 
   def missing_close_reason

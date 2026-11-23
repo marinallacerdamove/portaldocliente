@@ -48,6 +48,10 @@ export const REQUIRED_ON = [
   'conclusao',
 ];
 
+// Obrigatório na abertura pra quem abre pela tela do agente (Movidesk: "Na
+// abertura"). Mesma lista de Conversations::ResolveRequirementsService::OPENING_MOMENTS.
+export const OPENING_AGENT_MOMENTS = ['abertura_agente', 'abertura'];
+
 export const isEmptyValue = value =>
   value === undefined ||
   value === null ||

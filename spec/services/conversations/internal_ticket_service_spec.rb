@@ -105,4 +105,38 @@ RSpec.describe Conversations::InternalTicketService do
 
     expect { create_ticket(watcher_ids: [outsider.id]) }.to raise_error(described_class::InvalidTicket, 'watchers')
   end
+
+  # Regressão B31 (auditoria 18/11): o Portal cobra os campos adicionais obrigatórios "na abertura", e o
+  # "Novo ticket interno" do Chatwoot criava o ticket sem eles. Igual ao Movidesk: a tela (e o servidor) cobram
+  # o que a regra de exibição mostra para a classificação escolhida.
+  describe 'campos obrigatórios na abertura' do
+    let(:field) { TicketCustomField.create!(account: account, name: 'ID da Base:', field_type: 'text') }
+    let(:base_params) { { team: team, custom_attributes: { 'servico' => 'ALBATROSS' }, require_opening_fields: true } }
+
+    before do
+      TicketFieldRule.create!(account: account, name: 'Backup',
+                              conditions: [{ group: 'all', attribute: 'servico', operator: 'equal_to', value: 'ALBATROSS' }],
+                              fields: [{ field_id: field.id, required_on: 'abertura_agente' }])
+    end
+
+    it 'recusa o ticket da tela com obrigatório da abertura vazio e diz qual falta' do
+      expect { create_ticket(base_params) }
+        .to raise_error(described_class::InvalidTicket, 'Preencha os campos obrigatórios: ID da Base:')
+      expect(Conversation.count).to eq(0)
+    end
+
+    it 'cria quando o obrigatório está preenchido' do
+      params = base_params.deep_merge(custom_attributes: { 'campos_adicionais' => { field.key => '10234' } })
+
+      expect(create_ticket(params).custom_attributes['campos_adicionais']).to eq(field.key => '10234')
+    end
+
+    it 'não cobra o que a regra não mostra (outro serviço)' do
+      expect { create_ticket(base_params.merge(custom_attributes: { 'servico' => 'OUTRO' })) }.not_to raise_error
+    end
+
+    it 'a automação (sem tela pra preencher) continua criando' do
+      expect { create_ticket(base_params.except(:require_opening_fields)) }.not_to raise_error
+    end
+  end
 end

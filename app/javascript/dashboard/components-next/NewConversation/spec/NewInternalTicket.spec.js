@@ -4,7 +4,8 @@ import TicketsAPI from 'dashboard/api/tickets';
 import * as catalogApis from 'dashboard/api/ticketCatalog';
 import { useTicketCatalog } from 'dashboard/composables/useTicketCatalog';
 
-const { ticketCustomFieldsAPI } = catalogApis;
+const { ticketCustomFieldsAPI, ticketFieldRulesAPI, ticketServicesAPI } =
+  catalogApis;
 
 const testState = vi.hoisted(() => ({
   getters: {},
@@ -245,5 +246,175 @@ describe('NewInternalTicket cc agents', () => {
     expect(wrapper.vm.ccAgentOptions.map(agent => agent.id)).toEqual([
       member.id,
     ]);
+  });
+});
+
+// Regressão B31 (auditoria 18/11): o Portal cobra os campos adicionais obrigatórios na abertura e o "Novo
+// ticket interno" criava o ticket sem eles (e nem mostrava campo de texto ou checklist). Igual ao Movidesk:
+// aparecem os campos que a regra abre para a classificação, os obrigatórios travam a criação, e escolher o
+// serviço roda a macro dele no próprio formulário.
+describe('NewInternalTicket opening fields and service macro', () => {
+  const idDaBase = {
+    id: 10,
+    key: 'id_da_base',
+    name: 'ID da Base:',
+    field_type: 'text',
+    options: [],
+    active: true,
+  };
+  const checklist = {
+    id: 11,
+    key: 'checklist_importacao',
+    name: 'Checklist: Importação',
+    field_type: 'checklist',
+    options: ['01. Backup', '02. Importar'],
+    active: true,
+  };
+  const service = {
+    id: 1,
+    name: 'ALBATROSS',
+    full_name: 'ALBATROSS',
+    active: true,
+    ticket_type: 'ambos',
+    macro_id: 7,
+  };
+  const macro = {
+    id: 7,
+    actions: [
+      {
+        action_name: 'set_subject',
+        action_params: ['Backup de {{contact.name}}'],
+      },
+      {
+        action_name: 'fill_reply',
+        action_params: ['Empresa: {{ticket.empresa}}'],
+      },
+    ],
+  };
+
+  const mountWithCatalog = async () => {
+    ticketCustomFieldsAPI.get.mockResolvedValue({
+      data: { payload: [idDaBase, checklist] },
+    });
+    ticketFieldRulesAPI.get.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 1,
+            active: true,
+            conditions: [
+              {
+                group: 'all',
+                attribute: 'servico',
+                operator: 'equal_to',
+                value: 'ALBATROSS',
+              },
+            ],
+            fields: [
+              {
+                field_id: 10,
+                required_on: 'abertura_agente',
+                editable_by_agents: true,
+              },
+              {
+                field_id: 11,
+                required_on: 'abertura',
+                editable_by_agents: true,
+              },
+            ],
+          },
+        ],
+      },
+    });
+    ticketServicesAPI.get.mockResolvedValue({ data: { payload: [service] } });
+    await Promise.all(
+      ['customFields', 'fieldRules', 'services'].map(kind =>
+        useTicketCatalog().fetchList(kind, { force: true })
+      )
+    );
+    testState.getters = {
+      'agents/getAgents': [],
+      'teams/getTeams': [team],
+      'inboxes/getInboxes': [internalInbox],
+      'macros/getMacros': [macro],
+    };
+    const wrapper = shallowMount(NewInternalTicket, {
+      global: { stubs: { Dialog: DialogStub } },
+      attachTo: document.body,
+    });
+    await flushPromises();
+    fillRequiredFields(wrapper);
+    return wrapper;
+  };
+
+  const selectService = async wrapper => {
+    await wrapper.vm.onSelectServico({ id: 'ALBATROSS', name: 'ALBATROSS' });
+    await flushPromises();
+  };
+
+  beforeEach(() => {
+    Object.values(catalogApis).forEach(api =>
+      api.get.mockResolvedValue({ data: { payload: [] } })
+    );
+    TicketsAPI.createInternalTicket.mockResolvedValue({
+      data: { id: 900, account_id: 1 },
+    });
+  });
+
+  it('shows the text and checklist fields the rule opens and blocks the ticket until the required ones are filled', async () => {
+    const wrapper = await mountWithCatalog();
+    await selectService(wrapper);
+
+    expect(wrapper.vm.openingItems.map(({ field }) => field.key)).toEqual([
+      'id_da_base',
+      'checklist_importacao',
+    ]);
+    expect(wrapper.vm.canSubmit).toBe(false);
+
+    wrapper.vm.setClassification('id_da_base', '10234');
+    wrapper.vm.setClassification('checklist_importacao', ['01. Backup']);
+    expect(wrapper.vm.canSubmit).toBe(true);
+
+    await wrapper.vm.onSubmit();
+    expect(submittedTicket().custom_attributes.campos_adicionais).toEqual({
+      id_da_base: '10234',
+      checklist_importacao: ['01. Backup'],
+    });
+  });
+
+  it('does not require nor send a field the rule no longer shows', async () => {
+    const wrapper = await mountWithCatalog();
+    await selectService(wrapper);
+    wrapper.vm.setClassification('id_da_base', '10234');
+
+    wrapper.vm.onSelectServico({ id: '', name: '' });
+
+    expect(wrapper.vm.openingItems).toEqual([]);
+    expect(wrapper.vm.canSubmit).toBe(true);
+    await wrapper.vm.onSubmit();
+    expect(
+      submittedTicket().custom_attributes.campos_adicionais
+    ).toBeUndefined();
+  });
+
+  it('runs the service macro in the form: fills an empty subject and adds the text to the message', async () => {
+    const wrapper = await mountWithCatalog();
+    wrapper.vm.formState.contact = { ...contact, name: 'Ana Souza' };
+
+    await selectService(wrapper);
+
+    expect(wrapper.vm.formState.subject).toBe('Backup de Ana Souza');
+    expect(wrapper.vm.formState.message).toContain(
+      'Empresa: {{ticket.empresa}}'
+    );
+  });
+
+  it('keeps a subject the agent already typed', async () => {
+    const wrapper = await mountWithCatalog();
+    wrapper.vm.formState.subject = 'Meu assunto';
+
+    await selectService(wrapper);
+
+    expect(wrapper.vm.formState.subject).toBe('Meu assunto');
   });
 });
