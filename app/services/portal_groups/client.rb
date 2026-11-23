@@ -29,8 +29,7 @@ class PortalGroups::Client
   TIMEOUT_SECONDS = 30
   # Qualquer falha de transporte vira Error (status nil): campanha reagenda e a
   # tela responde 502, em vez de 500 ou campanha presa em "processando".
-  NETWORK_ERRORS = [Timeout::Error, SocketError, SystemCallError, IOError, OpenSSL::SSL::SSLError,
-                    Net::HTTPBadResponse, Net::ProtocolError].freeze
+  NETWORK_ERRORS = PortalNetworkErrors::ALL
 
   def initialize(account:)
     @account = account

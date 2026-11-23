@@ -29,7 +29,7 @@ class PortalAssistant::Client
     method == :get ? options[:query] = params : options[:body] = params.to_json
     response = HTTParty.send(method, "#{ENV.fetch('PORTAL_INTERNAL_API_URL')}/api/internal/assistant/#{path}", options)
     [response.code, response.parsed_response]
-  rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError => e
+  rescue *PortalNetworkErrors::ALL => e
     raise Error, "#{e.class}: #{e.message}"
   end
 

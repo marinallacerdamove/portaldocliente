@@ -23,7 +23,7 @@ class PortalContacts::Client
       headers: headers, timeout: TIMEOUT_SECONDS
     )
     Response.new(status: res.code, body: res.parsed_response.is_a?(Hash) ? res.parsed_response : {})
-  rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError => e
+  rescue *PortalNetworkErrors::ALL => e
     raise Error, "#{e.class}: #{e.message}"
   end
 

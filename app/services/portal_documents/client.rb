@@ -39,7 +39,7 @@ class PortalDocuments::Client
   def call(method, path, options = {})
     url = "#{ENV.fetch('PORTAL_INTERNAL_API_URL')}/api/internal/companies/#{@company.id}/#{path}"
     HTTParty.send(method, url, options.merge(headers: headers.merge(options[:headers] || {}), timeout: TIMEOUT_SECONDS))
-  rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError => e
+  rescue *PortalNetworkErrors::ALL => e
     raise Error, "#{e.class}: #{e.message}"
   end
 
