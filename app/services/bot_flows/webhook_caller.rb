@@ -62,7 +62,8 @@ class BotFlows::WebhookCaller
     parsed = {} unless parsed.is_a?(Hash)
 
     check = @node['success_check']
-    ok = check.blank? || check['field'].blank? || parsed.dig(*check['field'].to_s.split('.')) == check['equals']
+    # The builder saves the expected value as text; compare as text so booleans/numbers match (B84).
+    ok = check.blank? || check['field'].blank? || parsed.dig(*check['field'].to_s.split('.')).to_s == check['equals'].to_s
 
     [ok ? 'success' : 'error', @vars.merge(mapped_variables(parsed))]
   end

@@ -61,4 +61,20 @@ RSpec.describe BotFlows::WebhookCaller do
       expect(JSON.parse(options[:body])).to eq('nome' => 'Ana", "admin": true, "x": "')
     end
   end
+
+  # Regressão B84 (auditoria 18/11): a tela grava o valor esperado como texto ("true", "1"), e a resposta
+  # JSON traz booleano/número: a conferência nunca batia e o fluxo seguia sempre pelo caminho de erro.
+  it 'compara o valor esperado como texto com booleano e número da resposta' do
+    allow(SafeFetch).to receive(:fetch) do |*_args, **_options, &block|
+      block.call(instance_double(SafeFetch::Result, tempfile: StringIO.new('{"found":true,"total":2}')))
+    end
+    node['success_check'] = { 'field' => 'found', 'equals' => 'true' }
+
+    outcome, = described_class.new(node, {}, conversation).call
+    expect(outcome).to eq('success')
+
+    node['success_check'] = { 'field' => 'total', 'equals' => '2' }
+    outcome, = described_class.new(node, {}, conversation).call
+    expect(outcome).to eq('success')
+  end
 end
