@@ -100,7 +100,16 @@ class AutomationRules::ActionService < ActionService
 
     user = @conversation.assignee || @account.administrators.first
     fill_child_description(child, macro, user)
+    run_macro_keeping_context(macro, child, user)
+  end
+
+  # Macros::ExecutionService ends with Current.reset; the rule's next actions must still run as the
+  # automation (Current.executed_by), or they trigger other automation rules (B33).
+  def run_macro_keeping_context(macro, child, user)
+    previous = [Current.executed_by, Current.user]
     Macros::ExecutionService.new(macro, child, user).perform
+  ensure
+    Current.executed_by, Current.user = previous
   end
 
   def fill_child_description(child, macro, user)

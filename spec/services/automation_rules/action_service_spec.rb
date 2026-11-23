@@ -232,6 +232,22 @@ RSpec.describe AutomationRules::ActionService do
         expect(child.custom_attributes['ticket_pai_id']).to eq(conversation.display_id.to_s)
         expect(conversation.reload.custom_attributes['ticket_filhos_ids']).to eq(child.display_id.to_s)
       end
+
+      # Regressão B33 (auditoria 18/11): a macro do ticket filho fazia Current.reset no fim e as ações
+      # seguintes da regra rodavam sem Current.executed_by: deixavam de contar como "feitas pela
+      # automação" e disparavam outras automações (loop de regras).
+      it 'keeps the automation context for the actions after the child ticket' do
+        macro = create(:macro, account: account, actions: [{ action_name: 'add_label', action_params: ['filho'] }])
+        rule.update!(actions: [{ action_name: 'create_child_ticket', action_params: [macro.id] },
+                               { action_name: 'send_webhook_event', action_params: ['https://exemplo.test/hook'] }])
+        service = described_class.new(rule, account, conversation)
+        seen = :not_called
+        allow(service).to receive(:send_webhook_event) { seen = Current.executed_by }
+
+        service.perform
+
+        expect(seen).to eq(rule)
+      end
     end
   end
 end
