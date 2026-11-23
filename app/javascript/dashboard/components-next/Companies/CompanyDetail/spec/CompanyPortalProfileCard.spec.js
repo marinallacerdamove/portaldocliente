@@ -162,3 +162,37 @@ describe('CompanyPortalProfileCard contract', () => {
     );
   });
 });
+
+// Regressão B30 (auditoria 18/11): com um card em edição, trocar de empresa (mesma tela, outro id)
+// mantinha a edição e o rascunho da empresa A; o Salvar gravava os dados de A na empresa B.
+describe('CompanyPortalProfileCard switching company', () => {
+  it('drops the open edit and loads the new company when the company changes', async () => {
+    CompanyAPI.get.mockResolvedValue({
+      data: { payload: [], meta: { total_count: 0 } },
+    });
+    const wrapper = shallowMount(CompanyPortalProfileCard, {
+      props: {
+        company: {
+          id: 1,
+          name: 'Empresa A',
+          customAttributes: { contrato_valor: '100' },
+        },
+      },
+    });
+    await flushPromises();
+    wrapper.vm.startEdit('contrato');
+    wrapper.vm.customAttrs.contrato_valor = '999';
+
+    await wrapper.setProps({
+      company: {
+        id: 2,
+        name: 'Empresa B',
+        customAttributes: { contrato_valor: '200' },
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.vm.editingSection).toBeNull();
+    expect(wrapper.vm.customAttrs.contrato_valor).toBe('200');
+  });
+});

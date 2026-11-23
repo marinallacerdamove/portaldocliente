@@ -470,6 +470,18 @@ watch(
   { immediate: true, deep: true }
 );
 
+// PATCH LOCAL: other company on the same screen: the open edit and its draft belong to the previous
+// one; keeping them made Save write company A's data into company B (B30).
+watch(
+  () => props.company?.id,
+  (id, previousId) => {
+    if (previousId === undefined || id === previousId) return;
+    editingSection.value = null;
+    syncForm(props.company);
+  },
+  { flush: 'sync' }
+);
+
 const handleAvatarUpload = async ({ file, url }) => {
   avatarPreviewUrl.value = url;
   isUploadingAvatar.value = true;
