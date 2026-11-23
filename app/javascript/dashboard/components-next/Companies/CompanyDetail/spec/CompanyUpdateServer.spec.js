@@ -226,6 +226,38 @@ describe('CompanyUpdateServer', () => {
       );
       expect(CompanyAPI.getUpdateServer).toHaveBeenCalledTimes(2);
     });
+
+    // Regressão B46 (auditoria 18/11): o catálogo de módulos é global e só a Move edita. Conta de
+    // revenda (o Portal manda modules_editable: false) vê os módulos nas licenças, sem o painel de edição.
+    it('hides the module catalog editing when the Portal says the account cannot edit it', async () => {
+      CompanyAPI.getUpdateServer.mockResolvedValue({
+        data: payload({ modules_editable: false }),
+      });
+
+      const licenses = (await mountTab()).findComponent(
+        CompanyUpdateServerLicenses
+      );
+
+      expect(licenses.props('modules')).toHaveLength(1);
+      expect(licenses.props('saveModule')).toBeNull();
+      expect(licenses.props('reorderModules')).toBeNull();
+    });
+
+    it.each([
+      ['the Move account', { modules_editable: true }],
+      ['an older Portal that does not send the flag yet', {}],
+    ])('keeps the module catalog editing for %s', async (_, overrides) => {
+      CompanyAPI.getUpdateServer.mockResolvedValue({
+        data: payload(overrides),
+      });
+
+      const licenses = (await mountTab()).findComponent(
+        CompanyUpdateServerLicenses
+      );
+
+      expect(licenses.props('saveModule')).toEqual(expect.any(Function));
+      expect(licenses.props('reorderModules')).toEqual(expect.any(Function));
+    });
   });
 });
 

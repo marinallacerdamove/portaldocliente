@@ -158,6 +158,10 @@ const reorderModules = ids =>
     CompanyAPI.reorderUpdateServerModules(props.companyId, ids)
   );
 
+// O catálogo de módulos é global e só a conta da Move edita: nas outras o Portal manda
+// modules_editable: false e a tela fica só com a consulta (B46). Portal sem o campo segue editável.
+const modulesEditable = computed(() => data.value.modules_editable !== false);
+
 onMounted(() => {
   load();
   document.addEventListener('visibilitychange', refreshIfIdle);
@@ -246,8 +250,8 @@ watch(
         :is-saving="isSaving"
         :save="saveLicense"
         :save-each="saveLicenseQuiet"
-        :save-module="saveModule"
-        :reorder-modules="reorderModules"
+        :save-module="modulesEditable ? saveModule : null"
+        :reorder-modules="modulesEditable ? reorderModules : null"
         @busy-change="openSections.licenses = $event"
       />
     </template>
