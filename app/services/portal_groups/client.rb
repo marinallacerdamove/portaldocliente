@@ -26,7 +26,7 @@ class PortalGroups::Client
   end
 
   # Igual aos outros clientes do Portal: a tela não fica presa um minuto.
-  TIMEOUT_SECONDS = 30
+  TIMEOUT_SECONDS = PortalNetworkErrors::TIMEOUT_SECONDS
   # Qualquer falha de transporte vira Error (status nil): campanha reagenda e a
   # tela responde 502, em vez de 500 ou campanha presa em "processando".
   NETWORK_ERRORS = PortalNetworkErrors::ALL

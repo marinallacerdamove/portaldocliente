@@ -35,4 +35,13 @@ RSpec.describe PortalNetworkErrors do
       expect { client.list }.to raise_error(PortalDocuments::Client::Error)
     end
   end
+
+  # Regressão B37 (auditoria 18/11): o Rack::Timeout do Chatwoot corta o pedido em 15 s (padrão do
+  # rack-timeout; RACK_TIMEOUT_SERVICE_TIMEOUT não está definido), mas os clientes esperavam o Portal
+  # por até 90 s: a tela recebia 500 no meio, em vez da mensagem de Portal indisponível.
+  it 'todo cliente do Portal desiste antes do corte de 15 s do Chatwoot' do
+    clients = [PortalAssistant::Client, PortalContacts::Client, PortalDocuments::Client, PortalGroups::Client]
+
+    expect(clients.map { |client| client::TIMEOUT_SECONDS }).to all(be < 15)
+  end
 end

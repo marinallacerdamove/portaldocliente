@@ -5,7 +5,7 @@
 class PortalDocuments::Client
   class Error < StandardError; end
 
-  TIMEOUT_SECONDS = 60
+  TIMEOUT_SECONDS = PortalNetworkErrors::TIMEOUT_SECONDS
 
   def initialize(account:, company:)
     @account = account

@@ -8,7 +8,7 @@
 class PortalAssistant::Client
   class Error < StandardError; end
 
-  TIMEOUT_SECONDS = 90
+  TIMEOUT_SECONDS = PortalNetworkErrors::TIMEOUT_SECONDS
 
   def self.account_ids
     ENV.fetch('PORTAL_ASSISTANT_ACCOUNT_IDS', '').split(',').map(&:strip).compact_blank.map(&:to_i)

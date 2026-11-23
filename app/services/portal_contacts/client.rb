@@ -5,7 +5,7 @@
 class PortalContacts::Client
   class Error < StandardError; end
 
-  TIMEOUT_SECONDS = 30
+  TIMEOUT_SECONDS = PortalNetworkErrors::TIMEOUT_SECONDS
 
   Response = Struct.new(:status, :body, keyword_init: true)
 
