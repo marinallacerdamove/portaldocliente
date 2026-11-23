@@ -70,4 +70,27 @@ describe BotFlowListener do
       expect(fresh.reload.messages.where(message_type: :outgoing).count).to eq(0)
     end
   end
+
+  # Regressão B34 (auditoria 18/11): sem trava por conversa, conversation_created e a 1ª mensagem (ou
+  # duas mensagens juntas) corriam em paralelo; a mensagem que chegou antes da pergunta do bot era
+  # tomada como resposta dela.
+  describe 'concorrência' do
+    it 'não toma como resposta a mensagem que chegou antes da pergunta do bot' do
+      old = create(:message, conversation: conversation, account: account, message_type: :incoming, content: 'Suporte',
+                             created_at: 1.minute.ago)
+      old_event = Events::Base.new('message.created', Time.zone.now, message: old)
+
+      expect { listener.message_created(old_event) }.not_to(change { conversation.reload.additional_attributes[BotFlows::Engine::STATE_NODE_KEY] })
+    end
+
+    it 'espera a trava da conversa e processa com o estado atual' do
+      lock = instance_double(Redis::LockManager, unlock: true)
+      allow(Redis::LockManager).to receive(:new).and_return(lock)
+      allow(lock).to receive(:lock).and_return(false, true)
+      allow(listener).to receive(:sleep)
+
+      expect { listener.message_created(event) }.to change { outgoing_count }.by(1)
+      expect(lock).to have_received(:lock).with("BOT_FLOW_LOCK::#{conversation.id}", anything).twice
+    end
+  end
 end
