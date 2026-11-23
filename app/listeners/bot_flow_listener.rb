@@ -11,7 +11,7 @@ class BotFlowListener < BaseListener
     conversation, = extract_conversation_and_account(event)
     return unless whatsapp_conversation?(conversation)
 
-    with_bot_lock(conversation) { start_welcome_flow(conversation.reload) }
+    BotFlows::StepJob.perform_later(conversation.id)
   end
 
   def message_created(event)
@@ -21,7 +21,15 @@ class BotFlowListener < BaseListener
     conversation = message.conversation
     return unless whatsapp_conversation?(conversation)
 
-    with_bot_lock(conversation) { handle_incoming(conversation.reload, message) }
+    BotFlows::StepJob.perform_later(conversation.id, message.id)
+  end
+
+  # Called by BotFlows::StepJob (medium queue), never from the critical event queue (B82).
+  def process_step(conversation, message = nil)
+    with_bot_lock(conversation) do
+      conversation.reload
+      message ? handle_incoming(conversation, message) : start_welcome_flow(conversation)
+    end
   end
 
   private

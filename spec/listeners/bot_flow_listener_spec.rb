@@ -1,6 +1,11 @@
 require 'rails_helper'
 
 describe BotFlowListener do
+  include ActiveJob::TestHelper
+
+  # Os passos do bot rodam em BotFlows::StepJob (B82): aqui os jobs executam na hora.
+  around { |example| perform_enqueued_jobs(only: BotFlows::StepJob) { example.run } }
+
   let(:listener) { described_class.instance }
   let(:account) { create(:account) }
   let(:channel) { create(:channel_whatsapp, account: account, sync_templates: false, validate_provider_config: false) }
@@ -92,5 +97,19 @@ describe BotFlowListener do
       expect { listener.message_created(event) }.to change { outgoing_count }.by(1)
       expect(lock).to have_received(:lock).with("BOT_FLOW_LOCK::#{conversation.id}", anything).twice
     end
+  end
+
+  # Regressão B82 (auditoria 18/11): o passo do bot (chamadas à Receita, ao Portal e a webhooks, e a
+  # espera pela trava da conversa) rodava dentro do EventDispatcherJob da fila critical.
+  it 'roda o passo do bot num job da fila medium, fora da fila critical' do
+    expect { without_performing_jobs { listener.message_created(event) } }
+      .to have_enqueued_job(BotFlows::StepJob).with(conversation.id, message.id).on_queue('medium')
+  end
+
+  def without_performing_jobs(&)
+    queue_adapter.perform_enqueued_jobs = false
+    yield
+  ensure
+    queue_adapter.perform_enqueued_jobs = true
   end
 end
