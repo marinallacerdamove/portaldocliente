@@ -4,6 +4,8 @@ class BotFlowListener < BaseListener
   def conversation_created(event)
     conversation, = extract_conversation_and_account(event)
     return unless whatsapp_conversation?(conversation)
+    # Conversation an agent opened (assigned or started by an outgoing message): no welcome flow (B79).
+    return if human_took_over?(conversation) || agent_started?(conversation)
 
     engine = BotFlows::Engine.new(conversation)
     return if engine.running?
@@ -36,6 +38,10 @@ class BotFlowListener < BaseListener
   # Agente atribuído ou conversa resolvida: o bot não retoma o fluxo parado.
   def human_took_over?(conversation)
     conversation.assignee_id.present? || conversation.resolved?
+  end
+
+  def agent_started?(conversation)
+    conversation.messages.outgoing.exists? && !conversation.messages.incoming.exists?
   end
 
   def whatsapp_conversation?(conversation)

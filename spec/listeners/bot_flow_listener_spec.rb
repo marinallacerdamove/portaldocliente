@@ -50,4 +50,24 @@ describe BotFlowListener do
 
     expect { listener.message_created(event) }.not_to(change { outgoing_count })
   end
+
+  # Regressão B79 (auditoria 18/11): o fluxo de conversation_created disparava também na conversa de
+  # WhatsApp aberta pelo próprio agente (template ativo), e o bot respondia ao cliente por cima.
+  context 'when an agent opens the conversation' do
+    let(:fresh) { create(:conversation, account: account, inbox: channel.inbox, assignee: create(:user, account: account)) }
+
+    before do
+      account.bot_flows.create!(
+        name: 'Boas-vindas', inbox_ids: [channel.inbox.id], trigger_type: 'conversation_created',
+        nodes: [{ 'id' => 'start', 'type' => 'start' }, { 'id' => 'msg', 'type' => 'send_message', 'text' => 'Oi do bot' }],
+        edges: [{ 'source' => 'start', 'target' => 'msg', 'sourceHandle' => 'default' }]
+      )
+    end
+
+    it 'does not start the conversation_created flow' do
+      listener.conversation_created(Events::Base.new('conversation.created', Time.zone.now, conversation: fresh))
+
+      expect(fresh.reload.messages.where(message_type: :outgoing).count).to eq(0)
+    end
+  end
 end
