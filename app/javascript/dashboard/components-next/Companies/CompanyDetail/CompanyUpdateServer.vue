@@ -35,7 +35,9 @@ const isEditing = computed(() =>
 
 // silent = recarga em segundo plano: mantém a tela e os dados que já estão
 // nela (sem esqueleto) e, se falhar, não troca a tela por erro.
+// PATCH LOCAL: an answer for a company the user already left is dropped (B76).
 const load = async ({ silent = false } = {}) => {
+  const companyId = props.companyId;
   if (silent) isRefreshing.value = true;
   else {
     isLoading.value = true;
@@ -43,16 +45,21 @@ const load = async ({ silent = false } = {}) => {
     loadFailed.value = false;
   }
   try {
-    ({ data: data.value } = await CompanyAPI.getUpdateServer(props.companyId));
+    const response = await CompanyAPI.getUpdateServer(companyId);
+    if (companyId !== props.companyId) return;
+    data.value = response.data;
     lastUpdatedAt.value = new Date();
   } catch (error) {
+    if (companyId !== props.companyId) return;
     if (!silent) {
       if (error.response?.status === 404) isNotLinked.value = true;
       else loadFailed.value = true;
     }
   } finally {
-    isLoading.value = false;
-    isRefreshing.value = false;
+    if (companyId === props.companyId) {
+      isLoading.value = false;
+      isRefreshing.value = false;
+    }
   }
 };
 

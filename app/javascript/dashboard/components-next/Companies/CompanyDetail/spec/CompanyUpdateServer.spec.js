@@ -228,3 +228,35 @@ describe('CompanyUpdateServer', () => {
     });
   });
 });
+
+// Regressão B76 (auditoria 18/11): trocar de empresa com a resposta da anterior ainda a caminho
+// mostrava os dados da empresa anterior (a resposta mais lenta chegava por último).
+describe('CompanyUpdateServer switching company', () => {
+  afterEach(() => mounted.splice(0).forEach(wrapper => wrapper.unmount()));
+
+  it('ignores the late answer of the previous company', async () => {
+    let answerOld;
+    CompanyAPI.getUpdateServer.mockImplementation(id =>
+      id === 7
+        ? new Promise(resolve => {
+            answerOld = resolve;
+          })
+        : Promise.resolve({
+            data: payload({
+              bases: [{ id: 2, albatross_id: 8002, active: true }],
+            }),
+          })
+    );
+    const wrapper = shallowMount(CompanyUpdateServer, {
+      props: { companyId: 7 },
+    });
+    mounted.push(wrapper);
+    await wrapper.setProps({ companyId: 8 });
+    await flushPromises();
+
+    answerOld({ data: payload() });
+    await flushPromises();
+
+    expect(wrapper.vm.data.bases[0].albatross_id).toBe(8002);
+  });
+});

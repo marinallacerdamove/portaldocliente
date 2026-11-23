@@ -40,18 +40,23 @@ const applyResponse = ({ data }) => {
   files.value = data.files || [];
 };
 
+// PATCH LOCAL: an answer for a company the user already left is dropped, or the late answer of the
+// previous company replaced the current one (B76).
 const load = async () => {
+  const companyId = props.companyId;
   isLoading.value = true;
   isNotLinked.value = false;
   loadFailed.value = false;
   try {
-    applyResponse(await CompanyAPI.listDocuments(props.companyId));
+    const response = await CompanyAPI.listDocuments(companyId);
+    if (companyId === props.companyId) applyResponse(response);
   } catch (error) {
+    if (companyId !== props.companyId) return;
     files.value = [];
     if (error.response?.status === 404) isNotLinked.value = true;
     else loadFailed.value = true;
   } finally {
-    isLoading.value = false;
+    if (companyId === props.companyId) isLoading.value = false;
   }
 };
 
