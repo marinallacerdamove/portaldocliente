@@ -221,3 +221,29 @@ describe('NewInternalTicket', () => {
     });
   });
 });
+
+// Regressão B77 (auditoria 18/11): "Em cópia" oferecia todos os agentes da conta, mas o servidor só
+// aceita membros da caixa escolhida: marcar outro agente dava erro genérico e o ticket não era criado.
+describe('NewInternalTicket cc agents', () => {
+  const member = { id: 11, name: 'Membro' };
+  const outsider = { id: 12, name: 'Fora da caixa' };
+
+  it('offers only agents of the chosen inbox', async () => {
+    testState.getters = {
+      'agents/getAgents': [member, outsider],
+      'teams/getTeams': [team],
+      'inboxes/getInboxes': [portalInbox, internalInbox],
+      'inboxAssignableAgents/getAssignableAgents': inboxId =>
+        inboxId === internalInbox.id ? [member] : [],
+    };
+    const wrapper = shallowMount(NewInternalTicket, {
+      global: { stubs: { Dialog: DialogStub } },
+    });
+    wrapper.vm.formState.inbox = internalInbox;
+    await flushPromises();
+
+    expect(wrapper.vm.ccAgentOptions.map(agent => agent.id)).toEqual([
+      member.id,
+    ]);
+  });
+});

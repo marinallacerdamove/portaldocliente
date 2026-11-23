@@ -589,6 +589,7 @@
     "SEARCH_INPUT_PLACEHOLDER": "Buscar",
     "CREATE_SUCCESS": "Ticket criado!",
     "CREATE_ERROR": "Erro ao criar o ticket.",
+    "CC_NOT_MEMBER": "Só agentes da caixa escolhida podem ficar em cópia no ticket.",
     "VIEW_TICKET": "Ver ticket",
     "URGENCIA_OPTIONS": {
       "NONE": "Nenhuma",

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
@@ -79,6 +79,9 @@ const store = useStore();
 const searchContacts = createContactSearcher();
 
 const agentsList = useMapGetter('agents/getAgents');
+const assignableAgentsFor = useMapGetter(
+  'inboxAssignableAgents/getAssignableAgents'
+);
 const teams = useMapGetter('teams/getTeams');
 const inboxes = useMapGetter('inboxes/getInboxes');
 const { state: catalog, fetchList } = useTicketCatalog();
@@ -189,6 +192,30 @@ const emptyForm = () => ({
 });
 
 const formState = reactive(emptyForm());
+
+// PATCH LOCAL: the server only accepts members of the chosen inbox as watchers (InternalTicketService);
+// offering every agent let the agent pick one and the ticket failed with a generic error (B77).
+const ccAgentOptions = computed(() => {
+  const inboxId = formState.inbox?.id;
+  if (!inboxId || !assignableAgentsFor.value) return [];
+  const memberIds = new Set(
+    assignableAgentsFor.value(inboxId).map(agent => agent.id)
+  );
+  return (agentsList.value || []).filter(agent => memberIds.has(agent.id));
+});
+
+watch(
+  () => formState.inbox?.id,
+  inboxId => {
+    if (inboxId) store.dispatch('inboxAssignableAgents/fetch', [inboxId]);
+  },
+  { immediate: true }
+);
+
+watch(ccAgentOptions, options => {
+  const allowed = new Set(options.map(agent => agent.id));
+  formState.ccAgentIds = formState.ccAgentIds.filter(id => allowed.has(id));
+});
 
 // PATCH LOCAL (fork) - Serviço vem do cadastro de atendimento: só os ativos
 // do tipo de ticket da caixa escolhida (Tickets Internos = 'interno'),
@@ -580,7 +607,11 @@ const onSubmit = async () => {
     });
     close();
   } catch (error) {
-    useAlert(t('NEW_INTERNAL_TICKET_DIALOG.CREATE_ERROR'));
+    if (error?.response?.data?.error === 'watchers') {
+      useAlert(t('NEW_INTERNAL_TICKET_DIALOG.CC_NOT_MEMBER'));
+    } else {
+      useAlert(t('NEW_INTERNAL_TICKET_DIALOG.CREATE_ERROR'));
+    }
   } finally {
     isSubmitting.value = false;
   }
@@ -936,7 +967,7 @@ defineExpose({ open });
             class="flex flex-col overflow-y-auto border divide-y max-h-40 rounded-lg border-n-weak divide-n-weak bg-n-solid-1"
           >
             <label
-              v-for="agent in agentsList"
+              v-for="agent in ccAgentOptions"
               :key="agent.id"
               class="flex items-center gap-2 px-3 py-2 mb-0 text-xs cursor-pointer text-n-slate-12 hover:bg-n-alpha-2"
             >

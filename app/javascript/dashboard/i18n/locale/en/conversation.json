@@ -635,6 +635,7 @@
     "SEARCH_INPUT_PLACEHOLDER": "Search",
     "CREATE_SUCCESS": "Ticket created!",
     "CREATE_ERROR": "Error creating the ticket.",
+    "CC_NOT_MEMBER": "Only agents of the chosen inbox can be copied on the ticket.",
     "VIEW_TICKET": "View ticket",
     "URGENCIA_OPTIONS": {
       "NONE": "None",
