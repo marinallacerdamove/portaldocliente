@@ -49,6 +49,7 @@ export function useMacroExecution() {
   const { missingFor } = useResolveRequirements();
 
   const conversationById = useMapGetter('getConversationById');
+  const selectedChat = useMapGetter('getSelectedChat');
 
   const executingMacroId = ref(null);
   const pendingExecution = ref(null);
@@ -119,7 +120,9 @@ export function useMacroExecution() {
   ) => {
     const execution = { macro, conversationId, silent, successMessage };
 
-    fillReplyEditor(macro);
+    // PATCH LOCAL: the reply editor on screen belongs to the open conversation; a macro for another
+    // one (service changed, then the agent switched conversations) must not fill it (B78).
+    if (selectedChat.value?.id === conversationId) fillReplyEditor(macro);
     if (!hasServerActions(macro)) return null;
 
     if (!resolvesConversation(macro)) {

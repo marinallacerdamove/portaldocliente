@@ -4,6 +4,8 @@ import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
 import { useResolveRequirements } from 'dashboard/composables/useResolveRequirements';
 import { useMacroExecution } from '../useMacroExecution';
+import { emitter } from 'shared/helpers/mitt';
+import { BUS_EVENTS } from 'shared/constants/busEvents';
 
 vi.mock('dashboard/composables/store');
 vi.mock('dashboard/composables');
@@ -28,12 +30,13 @@ const checkMissingAttributes = vi.fn();
 const missingFor = vi.fn();
 const nothingMissing = { actions: [], customFields: [], closeReason: null };
 
-const mockConversation = (customAttributes = {}) => {
-  useMapGetter.mockImplementation(getter =>
-    getter === 'getConversationById'
-      ? { value: () => ({ id: 42, custom_attributes: customAttributes }) }
-      : { value: null }
-  );
+const mockConversation = (customAttributes = {}, selectedChatId = 42) => {
+  useMapGetter.mockImplementation(getter => {
+    if (getter === 'getConversationById')
+      return { value: () => ({ id: 42, custom_attributes: customAttributes }) };
+    if (getter === 'getSelectedChat') return { value: { id: selectedChatId } };
+    return { value: null };
+  });
 };
 
 describe('useMacroExecution', () => {
@@ -287,6 +290,42 @@ describe('useMacroExecution', () => {
       await flushPromises();
 
       expect(missingFor).not.toHaveBeenCalled();
+    });
+  });
+
+  // Regressão B78 (auditoria 18/11): trocar o Serviço e mudar de conversa antes da resposta mandava o
+  // texto da macro para o editor da conversa que estava aberta, que era outra.
+  describe('fill_reply', () => {
+    const fillReply = {
+      action_name: 'fill_reply',
+      action_params: ['Texto da macro', 'reply'],
+    };
+
+    it('fills the editor of the conversation the macro runs on', () => {
+      const emitted = vi.spyOn(emitter, 'emit');
+      const { execute } = useMacroExecution();
+
+      execute(macroWith([fillReply]), CONVERSATION_ID);
+
+      expect(emitted).toHaveBeenCalledWith(
+        BUS_EVENTS.MACRO_FILL_REPLY,
+        expect.anything()
+      );
+      emitted.mockRestore();
+    });
+
+    it('does not fill the editor when another conversation is open', () => {
+      mockConversation({}, 43);
+      const emitted = vi.spyOn(emitter, 'emit');
+      const { execute } = useMacroExecution();
+
+      execute(macroWith([fillReply]), CONVERSATION_ID);
+
+      expect(emitted).not.toHaveBeenCalledWith(
+        BUS_EVENTS.MACRO_FILL_REPLY,
+        expect.anything()
+      );
+      emitted.mockRestore();
     });
   });
 });

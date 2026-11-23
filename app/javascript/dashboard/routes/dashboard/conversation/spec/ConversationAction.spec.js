@@ -65,3 +65,30 @@ describe('ConversationAction runServicoMacro', () => {
     expect(dismissPendingAttributes).toHaveBeenCalledTimes(1);
   });
 });
+
+// Regressão B78 (auditoria 18/11): trocar o Serviço e mudar de conversa antes da resposta aplicava a
+// prioridade padrão do serviço na conversa que estava aberta, que era outra.
+describe('ConversationAction applyServicePriority', () => {
+  const { applyServicePriority } = ConversationAction.methods;
+  const option = { id: 'high' };
+
+  it('sends the priority to the conversation the service was chosen on', () => {
+    const context = { currentChat: { id: 43 }, $store: { dispatch: vi.fn() } };
+
+    applyServicePriority.call(context, option, 42);
+
+    expect(context.$store.dispatch).toHaveBeenCalledWith('assignPriority', {
+      conversationId: 42,
+      priority: 'high',
+    });
+    expect(context.assignedPriority).toBeUndefined();
+  });
+
+  it('uses the sidebar setter when the conversation is still open', () => {
+    const context = { currentChat: { id: 42 }, $store: { dispatch: vi.fn() } };
+
+    applyServicePriority.call(context, option, 42);
+
+    expect(context.assignedPriority).toBe(option);
+  });
+});

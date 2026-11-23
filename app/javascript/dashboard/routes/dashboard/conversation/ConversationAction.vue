@@ -485,8 +485,22 @@ export default {
 
       const defaultPriority =
         priority && this.priorityOptions.find(opt => opt.id === priority);
-      if (defaultPriority) this.assignedPriority = defaultPriority;
+      if (defaultPriority)
+        this.applyServicePriority(defaultPriority, conversationId);
       if (service.macro_id) this.runServicoMacro(service, conversationId);
+    },
+
+    // PATCH LOCAL: the priority setter acts on the open conversation; if the agent switched
+    // conversations while the service was saving, the priority goes to the one it belongs to (B78).
+    applyServicePriority(option, conversationId) {
+      if (this.currentChat.id === conversationId) {
+        this.assignedPriority = option;
+        return;
+      }
+      this.$store.dispatch('assignPriority', {
+        conversationId,
+        priority: option.id,
+      });
     },
 
     onSelectEmpresa(value) {
