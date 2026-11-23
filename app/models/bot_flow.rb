@@ -77,8 +77,27 @@ class BotFlow < ApplicationRecord
 
       missing = NODE_REQUIRED_FIELDS[type] - node.keys
       errors.add(:nodes, "node #{index}: missing #{missing.join(', ')}") if missing.any?
-      validate_chatwoot_action(node, index) if type == 'chatwoot_action'
+      validator = NODE_VALIDATORS[type]
+      send(validator, node, index) if validator
     end
+  end
+
+  NODE_VALIDATORS = { 'chatwoot_action' => :validate_chatwoot_action, 'menu' => :validate_menu_limits }.freeze
+
+  # PATCH LOCAL: WhatsApp limits for the interactive menu (Whatsapp::Providers::BaseService turns up
+  # to 3 options into buttons, more into a list). Past them the message is refused and the flow waits
+  # forever (B80).
+  MENU_MAX_OPTIONS = 10
+  MENU_BUTTON_OPTIONS = 3
+  MENU_BUTTON_LABEL_MAX = 20
+  MENU_LIST_LABEL_MAX = 24
+
+  def validate_menu_limits(node, index)
+    options = Array(node['options'])
+    errors.add(:nodes, "node #{index}: menu allows at most #{MENU_MAX_OPTIONS} options") if options.size > MENU_MAX_OPTIONS
+    max = options.size <= MENU_BUTTON_OPTIONS ? MENU_BUTTON_LABEL_MAX : MENU_LIST_LABEL_MAX
+    too_long = options.select { |option| option.is_a?(Hash) && option['label'].to_s.length > max }
+    errors.add(:nodes, "node #{index}: menu labels up to #{max} characters") if too_long.any?
   end
 
   def validate_chatwoot_action(node, index)
