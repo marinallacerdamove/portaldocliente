@@ -3,6 +3,7 @@ import {
   missingRequiredFields,
   visibleCustomFields,
   STATUS_NOT_CONCLUDED,
+  teamLockedFieldKeys,
 } from '../ticketFieldRules';
 import parity from '../../../../../spec/fixtures/fork_parity/ticket_field_rules_cases.json';
 import teamCases from '../../../../../spec/fixtures/fork_parity/ticket_field_team_cases.json';
@@ -271,5 +272,66 @@ describe('agentCanEditItem', () => {
         example.can_edit
       );
     });
+  });
+});
+
+// Revisão do campo restrito (25/11): o que o agente não grava por equipe, igual a
+// ResolveRequirementsService#team_locked_field_keys. Campo escondido também trava.
+describe('teamLockedFieldKeys', () => {
+  const teamFields = [
+    { id: 1, key: 'decisao_po', active: true },
+    { id: 2, key: 'issue_jira', active: true },
+  ];
+  const teamRules = [
+    {
+      active: true,
+      conditions: [
+        {
+          group: 'all',
+          attribute: 'servico',
+          operator: 'equal_to',
+          value: 'PO',
+        },
+      ],
+      fields: [
+        {
+          field_id: 1,
+          editable_by_agents: true,
+          team_names: ['Desenvolvimento'],
+        },
+        { field_id: 2, editable_by_agents: true },
+      ],
+    },
+  ];
+  const outsider = { isAdmin: false, teamNames: ['suporte técnico'] };
+
+  it('locks the restricted field for an agent outside the team, even while hidden', () => {
+    expect([
+      ...teamLockedFieldKeys({
+        rules: teamRules,
+        fields: teamFields,
+        visible: [],
+        editor: outsider,
+      }),
+    ]).toEqual(['decisao_po']);
+  });
+
+  it('locks nothing for the team member or the administrator', () => {
+    expect(
+      teamLockedFieldKeys({
+        rules,
+        fields,
+        visible: [],
+        editor: { isAdmin: false, teamNames: ['desenvolvimento'] },
+      }).size
+    ).toBe(0);
+    expect(
+      teamLockedFieldKeys({
+        rules,
+        fields,
+        visible: [],
+        editor: { isAdmin: true, teamNames: [] },
+      }).size
+    ).toBe(0);
   });
 });

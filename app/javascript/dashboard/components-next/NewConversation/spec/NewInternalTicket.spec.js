@@ -464,3 +464,88 @@ describe('NewInternalTicket opening fields and service macro', () => {
     expect(wrapper.vm.formState.subject).toBe('Meu assunto');
   });
 });
+
+// Revisão do campo restrito (25/11): os campos do QA/DEV (Fluxo PO no Movidesk, restrito a algumas equipes)
+// ficavam editáveis para quem não é da equipe e o servidor descartava o valor sem avisar.
+describe('NewInternalTicket QA/DEV fields restricted to a team', () => {
+  const decisaoPo = {
+    id: 1,
+    key: 'decisao_po',
+    name: 'Decisão PO',
+    field_type: 'list',
+    options: ['Aprovado'],
+    active: true,
+  };
+
+  const mountAs = async teamName => {
+    ticketCustomFieldsAPI.get.mockResolvedValue({
+      data: { payload: [decisaoPo] },
+    });
+    ticketFieldRulesAPI.get.mockResolvedValue({
+      data: {
+        payload: [
+          {
+            id: 1,
+            active: true,
+            conditions: [],
+            fields: [
+              {
+                field_id: 1,
+                editable_by_agents: true,
+                team_names: ['Desenvolvimento'],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    await Promise.all(
+      ['customFields', 'fieldRules'].map(kind =>
+        useTicketCatalog().fetchList(kind, { force: true })
+      )
+    );
+    testState.getters = {
+      'agents/getAgents': [{ id: 5, team_ids: [9] }],
+      'teams/getTeams': [team, { id: 9, name: teamName }],
+      'inboxes/getInboxes': [internalInbox],
+      getCurrentRole: 'agent',
+      getCurrentUser: { id: 5 },
+    };
+    const wrapper = shallowMount(NewInternalTicket, {
+      global: { stubs: { Dialog: DialogStub } },
+    });
+    await flushPromises();
+    fillRequiredFields(wrapper);
+    wrapper.vm.formState.decisaoPo = { id: 'Aprovado', name: 'Aprovado' };
+    return wrapper;
+  };
+
+  beforeEach(() => {
+    Object.values(catalogApis).forEach(api =>
+      api.get.mockResolvedValue({ data: { payload: [] } })
+    );
+    TicketsAPI.createInternalTicket.mockResolvedValue({
+      data: { id: 900, account_id: 1 },
+    });
+  });
+
+  it('locks the field and does not send it for an agent outside the team', async () => {
+    const wrapper = await mountAs('suporte técnico');
+
+    expect(wrapper.vm.qaDevLocked('decisao_po')).toBe(true);
+    await wrapper.vm.onSubmit();
+    expect(
+      submittedTicket().custom_attributes.campos_adicionais
+    ).toBeUndefined();
+  });
+
+  it('keeps the field for a team member', async () => {
+    const wrapper = await mountAs('desenvolvimento');
+
+    expect(wrapper.vm.qaDevLocked('decisao_po')).toBe(false);
+    await wrapper.vm.onSubmit();
+    expect(submittedTicket().custom_attributes.campos_adicionais).toEqual({
+      decisao_po: 'Aprovado',
+    });
+  });
+});

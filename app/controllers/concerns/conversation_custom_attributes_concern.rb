@@ -17,7 +17,10 @@ module ConversationCustomAttributesConcern
   end
 
   def destroy_custom_attributes
+    checklist_before = @conversation.custom_attributes&.dig(TicketContract::CUSTOM_FIELDS_KEY) || {}
+    locked_before = team_locked_field_keys # PATCH LOCAL (fork) - apagar não passa por cima da trava de equipe
     @conversation.custom_attributes = @conversation.custom_attributes.excluding(params[:custom_attributes])
+    keep_team_locked_fields(checklist_before, locked_before)
     @conversation.save!
   end
 

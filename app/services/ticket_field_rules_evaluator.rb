@@ -57,6 +57,17 @@ class TicketFieldRulesEvaluator
     items
   end
 
+  # Itens de todas as regras ativas, sem olhar condição (quem não pode gravar
+  # um campo não grava nem enquanto ele está escondido).
+  def all_items
+    @rules.flat_map do |rule|
+      Array(rule['fields']).filter_map do |rule_field|
+        field = @fields_by_id[rule_field['field_id']]
+        rule_field.stringify_keys.merge('field' => field) if field
+      end
+    end
+  end
+
   private
 
   def items_for(context, visible_ids)

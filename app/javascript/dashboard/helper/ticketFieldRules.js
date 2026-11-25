@@ -138,12 +138,40 @@ export const teamKey = name =>
 // deixa o agente editar e, se tem team_names, ele é administrador ou de uma
 // dessas equipes (nome sem diferenciar maiúsculas). Mesma regra de
 // TicketFieldRulesEvaluator.agent_can_edit? no servidor.
-export const agentCanEditItem = (item, { isAdmin, teamNames }) => {
-  if (!item.editable_by_agents) return false;
+// Só a parte da equipe (TicketFieldRulesEvaluator.team_allowed?).
+const teamAllowed = (item, { isAdmin, teamNames }) => {
   const restricted = (item.team_names || []).map(teamKey);
   if (isAdmin || !restricted.length) return true;
   const own = new Set(teamNames.map(teamKey));
   return restricted.some(name => own.has(name));
+};
+
+export const agentCanEditItem = (item, editor) =>
+  !!item.editable_by_agents && teamAllowed(item, editor);
+
+// Chaves que o agente não grava por não ser da equipe (o servidor descarta;
+// espelho de ResolveRequirementsService#team_locked_field_keys): campo que a
+// regra mostra (visible) vale a configuração da tela; campo escondido fica
+// travado se alguma regra ativa o restringe.
+export const teamLockedFieldKeys = ({ rules, fields, visible, editor }) => {
+  const shown = new Set(visible.map(item => item.field.key));
+  const fieldsById = new Map(
+    fields.filter(field => field.active).map(field => [field.id, field])
+  );
+  const hidden = rules
+    .filter(rule => rule.active)
+    .flatMap(rule =>
+      rule.fields.map(ruleField => ({
+        ...ruleField,
+        field: fieldsById.get(ruleField.field_id),
+      }))
+    )
+    .filter(item => item.field && !shown.has(item.field.key));
+  return new Set(
+    [...visible, ...hidden]
+      .filter(item => !teamAllowed(item, editor))
+      .map(item => item.field.key)
+  );
 };
 
 // Obrigatórios ainda vazios pro momento (ex. ['conclusao'] ao resolver).

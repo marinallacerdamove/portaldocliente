@@ -1511,6 +1511,27 @@ RSpec.describe 'Conversations API', type: :request do
           save_fields(create(:user, account: account, role: :administrator))
           expect(conversation.reload.custom_attributes['campos_adicionais'][restricted.key]).to eq('Alta')
         end
+
+        # Revisão do campo restrito (25/11): apagar os campos adicionais pela API passava por cima da trava.
+        it 'apagar os campos adicionais mantém o restrito para o agente de fora da equipe' do
+          post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/destroy_custom_attributes",
+               headers: agent.create_new_auth_token, as: :json, params: { custom_attributes: ['campos_adicionais'] }
+
+          expect(response).to have_http_status(:success)
+          expect(conversation.reload.custom_attributes['campos_adicionais']).to eq(restricted.key => 'Baixa')
+        end
+
+        # Revisão (25/11): campo restrito que a regra não mostra naquele momento era gravado e aparecia depois.
+        it 'ignora o campo restrito mesmo quando a regra dele não está mostrando' do
+          TicketFieldRule.find_by!(account: account, name: 'Interno').update!(
+            conditions: [{ group: 'all', attribute: 'servico', operator: 'equal_to', value: 'ALBATROSS' }]
+          )
+          conversation.update!(custom_attributes: { 'campos_adicionais' => {} })
+
+          save_fields(agent)
+
+          expect(conversation.reload.custom_attributes['campos_adicionais']).not_to have_key(restricted.key)
+        end
       end
 
       it 'replaces custom attributes by default' do

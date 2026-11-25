@@ -53,12 +53,16 @@ class Conversations::ResolveRequirementsService
     missing_custom_fields(OPENING_MOMENTS)
   end
 
-  # Chaves dos campos que a regra mostra e que o usuário não edita por não ser
-  # da equipe (o servidor ignora o valor que ele mandar). Sem user: nenhuma.
+  # Chaves dos campos que o usuário não edita por não ser da equipe (o servidor
+  # ignora o valor que ele mandar). Campo que a regra mostra vale a configuração
+  # que está na tela; campo escondido fica travado se alguma regra o restringe,
+  # senão o valor gravado agora apareceria quando a regra passasse a mostrar.
+  # Sem user: nenhuma.
   def team_locked_field_keys
-    @account_data.evaluator.visible_items(context)
-                 .reject { |item| TicketFieldRulesEvaluator.team_allowed?(item, editor) }
-                 .map { |item| item['field'].key }
+    visible = @account_data.evaluator.visible_items(context)
+    shown = visible.map { |item| item['field'].key }
+    hidden = @account_data.evaluator.all_items.reject { |item| shown.include?(item['field'].key) }
+    (visible + hidden).reject { |item| TicketFieldRulesEvaluator.team_allowed?(item, editor) }.map { |item| item['field'].key }.uniq
   end
 
   private

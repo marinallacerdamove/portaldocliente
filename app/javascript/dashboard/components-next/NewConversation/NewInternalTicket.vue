@@ -42,6 +42,7 @@ import {
 } from 'dashboard/composables/useConversationCustomFields';
 import {
   agentCanEditItem,
+  teamLockedFieldKeys,
   CUSTOM_FIELDS_ATTRIBUTE_KEY,
   OPENING_AGENT_MOMENTS,
   isChecklistItem,
@@ -326,6 +327,18 @@ const visibleItems = computed(() =>
 
 // Só o que o agente preenche: campo que ele não edita ou de outra equipe
 // (Movidesk: "somente as equipes") não aparece nem é cobrado na abertura.
+// Campos do QA/DEV (Fluxo PO no Movidesk) que o agente não grava por não ser
+// da equipe: ficam só leitura e não vão no envio (o servidor descartaria).
+const teamLockedKeys = computed(() =>
+  teamLockedFieldKeys({
+    rules: catalog.fieldRules,
+    fields: catalog.customFields,
+    visible: visibleItems.value,
+    editor: agentEditor.value,
+  })
+);
+const qaDevLocked = key => teamLockedKeys.value.has(key);
+
 const openingItems = computed(() =>
   [
     ...itemsInGroup(visibleItems.value, FIELD_GROUPS.CLASSIFICATION),
@@ -671,7 +684,7 @@ const buildCustomAttributes = () => {
     data_de_atualizacao_do_sistema: formState.dataAtualizacaoSistema,
   };
   Object.entries(qaDevValues).forEach(([key, value]) => {
-    if (value) customFieldValues[key] = value;
+    if (value && !qaDevLocked(key)) customFieldValues[key] = value;
   });
   if (Object.keys(customFieldValues).length)
     customAttributes[CUSTOM_FIELDS_ATTRIBUTE_KEY] = customFieldValues;
@@ -980,6 +993,7 @@ defineExpose({ open });
               <ComboBox
                 :size="FIELD_SIZE"
                 :model-value="formState.liberacoes.id"
+                :disabled="qaDevLocked('liberacoes')"
                 :options="toComboOptions(liberacoesOptions)"
                 :placeholder="
                   t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
@@ -1001,6 +1015,7 @@ defineExpose({ open });
               }}</span>
               <Input
                 v-model="formState.issueJira"
+                :disabled="qaDevLocked('issue_jira')"
                 type="text"
                 :size="FIELD_SIZE"
                 :custom-input-class="FIELD_INPUT_CLASS"
@@ -1013,6 +1028,7 @@ defineExpose({ open });
               <ComboBox
                 :size="FIELD_SIZE"
                 :model-value="formState.decisaoPo.id"
+                :disabled="qaDevLocked('decisao_po')"
                 :options="toComboOptions(decisaoPoOptions)"
                 :placeholder="
                   t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
@@ -1035,6 +1051,7 @@ defineExpose({ open });
               <ComboBox
                 :size="FIELD_SIZE"
                 :model-value="formState.statusCobranca.id"
+                :disabled="qaDevLocked('status_da_cobranca')"
                 :options="toComboOptions(statusCobrancaOptions)"
                 :placeholder="
                   t('NEW_INTERNAL_TICKET_DIALOG.SELECT_PLACEHOLDER')
@@ -1056,6 +1073,7 @@ defineExpose({ open });
               }}</span>
               <Input
                 v-model="formState.dataEntrega"
+                :disabled="qaDevLocked('data_entrega')"
                 type="date"
                 :size="FIELD_SIZE"
                 :custom-input-class="FIELD_INPUT_CLASS"
@@ -1067,6 +1085,7 @@ defineExpose({ open });
               }}</span>
               <Input
                 v-model="formState.dataAtualizacaoSistema"
+                :disabled="qaDevLocked('data_de_atualizacao_do_sistema')"
                 :size="FIELD_SIZE"
                 :custom-input-class="FIELD_INPUT_CLASS"
                 type="datetime-local"
