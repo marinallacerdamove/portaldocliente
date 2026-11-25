@@ -453,7 +453,7 @@ RSpec.describe 'Conversation Messages API', type: :request do
         expect(message.reload.content).to eq('Original')
       end
 
-      it "still requires authorization for a blank content edit (does not fall through to the status branch)" do
+      it 'still requires authorization for a blank content edit (does not fall through to the status branch)' do
         patch api_v1_account_conversation_message_url(
           account_id: account.id,
           conversation_id: conversation.display_id,
@@ -461,6 +461,38 @@ RSpec.describe 'Conversation Messages API', type: :request do
         ), params: { content: '' }, headers: other_agent.create_new_auth_token, as: :json
 
         expect(response).to have_http_status(:unauthorized)
+      end
+
+      # Regressão B56 (auditoria 18/11): anexo trocado ao editar a mensagem no Portal não chegava ao
+      # Chatwoot. O Portal não guarda o id que o anexo ganha aqui, então manda a lista inteira
+      # (replace_attachments): repetir o envio dá o mesmo resultado.
+      it 'replaces all attachments with the ones sent when replace_attachments is set' do
+        message.attachments.create!(account_id: account.id, file_type: :image,
+                                    file: Rack::Test::UploadedFile.new('spec/assets/avatar.png', 'image/png'))
+
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: message.id
+        ), params: { content: 'Com o PDF certo', replace_attachments: 'true',
+                     attachments: [Rack::Test::UploadedFile.new('spec/assets/sample.pdf', 'application/pdf')] },
+           headers: admin.create_new_auth_token
+
+        expect(response).to have_http_status(:success)
+        expect(message.reload.attachments.map { |attachment| attachment.file.filename.to_s }).to eq(['sample.pdf'])
+      end
+
+      it 'removes every attachment when replace_attachments comes without files' do
+        message.attachments.create!(account_id: account.id, file_type: :image,
+                                    file: Rack::Test::UploadedFile.new('spec/assets/avatar.png', 'image/png'))
+
+        patch api_v1_account_conversation_message_url(
+          account_id: account.id,
+          conversation_id: conversation.display_id,
+          id: message.id
+        ), params: { content: 'Sem anexo', replace_attachments: true }, headers: admin.create_new_auth_token, as: :json
+
+        expect(message.reload.attachments).to be_empty
       end
     end
   end

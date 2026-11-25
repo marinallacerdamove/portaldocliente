@@ -26,12 +26,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
       content = permitted_params[:content].to_s.strip
       return render json: { error: 'Content cannot be blank' }, status: :unprocessable_entity if content.blank?
 
-      updated = Messages::ContentUpdateService.new(
-        message,
-        content,
-        new_attachments: permitted_params[:attachments] || [],
-        remove_attachment_ids: permitted_params[:remove_attachment_ids] || []
-      ).perform
+      updated = content_update_service(content).perform
       return render json: { error: 'This message cannot be edited' }, status: :unprocessable_entity unless updated
     else
       Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
@@ -101,8 +96,18 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     end
   end
 
+  def content_update_service(content)
+    Messages::ContentUpdateService.new(
+      message,
+      content,
+      new_attachments: permitted_params[:attachments] || [],
+      remove_attachment_ids: permitted_params[:remove_attachment_ids] || [],
+      replace_attachments: ActiveModel::Type::Boolean.new.cast(permitted_params[:replace_attachments]) || false
+    )
+  end
+
   def permitted_params
-    params.permit(:id, :target_language, :status, :external_error, :content, attachments: [], remove_attachment_ids: [])
+    params.permit(:id, :target_language, :status, :external_error, :content, :replace_attachments, attachments: [], remove_attachment_ids: [])
   end
 
   # Usa a presença da chave (não .present?) de propósito — um `content` em

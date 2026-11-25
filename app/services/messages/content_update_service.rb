@@ -1,13 +1,17 @@
 class Messages::ContentUpdateService
   include ::FileTypeHelper
 
-  attr_reader :message, :content, :new_attachments, :remove_attachment_ids
+  attr_reader :message, :content, :new_attachments, :remove_attachment_ids, :replace_attachments
 
-  def initialize(message, content, new_attachments: [], remove_attachment_ids: [])
+  # PATCH LOCAL (fork) - replace_attachments: os anexos enviados passam a ser
+  # todos os anexos da mensagem (a edição feita no Portal, que não sabe o id
+  # que cada anexo tem aqui; repetir o envio dá o mesmo resultado, B56).
+  def initialize(message, content, new_attachments: [], remove_attachment_ids: [], replace_attachments: false)
     @message = message
     @content = content
     @new_attachments = new_attachments
     @remove_attachment_ids = remove_attachment_ids
+    @replace_attachments = replace_attachments
   end
 
   def perform
@@ -26,6 +30,7 @@ class Messages::ContentUpdateService
   end
 
   def remove_attachments
+    return message.attachments.destroy_all if replace_attachments
     return if remove_attachment_ids.blank?
 
     message.attachments.where(id: remove_attachment_ids).destroy_all
