@@ -1,4 +1,7 @@
-import { conversationOrigin } from '../useConversationCustomFields';
+import {
+  agentEditor,
+  conversationOrigin,
+} from '../useConversationCustomFields';
 
 describe('conversationOrigin', () => {
   const apiInbox = { name: 'Portal', channel_type: 'Channel::Api' };
@@ -35,5 +38,31 @@ describe('conversationOrigin', () => {
     );
     expect(conversationOrigin(apiInbox, {})).toBe('cliente');
     expect(conversationOrigin(apiInbox, null)).toBe('cliente');
+  });
+});
+
+describe('agentEditor', () => {
+  const teams = [
+    { id: 1, name: 'tecnologia e infraestrutura' },
+    { id: 2, name: 'suporte' },
+  ];
+  const agents = [
+    { id: 7, team_ids: [1] },
+    { id: 8, team_ids: [] },
+  ];
+
+  it('lists the team names of the current agent', () => {
+    expect(
+      agentEditor({ isAdmin: false, currentUserId: 7, agents, teams })
+    ).toEqual({ isAdmin: false, teamNames: ['tecnologia e infraestrutura'] });
+  });
+
+  it('has no team while the agent list is not loaded or he has none', () => {
+    expect(
+      agentEditor({ isAdmin: true, currentUserId: 8, agents, teams })
+    ).toEqual({ isAdmin: true, teamNames: [] });
+    expect(
+      agentEditor({ isAdmin: false, currentUserId: 7, agents: [], teams })
+    ).toEqual({ isAdmin: false, teamNames: [] });
   });
 });

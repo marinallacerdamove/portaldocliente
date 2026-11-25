@@ -1,0 +1,11 @@
+{
+  "description": "Quem edita um campo da regra (Movidesk: somente as equipes). Lido pelo avaliador do servidor (TicketFieldRulesEvaluator.agent_can_edit?) e pelo da tela (agentCanEditItem); os dois têm que responder igual.",
+  "cases": [
+    { "name": "sem equipe na regra: todo agente edita", "item": { "editable_by_agents": true }, "editor": { "admin": false, "team_names": [] }, "can_edit": true },
+    { "name": "lista vazia é o mesmo que sem equipe", "item": { "editable_by_agents": true, "team_names": [] }, "editor": { "admin": false, "team_names": [] }, "can_edit": true },
+    { "name": "agente fora da equipe não edita", "item": { "editable_by_agents": true, "team_names": ["Tecnologia e Infraestrutura"] }, "editor": { "admin": false, "team_names": ["Suporte"] }, "can_edit": false },
+    { "name": "agente da equipe edita, sem diferenciar maiúsculas e espaços", "item": { "editable_by_agents": true, "team_names": ["Tecnologia e Infraestrutura"] }, "editor": { "admin": false, "team_names": ["Suporte", " tecnologia  e infraestrutura"] }, "can_edit": true },
+    { "name": "administrador nunca é bloqueado pela equipe", "item": { "editable_by_agents": true, "team_names": ["Tecnologia e Infraestrutura"] }, "editor": { "admin": true, "team_names": [] }, "can_edit": true },
+    { "name": "campo que agente não edita continua fechado, mesmo pra equipe e administrador", "item": { "editable_by_agents": false, "team_names": ["Suporte"] }, "editor": { "admin": true, "team_names": ["Suporte"] }, "can_edit": false }
+  ]
+}

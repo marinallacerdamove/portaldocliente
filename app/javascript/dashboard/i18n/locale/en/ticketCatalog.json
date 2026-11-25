@@ -281,7 +281,10 @@
         "FIELDS_HINT": "In the order they show on the ticket. Columns: field width in a 12-column row.",
         "ADD_FIELD": "Add field",
         "COLUMNS_LABEL": "Columns",
-        "REQUIRED_ON_LABEL": "Required"
+        "REQUIRED_ON_LABEL": "Required",
+        "TEAMS_LABEL": "Teams that edit",
+        "TEAMS_HINT": "Only agents of these teams (and administrators) edit this field. None picked: every team.",
+        "TEAMS_EMPTY": "No teams yet."
       }
     }
   }

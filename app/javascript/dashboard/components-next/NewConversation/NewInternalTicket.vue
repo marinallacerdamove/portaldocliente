@@ -36,8 +36,12 @@ import {
   applyServiceChange,
   filterPriorityOptions,
 } from 'dashboard/helper/ticketCatalogRules';
-import { conversationOrigin } from 'dashboard/composables/useConversationCustomFields';
 import {
+  conversationOrigin,
+  useCurrentAgentEditor,
+} from 'dashboard/composables/useConversationCustomFields';
+import {
+  agentCanEditItem,
   CUSTOM_FIELDS_ATTRIBUTE_KEY,
   OPENING_AGENT_MOMENTS,
   isChecklistItem,
@@ -96,6 +100,7 @@ const macros = useMapGetter('macros/getMacros');
 const currentUser = useMapGetter('getCurrentUser');
 const inboxes = useMapGetter('inboxes/getInboxes');
 const { state: catalog, fetchList } = useTicketCatalog();
+const agentEditor = useCurrentAgentEditor();
 
 // Caixa é escolhida explicitamente no formulário agora (formState.inbox) -
 // quem cria vê e decide pra onde o ticket vai (Tickets Internos, Portal do
@@ -319,12 +324,14 @@ const visibleItems = computed(() =>
   })
 );
 
+// Só o que o agente preenche: campo que ele não edita ou de outra equipe
+// (Movidesk: "somente as equipes") não aparece nem é cobrado na abertura.
 const openingItems = computed(() =>
   [
     ...itemsInGroup(visibleItems.value, FIELD_GROUPS.CLASSIFICATION),
     ...itemsInGroup(visibleItems.value, FIELD_GROUPS.OTHER),
     ...visibleItems.value.filter(isChecklistItem),
-  ].filter(item => item.editable_by_agents)
+  ].filter(item => agentCanEditItem(item, agentEditor.value))
 );
 
 // Obrigatório na abertura e vazio trava o "Criar ticket" (o servidor cobra o

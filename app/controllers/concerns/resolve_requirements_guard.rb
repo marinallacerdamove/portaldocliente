@@ -23,7 +23,7 @@ module ResolveRequirementsGuard
   def resolve_requirements_missing(conversation, account_data: nil)
     return [] if conversation.resolved? || !enforce_resolve_requirements?
 
-    Conversations::ResolveRequirementsService.new(conversation, account_data: account_data).missing
+    Conversations::ResolveRequirementsService.new(conversation, account_data: account_data, user: Current.user).missing
   end
 
   # toggle_status: pedido de resolver (status 'resolved', ou alternar uma

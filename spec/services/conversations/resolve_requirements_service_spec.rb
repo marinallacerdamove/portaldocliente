@@ -83,4 +83,40 @@ RSpec.describe Conversations::ResolveRequirementsService do
 
     expect(described_class.new(conversation.reload, account_data: account_data).missing).to eq(missing)
   end
+
+  # Movidesk: "somente as equipes". Campo da regra restrito a uma equipe só é cobrado (e editado) por quem é
+  # dela ou administrador; sem usuário (integração, automação) continua como antes.
+  describe 'campo restrito a equipes' do
+    let(:field) { TicketCustomField.create!(account: account, name: 'Criticidade do cliente', field_type: 'text') }
+    let(:team) { create(:team, account: account, name: 'tecnologia e infraestrutura') }
+    let(:admin) { create(:user, account: account, role: :administrator) }
+
+    before do
+      # Sem callback: trocar o time pela atribuição tiraria o agente que não é dele.
+      conversation.update_columns(team_id: team.id) # rubocop:disable Rails/SkipsModelValidations
+      TicketFieldRule.create!(account: account, name: 'Interno', fields: [
+                                { field_id: field.id, required_on: 'conclusao', team_names: ['Tecnologia e Infraestrutura'] }
+                              ])
+    end
+
+    def service_for(user) = described_class.new(conversation.reload, user: user)
+
+    it 'não cobra nem libera para o agente de fora da equipe' do
+      expect(service_for(agent).missing).to eq([])
+      expect(service_for(agent).team_locked_field_keys).to eq([field.key])
+    end
+
+    it 'cobra e libera para o agente da equipe (nome sem diferenciar maiúsculas) e para o administrador' do
+      create(:team_member, team: team, user: agent)
+
+      [agent, admin].each do |user|
+        expect(service_for(user).missing).to eq(['Criticidade do cliente'])
+        expect(service_for(user).team_locked_field_keys).to eq([])
+      end
+    end
+
+    it 'sem usuário continua cobrando como antes' do
+      expect(described_class.new(conversation.reload).missing).to eq(['Criticidade do cliente'])
+    end
+  end
 end

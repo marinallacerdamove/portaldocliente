@@ -18,6 +18,7 @@ import {
 import { saveCustomFields } from 'dashboard/composables/customFieldsWriter';
 import wootConstants from 'dashboard/constants/globals';
 import {
+  agentCanEditItem,
   CUSTOM_FIELDS_ATTRIBUTE_KEY,
   isEmptyValue,
   missingRequiredFields,
@@ -44,8 +45,37 @@ export const conversationOrigin = (inbox, attributes = {}) => {
     : CHANNEL_ORIGINS[inbox?.channel_type] || '';
 };
 
+// Quem está logado, pra agentCanEditItem: administrador e nomes das equipes
+// dele (agents/getAgents traz team_ids; sem a lista, nenhuma equipe).
+export const agentEditor = ({ isAdmin, currentUserId, agents, teams }) => {
+  const teamIds =
+    agents.find(agent => agent.id === currentUserId)?.team_ids || [];
+  return {
+    isAdmin,
+    teamNames: teams
+      .filter(team => teamIds.includes(team.id))
+      .map(team => team.name),
+  };
+};
+
+export function useCurrentAgentEditor() {
+  const currentRole = useMapGetter('getCurrentRole');
+  const currentUser = useMapGetter('getCurrentUser');
+  const agents = useMapGetter('agents/getAgents');
+  const teams = useMapGetter('teams/getTeams');
+  return computed(() =>
+    agentEditor({
+      isAdmin: currentRole.value === 'administrator',
+      currentUserId: currentUser.value?.id,
+      agents: agents.value || [],
+      teams: teams.value || [],
+    })
+  );
+}
+
 export function useConversationCustomFields(conversation) {
   const store = useStore();
+  const editor = useCurrentAgentEditor();
   const { state, fetchList } = useTicketCatalog();
   const getInbox = useMapGetter('inboxes/getInbox');
 
@@ -80,13 +110,14 @@ export function useConversationCustomFields(conversation) {
     });
   });
 
+  // Campo restrito a outra equipe fica só leitura e não é cobrado dele.
+  const canEdit = item => agentCanEditItem(item, editor.value);
+
   // Obrigatório "na conclusão" que o agente pode preencher e está vazio.
   const missingOnResolve = computed(() =>
-    missingRequiredFields(
-      items.value.filter(item => item.editable_by_agents),
-      values.value,
-      ['conclusao']
-    )
+    missingRequiredFields(items.value.filter(canEdit), values.value, [
+      'conclusao',
+    ])
   );
 
   const load = () =>
@@ -101,5 +132,5 @@ export function useConversationCustomFields(conversation) {
     return saveCustomFields(store, conversation.value.id, next);
   };
 
-  return { items, values, missingOnResolve, load, saveValue };
+  return { items, values, canEdit, missingOnResolve, load, saveValue };
 }

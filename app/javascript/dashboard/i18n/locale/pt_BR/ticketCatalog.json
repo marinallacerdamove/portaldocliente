@@ -281,7 +281,10 @@
         "FIELDS_HINT": "Na ordem em que aparecem no ticket. Colunas: largura do campo numa linha de 12.",
         "ADD_FIELD": "Adicionar campo",
         "COLUMNS_LABEL": "Colunas",
-        "REQUIRED_ON_LABEL": "Obrigatório"
+        "REQUIRED_ON_LABEL": "Obrigatório",
+        "TEAMS_LABEL": "Equipes que editam",
+        "TEAMS_HINT": "Só agentes dessas equipes (e administradores) editam este campo. Nenhuma marcada: todas as equipes.",
+        "TEAMS_EMPTY": "Nenhuma equipe cadastrada."
       }
     }
   }

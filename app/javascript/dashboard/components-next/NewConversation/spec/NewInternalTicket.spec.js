@@ -292,7 +292,7 @@ describe('NewInternalTicket opening fields and service macro', () => {
     ],
   };
 
-  const mountWithCatalog = async () => {
+  const mountWithCatalog = async ({ idDaBaseRule = {}, getters = {} } = {}) => {
     ticketCustomFieldsAPI.get.mockResolvedValue({
       data: { payload: [idDaBase, checklist] },
     });
@@ -315,6 +315,7 @@ describe('NewInternalTicket opening fields and service macro', () => {
                 field_id: 10,
                 required_on: 'abertura_agente',
                 editable_by_agents: true,
+                ...idDaBaseRule,
               },
               {
                 field_id: 11,
@@ -337,6 +338,7 @@ describe('NewInternalTicket opening fields and service macro', () => {
       'teams/getTeams': [team],
       'inboxes/getInboxes': [internalInbox],
       'macros/getMacros': [macro],
+      ...getters,
     };
     const wrapper = shallowMount(NewInternalTicket, {
       global: { stubs: { Dialog: DialogStub } },
@@ -379,6 +381,50 @@ describe('NewInternalTicket opening fields and service macro', () => {
     expect(submittedTicket().custom_attributes.campos_adicionais).toEqual({
       id_da_base: '10234',
       checklist_importacao: ['01. Backup'],
+    });
+  });
+
+  // Movidesk: "somente as equipes". Campo de outra equipe não entra na abertura
+  // de quem não é dela: não é cobrado nem enviado.
+  describe('field restricted to a team', () => {
+    const restricted = { team_names: ['Infra'] };
+    const asAgent = teamIds => ({
+      getCurrentUser: { id: 7 },
+      getCurrentRole: 'agent',
+      'agents/getAgents': [{ id: 7, team_ids: teamIds }],
+      'teams/getTeams': [team, { id: 4, name: 'infra' }],
+    });
+
+    it('is neither required nor sent for an agent outside the team', async () => {
+      const wrapper = await mountWithCatalog({
+        idDaBaseRule: restricted,
+        getters: asAgent([3]),
+      });
+      await selectService(wrapper);
+      wrapper.vm.setClassification('id_da_base', '10234');
+      wrapper.vm.setClassification('checklist_importacao', ['01. Backup']);
+
+      expect(wrapper.vm.openingItems.map(({ field }) => field.key)).toEqual([
+        'checklist_importacao',
+      ]);
+      expect(wrapper.vm.canSubmit).toBe(true);
+      await wrapper.vm.onSubmit();
+      expect(submittedTicket().custom_attributes.campos_adicionais).toEqual({
+        checklist_importacao: ['01. Backup'],
+      });
+    });
+
+    it('is required for an agent of the team (name in any case)', async () => {
+      const wrapper = await mountWithCatalog({
+        idDaBaseRule: restricted,
+        getters: asAgent([4]),
+      });
+      await selectService(wrapper);
+
+      expect(wrapper.vm.openingItems.map(({ field }) => field.key)).toEqual([
+        'id_da_base',
+        'checklist_importacao',
+      ]);
     });
   });
 

@@ -14,10 +14,12 @@ vi.mock('dashboard/composables/store', async () => {
 vi.mock('dashboard/composables/useConversationCustomFields', async () => {
   const { ref } = await import('vue');
   testState.refs.values = ref({});
+  testState.refs.items = ref([]);
   return {
     useConversationCustomFields: () => ({
-      items: ref([]),
+      items: testState.refs.items,
       values: testState.refs.values,
+      canEdit: item => item.editable_by_agents && !item.team_names,
       load: vi.fn(),
       saveValue: vi.fn(),
     }),
@@ -69,5 +71,30 @@ describe('TicketCustomFields drafts', () => {
     await nextTick();
 
     expect(wrapper.vm.drafts).toEqual({ causa: 'Outra' });
+  });
+});
+
+// Movidesk: "somente as equipes". Quem decide é o canEdit do composable
+// (agentCanEditItem): campo de outra equipe aparece só pra leitura.
+describe('TicketCustomFields editable x read only', () => {
+  it('shows as read only the field the agent cannot edit', () => {
+    const field = (id, key) => ({ id, key, name: key, field_type: 'text' });
+    testState.refs.values.value = {};
+    testState.refs.items.value = [
+      { field: field(1, 'causa'), editable_by_agents: true },
+      {
+        field: field(2, 'criticidade'),
+        editable_by_agents: true,
+        team_names: ['Tecnologia e Infraestrutura'],
+      },
+    ];
+    const wrapper = shallowMount(TicketCustomFields);
+
+    expect(wrapper.vm.editableItems.map(item => item.field.key)).toEqual([
+      'causa',
+    ]);
+    expect(wrapper.vm.readOnlyItems.map(item => item.field.key)).toEqual([
+      'criticidade',
+    ]);
   });
 });

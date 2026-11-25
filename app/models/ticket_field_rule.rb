@@ -8,7 +8,9 @@
 #   é isso que monta a cascata Classificação do Serviço -> Tipo -> Checklist.
 #   Valores por nome, igual a conversa guarda (serviço = caminho completo).
 # fields: [{ field_id:, columns: 1..12, visible_to_clients:, editable_by_clients:,
-#   editable_by_agents:, required_on: }] - na ordem de exibição.
+#   editable_by_agents:, required_on:, team_names: }] - na ordem de exibição.
+#   team_names (Movidesk: "somente as equipes"): só agente dessas equipes (ou
+#   administrador) edita; sem a chave, todas as equipes.
 class TicketFieldRule < ApplicationRecord
   include TicketCatalogCode
   include TicketCatalogPortalEvent
@@ -56,7 +58,14 @@ class TicketFieldRule < ApplicationRecord
     normalized = { 'field_id' => field['field_id'].to_i, 'columns' => (field['columns'].presence || 12).to_i,
                    'required_on' => field['required_on'].presence || 'nao_exigir' }
     FIELD_FLAGS.each { |flag| normalized[flag] = ActiveModel::Type::Boolean.new.cast(field.fetch(flag, flag == 'editable_by_agents')) || false }
+    team_names = normalize_team_names(field['team_names'])
+    normalized['team_names'] = team_names if team_names.any?
     normalized
+  end
+
+  # Sem vazio nem repetido (sem diferenciar maiúsculas), na grafia recebida.
+  def normalize_team_names(names)
+    Array(names).map { |name| name.to_s.squish }.compact_blank.uniq(&:downcase)
   end
 
   def account_field_ids

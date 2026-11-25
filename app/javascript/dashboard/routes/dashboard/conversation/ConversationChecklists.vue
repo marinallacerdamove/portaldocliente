@@ -15,10 +15,15 @@ import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 
 const { t } = useI18n();
 const currentChat = useMapGetter('getSelectedChat');
-const { items, values, load, saveValue } =
+const { items, values, canEdit, load, saveValue } =
   useConversationCustomFields(currentChat);
 
-const checklists = computed(() => items.value.filter(isChecklistItem));
+// Checklist de outra equipe (ou que o agente não edita) fica desabilitado.
+const checklists = computed(() =>
+  items.value
+    .filter(isChecklistItem)
+    .map(item => ({ field: item.field, editable: canEdit(item) }))
+);
 // "conversa:campo" -> aberto/fechado escolhido pelo agente.
 const openState = ref({});
 
@@ -56,7 +61,7 @@ onMounted(load);
       class="mx-2 mt-2 max-h-[40vh] overflow-y-auto rounded-lg border border-n-weak bg-n-solid-1 px-3 py-2"
     >
       <section
-        v-for="{ field, editable_by_agents: editable } in checklists"
+        v-for="{ field, editable } in checklists"
         :key="field.id"
         class="py-1.5"
       >

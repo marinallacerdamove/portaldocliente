@@ -80,6 +80,21 @@ RSpec.describe TicketFieldRulesEvaluator do
     expect(described_class.missing_required(items, values, ['abertura'])).to eq([])
   end
 
+  # Mesmo arquivo lido por helper/specs/ticketFieldRules.spec.js (agentCanEditItem).
+  it 'decide quem edita o campo pela equipe igual à tela' do
+    cases = JSON.parse(Rails.root.join('spec/fixtures/fork_parity/ticket_field_team_cases.json').read)['cases']
+
+    cases.each do |example|
+      editor = example['editor'].symbolize_keys
+      expect(described_class.agent_can_edit?(example['item'], editor)).to eq(example['can_edit']), example['name']
+    end
+  end
+
+  it 'sem quem edita (integração, automação) só olha se o agente edita, como antes da equipe' do
+    expect(described_class.agent_can_edit?({ 'editable_by_agents' => true, 'team_names' => ['QA'] }, nil)).to be(true)
+    expect(described_class.agent_can_edit?({ 'editable_by_agents' => false }, nil)).to be(false)
+  end
+
   # Mesmo arquivo lido por helper/specs/ticketFieldRules.spec.js: os dois avaliadores
   # (este e o da tela) têm que dar o mesmo resultado nos mesmos casos.
   describe 'shared parity cases' do

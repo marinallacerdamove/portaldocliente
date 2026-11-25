@@ -138,5 +138,30 @@ RSpec.describe Conversations::InternalTicketService do
     it 'a automação (sem tela pra preencher) continua criando' do
       expect { create_ticket(base_params.except(:require_opening_fields)) }.not_to raise_error
     end
+
+    # Movidesk: "somente as equipes". Quem não é da equipe não preenche o campo restrito: não é cobrado dele e o
+    # valor que mandar não é gravado.
+    context 'with the field restricted to another team' do
+      let(:open_field) { TicketCustomField.create!(account: account, name: 'Causa', field_type: 'text') }
+
+      before do
+        TicketFieldRule.find_by!(name: 'Backup').update!(fields: [
+                                                           { field_id: field.id, required_on: 'abertura', team_names: ['Infra'] },
+                                                           { field_id: open_field.id }
+                                                         ])
+      end
+
+      it 'cria sem cobrar e sem gravar o valor do campo restrito' do
+        params = base_params.deep_merge(custom_attributes: { 'campos_adicionais' => { field.key => '10234', open_field.key => 'Bug' } })
+
+        expect(create_ticket(params).custom_attributes['campos_adicionais']).to eq(open_field.key => 'Bug')
+      end
+
+      it 'cobra de quem é da equipe' do
+        create(:team_member, team: create(:team, account: account, name: 'infra'), user: agent)
+
+        expect { create_ticket(base_params) }.to raise_error(described_class::InvalidTicket, 'Preencha os campos obrigatórios: ID da Base:')
+      end
+    end
   end
 end

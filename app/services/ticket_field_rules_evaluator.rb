@@ -16,6 +16,27 @@ class TicketFieldRulesEvaluator
     items.select { |item| moments.include?(item['required_on']) && empty_value?((values || {})[item['field'].key]) }
   end
 
+  # Agente pode editar o item da regra (Movidesk: "somente as equipes"): o item
+  # deixa o agente editar e, se tem team_names, o editor é administrador ou de
+  # uma dessas equipes (nome sem diferenciar maiúsculas). editor: { admin:,
+  # team_names: }; nil (integração, automação) não confere equipe.
+  def self.agent_can_edit?(item, editor)
+    return false unless item['editable_by_agents']
+
+    team_allowed?(item, editor)
+  end
+
+  # Só a parte da equipe (ver agent_can_edit?).
+  def self.team_allowed?(item, editor)
+    restricted = Array(item['team_names']).map { |name| team_key(name) }
+    editor.nil? || editor[:admin] || restricted.empty? || restricted.intersect?(editor[:team_names].map { |name| team_key(name) })
+  end
+
+  def self.team_key(name)
+    name.to_s.squish.downcase
+  end
+  private_class_method :team_key
+
   def initialize(rules:, fields:)
     @fields_by_id = fields.select(&:active).index_by(&:id)
     @rules = rules.map { |rule| rule.as_json.stringify_keys }.select { |rule| rule['active'] }

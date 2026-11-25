@@ -9,7 +9,7 @@ class Api::V1::Accounts::TicketFieldRulesController < Api::V1::Accounts::BaseCon
     params.require(:ticket_field_rule).permit(
       :name, :active, :position,
       conditions: [:group, :attribute, :operator, :value, :field_id],
-      fields: [:field_id, :columns, :visible_to_clients, :editable_by_clients, :editable_by_agents, :required_on]
+      fields: [:field_id, :columns, :visible_to_clients, :editable_by_clients, :editable_by_agents, :required_on, { team_names: [] }]
     )
   end
 end

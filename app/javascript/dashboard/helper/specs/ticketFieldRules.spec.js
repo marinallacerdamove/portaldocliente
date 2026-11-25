@@ -1,9 +1,11 @@
 import {
+  agentCanEditItem,
   missingRequiredFields,
   visibleCustomFields,
   STATUS_NOT_CONCLUDED,
 } from '../ticketFieldRules';
 import parity from '../../../../../spec/fixtures/fork_parity/ticket_field_rules_cases.json';
+import teamCases from '../../../../../spec/fixtures/fork_parity/ticket_field_team_cases.json';
 
 const field = (id, key, extra = {}) => ({
   id,
@@ -253,6 +255,21 @@ describe('shared parity cases', () => {
         missing.map(item => item.field.key),
         example.name
       ).toEqual(example.missing_on_conclusao);
+    });
+  });
+});
+
+// Mesmo arquivo lido por TicketFieldRulesEvaluator.agent_can_edit? (servidor).
+describe('agentCanEditItem', () => {
+  it('decide quem edita o campo pela equipe igual ao servidor', () => {
+    teamCases.cases.forEach(example => {
+      const editor = {
+        isAdmin: example.editor.admin,
+        teamNames: example.editor.team_names,
+      };
+      expect(agentCanEditItem(example.item, editor), example.name).toBe(
+        example.can_edit
+      );
     });
   });
 });

@@ -1,13 +1,16 @@
 <script setup>
 // PATCH LOCAL (fork) - um campo exibido pela regra: largura (colunas de 12),
-// quem vê e quem edita (cliente no Portal, agente) e quando é obrigatório.
+// quem vê e quem edita (cliente no Portal, agente e de quais equipes) e
+// quando é obrigatório.
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useMapGetter } from 'dashboard/composables/store';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Input from 'dashboard/components-next/input/Input.vue';
 import SelectInput from 'dashboard/components-next/select/LabeledSelect.vue';
-import { REQUIRED_ON } from 'dashboard/helper/ticketFieldRules';
+import { REQUIRED_ON, teamKey } from 'dashboard/helper/ticketFieldRules';
+import ToggleChips from './ToggleChips.vue';
 
 defineProps({
   fieldName: { type: String, required: true },
@@ -27,6 +30,7 @@ const FLAGS = [
 const MAX_COLUMNS = 12;
 
 const { t } = useI18n();
+const teams = useMapGetter('teams/getTeams');
 
 const requiredOptions = computed(() =>
   REQUIRED_ON.map(moment => ({
@@ -34,6 +38,32 @@ const requiredOptions = computed(() =>
     label: t(`TICKET_CATALOG.FIELD_RULES.REQUIRED_ON.${moment}`),
   }))
 );
+
+// Equipes que editam (Movidesk: "somente as equipes"; vazio = todas). Nome
+// comparado sem diferenciar maiúsculas: a regra pode ter vindo do Portal com
+// outra grafia, que é mantida. Equipe da regra que esta conta não tem também
+// aparece, pra poder ser tirada.
+const savedTeams = computed(() => item.value.team_names || []);
+const teamOptions = computed(() => {
+  const names = teams.value.map(team => team.name);
+  const known = new Set(names.map(teamKey));
+  const unknown = savedTeams.value.filter(name => !known.has(teamKey(name)));
+  return [...names, ...unknown].map(name => ({ id: name, name }));
+});
+const selectedTeams = computed({
+  get: () => {
+    const saved = new Set(savedTeams.value.map(teamKey));
+    return teamOptions.value
+      .filter(option => saved.has(teamKey(option.name)))
+      .map(option => option.id);
+  },
+  set: names => {
+    item.value.team_names = names.map(
+      name =>
+        savedTeams.value.find(saved => teamKey(saved) === teamKey(name)) || name
+    );
+  },
+});
 
 const columns = computed({
   get: () => String(item.value.columns),
@@ -100,6 +130,19 @@ const columns = computed({
         <Checkbox v-model="item[flag]" />
         {{ t(`TICKET_CATALOG.FIELD_RULES.FLAGS.${flag}`) }}
       </label>
+    </div>
+    <div v-if="item.editable_by_agents" class="flex flex-col gap-1.5">
+      <span class="text-sm font-medium text-n-slate-12">
+        {{ t('TICKET_CATALOG.FIELD_RULES.FORM.TEAMS_LABEL') }}
+      </span>
+      <span class="text-xs text-n-slate-11">
+        {{ t('TICKET_CATALOG.FIELD_RULES.FORM.TEAMS_HINT') }}
+      </span>
+      <ToggleChips
+        v-model="selectedTeams"
+        :options="teamOptions"
+        :empty-message="t('TICKET_CATALOG.FIELD_RULES.FORM.TEAMS_EMPTY')"
+      />
     </div>
   </div>
 </template>

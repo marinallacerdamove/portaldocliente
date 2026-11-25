@@ -15,7 +15,9 @@
 # announce deixa uma nota privada nela apontando pro ticket novo.
 # require_opening_fields: ticket aberto por uma tela (agente) cobra os campos
 # adicionais obrigatórios na abertura, igual ao Movidesk e ao Portal; a
-# automação não tem quem preencha e não passa isso.
+# automação não tem quem preencha e não passa isso. Campo restrito a outras
+# equipes (Movidesk: "somente as equipes") não é cobrado de quem abre e o
+# valor que ele mandar não é gravado.
 class Conversations::InternalTicketService
   class InvalidTicket < StandardError; end
 
@@ -55,17 +57,33 @@ class Conversations::InternalTicketService
   def validate_opening_fields!
     return unless @params[:require_opening_fields]
 
-    draft = Conversation.new(account: @inbox.account, inbox: @inbox, team: @params[:team], assignee: @params[:assignee],
-                             custom_attributes: (@params[:custom_attributes] || {}).to_h)
-    missing = Conversations::ResolveRequirementsService.new(draft).missing_on_opening
+    drop_team_locked_values
+    missing = opening_requirements.missing_on_opening
     raise InvalidTicket, "Preencha os campos obrigatórios: #{missing.join(', ')}" if missing.any?
+  end
+
+  def drop_team_locked_values
+    locked = opening_requirements.team_locked_field_keys
+    values = custom_attributes[TicketContract::CUSTOM_FIELDS_KEY]
+    custom_attributes[TicketContract::CUSTOM_FIELDS_KEY] = values.except(*locked) if locked.any? && values.is_a?(Hash)
+  end
+
+  # Avaliado com os valores atuais do formulário (tirar um valor muda a cascata).
+  def opening_requirements
+    draft = Conversation.new(account: @inbox.account, inbox: @inbox, team: @params[:team], assignee: @params[:assignee],
+                             custom_attributes: custom_attributes)
+    Conversations::ResolveRequirementsService.new(draft, user: @user)
+  end
+
+  def custom_attributes
+    @custom_attributes ||= (@params[:custom_attributes] || {}).to_h
   end
 
   def create_conversation
     contact_inbox = ContactInboxBuilder.new(contact: @contact, inbox: @inbox).perform
     conversation = Conversation.create!(
       account_id: @inbox.account_id, inbox_id: @inbox.id, contact_id: @contact.id, contact_inbox_id: contact_inbox.id,
-      team: @params[:team], priority: @params[:priority].presence, custom_attributes: (@params[:custom_attributes] || {}).to_h
+      team: @params[:team], priority: @params[:priority].presence, custom_attributes: custom_attributes
     )
     # Depois do time, como na atribuição pela tela: o responsável escolhido fica
     # mesmo que o time dele seja outro (criar já com os dois o descartaria).

@@ -748,6 +748,21 @@ RSpec.describe 'Conversations API', type: :request do
           end
         end
         # rubocop:enable RSpec/NestedGroups
+
+        # Movidesk: "somente as equipes". Obrigatório na conclusão restrito a outra equipe não trava o agente de fora.
+        it 'não cobra do agente de fora da equipe o campo restrito a ela' do
+          field = TicketCustomField.create!(account: account, name: 'Esforço Estimado', field_type: 'text')
+          TicketFieldRule.create!(account: account, name: 'Interno', fields: [
+                                    { field_id: field.id, required_on: 'conclusao', team_names: ['Tecnologia e Infraestrutura'] }
+                                  ])
+          blocked.update!(priority: :medium, assignee: agent)
+
+          post "/api/v1/accounts/#{account.id}/conversations/#{blocked.display_id}/toggle_status",
+               headers: agent.create_new_auth_token, params: { status: 'resolved' }, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(blocked.reload.status).to eq('resolved')
+        end
       end
 
       it 'toggles the conversation status if status is empty' do
@@ -1458,6 +1473,44 @@ RSpec.describe 'Conversations API', type: :request do
              as: :json
 
         expect(conversation.reload.custom_attributes).to eq({ 'existing_key' => 'keep', 'user_id' => 1001 })
+      end
+
+      # PATCH LOCAL (fork) - Movidesk: "somente as equipes". Valor de campo restrito mandado por quem não é da
+      # equipe (nem administrador) é ignorado; o resto da gravação vale.
+      context 'with a custom field restricted to a team (fork)' do
+        let(:team) { create(:team, account: account, name: 'tecnologia e infraestrutura') }
+        let(:restricted) { TicketCustomField.create!(account: account, name: 'Criticidade do cliente', field_type: 'text') }
+        let(:open_field) { TicketCustomField.create!(account: account, name: 'Causa', field_type: 'text') }
+
+        before do
+          TicketFieldRule.create!(account: account, name: 'Interno', fields: [
+                                    { field_id: restricted.id, team_names: ['Tecnologia e Infraestrutura'] }, { field_id: open_field.id }
+                                  ])
+          conversation.update!(custom_attributes: { 'campos_adicionais' => { restricted.key => 'Baixa' } })
+        end
+
+        def save_fields(user)
+          post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/custom_attributes",
+               headers: user.create_new_auth_token, as: :json,
+               params: { custom_attributes: { campos_adicionais: { restricted.key => 'Alta', open_field.key => 'Bug' } }, merge: true }
+        end
+
+        it 'ignora o valor do campo restrito para o agente de fora da equipe' do
+          save_fields(agent)
+
+          expect(response).to have_http_status(:success)
+          expect(conversation.reload.custom_attributes['campos_adicionais']).to eq(restricted.key => 'Baixa', open_field.key => 'Bug')
+        end
+
+        it 'grava para o agente da equipe e para o administrador' do
+          create(:team_member, team: team, user: agent)
+          save_fields(agent)
+          expect(conversation.reload.custom_attributes['campos_adicionais']).to eq(restricted.key => 'Alta', open_field.key => 'Bug')
+
+          conversation.update!(custom_attributes: { 'campos_adicionais' => { restricted.key => 'Baixa' } })
+          save_fields(create(:user, account: account, role: :administrator))
+          expect(conversation.reload.custom_attributes['campos_adicionais'][restricted.key]).to eq('Alta')
+        end
       end
 
       it 'replaces custom attributes by default' do

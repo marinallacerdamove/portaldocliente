@@ -37,6 +37,6 @@ module Macros::ResolveRequirements
     return false if Current.executed_by.is_a?(AutomationRule)
 
     @conversation.reload
-    !@conversation.resolved? && Conversations::ResolveRequirementsService.new(@conversation).missing.any?
+    !@conversation.resolved? && Conversations::ResolveRequirementsService.new(@conversation, user: @user).missing.any?
   end
 end

@@ -4,7 +4,8 @@
 # conclusão (useConversationCustomFields.js) e motivo de encerramento. Cobrado
 # no servidor pra quem resolve pela tela (inclusive em massa) sem passar por
 # essa checagem. Integração (Portal, automação) não passa por aqui - ver
-# ResolveRequirementsGuard.
+# ResolveRequirementsGuard. Com user:, campo restrito a outras equipes
+# (TicketFieldRulesEvaluator.agent_can_edit?) não é cobrado dele.
 class Conversations::ResolveRequirementsService
   # Ações da conversa cobradas quando a conta tem o atributo cadastrado.
   REQUIRED_ACTION_ATTRIBUTE_KEYS = [TicketContract::COMPANY_KEY, TicketContract::CATEGORY_KEY, TicketContract::SERVICE_KEY].freeze
@@ -30,8 +31,9 @@ class Conversations::ResolveRequirementsService
     )
   end
 
-  def initialize(conversation, account_data: nil)
+  def initialize(conversation, account_data: nil, user: nil)
     @conversation = conversation
+    @user = user
     @account = conversation.account
     @attributes = conversation.custom_attributes || {}
     @account_data = account_data || self.class.account_data(@account)
@@ -49,6 +51,14 @@ class Conversations::ResolveRequirementsService
   # mesma avaliação da conclusão, com os momentos da abertura.
   def missing_on_opening
     missing_custom_fields(OPENING_MOMENTS)
+  end
+
+  # Chaves dos campos que a regra mostra e que o usuário não edita por não ser
+  # da equipe (o servidor ignora o valor que ele mandar). Sem user: nenhuma.
+  def team_locked_field_keys
+    @account_data.evaluator.visible_items(context)
+                 .reject { |item| TicketFieldRulesEvaluator.team_allowed?(item, editor) }
+                 .map { |item| item['field'].key }
   end
 
   private
@@ -78,8 +88,18 @@ class Conversations::ResolveRequirementsService
   end
 
   def missing_custom_fields(moments)
-    items = @account_data.evaluator.visible_items(context).select { |item| item['editable_by_agents'] }
+    items = @account_data.evaluator.visible_items(context).select { |item| TicketFieldRulesEvaluator.agent_can_edit?(item, editor) }
     TicketFieldRulesEvaluator.missing_required(items, custom_field_values, moments).map { |item| item['field'].name }
+  end
+
+  # Só consulta papel e equipes quando há usuário.
+  def editor
+    return if @user.nil?
+
+    @editor ||= {
+      admin: @account.account_users.find_by(user: @user)&.administrator?,
+      team_names: @account.teams.joins(:team_members).where(team_members: { user_id: @user.id }).pluck(:name)
+    }
   end
 
   def missing_close_reason

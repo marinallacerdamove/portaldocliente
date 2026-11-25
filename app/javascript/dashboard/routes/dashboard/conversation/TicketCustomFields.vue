@@ -30,7 +30,7 @@ const props = defineProps({
 
 const { t } = useI18n();
 const currentChat = useMapGetter('getSelectedChat');
-const { items, values, load, saveValue } =
+const { items, values, canEdit, load, saveValue } =
   useConversationCustomFields(currentChat);
 
 // Rascunho dos campos de texto/data até sair do campo.
@@ -61,11 +61,10 @@ const valueOf = field =>
     : values.value[field.key];
 
 const groupItems = computed(() => itemsInGroup(items.value, props.group));
-const editableItems = computed(() =>
-  groupItems.value.filter(item => item.editable_by_agents)
-);
+// Campo que o agente não edita (ou de outra equipe) aparece só pra leitura.
+const editableItems = computed(() => groupItems.value.filter(canEdit));
 const readOnlyItems = computed(() =>
-  groupItems.value.filter(item => !item.editable_by_agents)
+  groupItems.value.filter(item => !canEdit(item))
 );
 
 const save = async (key, value) => {

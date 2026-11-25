@@ -128,6 +128,24 @@ export const visibleCustomFields = ({ rules, fields, context }) => {
   return result.items;
 };
 
+export const teamKey = name =>
+  String(name ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+
+// Agente pode editar o item da regra (Movidesk: "somente as equipes"): o item
+// deixa o agente editar e, se tem team_names, ele é administrador ou de uma
+// dessas equipes (nome sem diferenciar maiúsculas). Mesma regra de
+// TicketFieldRulesEvaluator.agent_can_edit? no servidor.
+export const agentCanEditItem = (item, { isAdmin, teamNames }) => {
+  if (!item.editable_by_agents) return false;
+  const restricted = (item.team_names || []).map(teamKey);
+  if (isAdmin || !restricted.length) return true;
+  const own = new Set(teamNames.map(teamKey));
+  return restricted.some(name => own.has(name));
+};
+
 // Obrigatórios ainda vazios pro momento (ex. ['conclusao'] ao resolver).
 export const missingRequiredFields = (items, values, moments) =>
   items.filter(
