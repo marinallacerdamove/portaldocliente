@@ -3,7 +3,7 @@
 # sincronização): só administrador. Ver PortalAssistant::Client.
 class Api::V1::Accounts::PortalAssistantController < Api::V1::Accounts::BaseController
   before_action :ensure_enabled
-  before_action :check_admin_authorization?, except: [:ask, :rate]
+  before_action :check_admin_authorization?, except: [:ask, :question, :rate]
 
   rescue_from PortalAssistant::Client::Error do |e|
     Rails.logger.error("[PortalAssistant] #{e.message}")
@@ -12,6 +12,11 @@ class Api::V1::Accounts::PortalAssistantController < Api::V1::Accounts::BaseCont
 
   def ask
     forward(:post, 'questions', params.permit(:question))
+  end
+
+  # A resposta vem em segundo plano: a tela consulta a própria pergunta até chegar (B37).
+  def question
+    forward(:get, "questions/#{params[:question_id].to_i}")
   end
 
   def rate

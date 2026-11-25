@@ -24,7 +24,8 @@
       "HELPFUL": "Resposta útil",
       "NOT_HELPFUL": "Resposta ruim",
       "RATE_ERROR": "Não foi possível registrar a avaliação.",
-      "ERROR": "Não foi possível consultar o Assistente."
+      "ERROR": "Não foi possível consultar o Assistente.",
+      "TIMEOUT": "A resposta está demorando demais. Tente de novo daqui a pouco."
     },
     "SOURCES": {
       "STATUS_TITLE": "Sincronização da wiki",
@@ -85,6 +86,7 @@
       "ANSWERED": "Respondida",
       "UNANSWERED": "Sem resposta",
       "FAILED": "Falhou",
+      "PENDING": "Respondendo",
       "RATED_UP": "Útil",
       "RATED_DOWN": "Ruim",
       "BY": "{name} · {date}",

@@ -24,7 +24,8 @@
       "HELPFUL": "Helpful answer",
       "NOT_HELPFUL": "Bad answer",
       "RATE_ERROR": "Could not save the rating.",
-      "ERROR": "Could not reach the Assistant."
+      "ERROR": "Could not reach the Assistant.",
+      "TIMEOUT": "The answer is taking too long. Try again in a moment."
     },
     "SOURCES": {
       "STATUS_TITLE": "Wiki sync",
@@ -85,6 +86,7 @@
       "ANSWERED": "Answered",
       "UNANSWERED": "Unanswered",
       "FAILED": "Failed",
+      "PENDING": "Answering",
       "RATED_UP": "Helpful",
       "RATED_DOWN": "Bad",
       "BY": "{name} · {date}",

@@ -8,6 +8,31 @@ import { usePortalAssistant } from 'dashboard/composables/usePortalAssistant';
 
 export const MAX_QUESTION_LENGTH = 2000;
 export const RATINGS = { UP: 'up', DOWN: 'down' };
+// O Portal responde em segundo plano (B37): a pergunta volta "respondendo"
+// e a tela consulta de tempos em tempos, até o limite.
+export const POLL_INTERVAL_MS = 1500;
+export const MAX_WAIT_MS = 120000;
+
+const wait = ms =>
+  new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+
+// Consulta até a pergunta sair de "respondendo"; null se passou do limite.
+const waitForAnswer = async question => {
+  let current = question;
+  for (
+    let waited = 0;
+    current.pending && waited < MAX_WAIT_MS;
+    waited += POLL_INTERVAL_MS
+  ) {
+    // eslint-disable-next-line no-await-in-loop
+    await wait(POLL_INTERVAL_MS);
+    // eslint-disable-next-line no-await-in-loop
+    ({ data: current } = await PortalAssistantAPI.getQuestion(question.id));
+  }
+  return current.pending ? null : current;
+};
 
 export function usePortalAssistantAsk() {
   const { t } = useI18n();
@@ -23,7 +48,16 @@ export function usePortalAssistantAsk() {
     isAsking.value = true;
     try {
       const { data } = await PortalAssistantAPI.ask(text);
-      return data;
+      const answer = await waitForAnswer(data);
+      if (!answer) {
+        useAlert(t('PORTAL_ASSISTANT.ASK.TIMEOUT'));
+        return null;
+      }
+      if (answer.failed) {
+        useAlert(answer.error_message || t('PORTAL_ASSISTANT.ASK.ERROR'));
+        return null;
+      }
+      return answer;
     } catch (error) {
       useAlert(errorMessage(error, t('PORTAL_ASSISTANT.ASK.ERROR')));
       return null;

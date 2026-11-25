@@ -49,6 +49,12 @@ const selectFilter = value => {
 };
 
 const statusChip = question => {
+  if (question.pending) {
+    return {
+      label: t('PORTAL_ASSISTANT.QUESTIONS.PENDING'),
+      class: 'bg-n-alpha-2 text-n-slate-11',
+    };
+  }
   if (question.failed) {
     return {
       label: t('PORTAL_ASSISTANT.QUESTIONS.FAILED'),

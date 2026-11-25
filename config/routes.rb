@@ -140,6 +140,7 @@ Rails.application.routes.draw do
           # PATCH LOCAL (fork) - Assistente (IA com base na wiki), repassado pro Portal.
           get 'portal_assistant/questions', to: 'portal_assistant#questions'
           post 'portal_assistant/questions', to: 'portal_assistant#ask'
+          get 'portal_assistant/questions/:question_id', to: 'portal_assistant#question'
           patch 'portal_assistant/questions/:question_id', to: 'portal_assistant#rate'
           get 'portal_assistant/areas', to: 'portal_assistant#areas'
           patch 'portal_assistant/areas/:area_id', to: 'portal_assistant#update_area'

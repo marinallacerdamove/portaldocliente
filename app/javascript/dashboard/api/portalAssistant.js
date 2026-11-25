@@ -12,6 +12,10 @@ class PortalAssistantAPI extends ApiClient {
     return axios.post(`${this.url}/questions`, { question });
   }
 
+  getQuestion(questionId) {
+    return axios.get(`${this.url}/questions/${questionId}`);
+  }
+
   rate(questionId, rating) {
     return axios.patch(`${this.url}/questions/${questionId}`, { rating });
   }
